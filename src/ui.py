@@ -359,6 +359,15 @@ def coverage_problem(eid: str, symbols: list[str], mode: str) -> str | None:
     return None
 
 
+def fallback_event(kind: str, symbols: list[str], mode: str) -> str:
+    """The official pick if these stocks cover it, otherwise the first event (official first) they all cover."""
+    off = default_results()["official"][kind]
+    for eid in [off] + [e for e in event_options(kind) if e not in (off, "custom")]:
+        if coverage_problem(eid, symbols, mode) is None:
+            return eid
+    return "custom"
+
+
 def _resolve_event(kind: str) -> dict:
     s = st.session_state
     eid = s[f"{kind}_id"]
@@ -371,6 +380,12 @@ def _resolve_event(kind: str) -> dict:
             except ValueError:
                 pass
         eid = default_results()["official"][kind]
+    if coverage_problem(eid, s["pick_A"] + s["pick_B"], s["window_mode"]):
+        eid = fallback_event(kind, s["pick_A"] + s["pick_B"], s["window_mode"])
+        if eid == "custom":  # nothing in the catalogue fits: use the most recent 252 days before Current
+            cal = D.calendar()
+            ev = EV.custom_event(cal[-2 * config.REGIME_DAYS], cal[-config.REGIME_DAYS - 1], nifty_close(), kind)
+            return E.event_payload(ev)
     return default_results()["events"][eid]
 
 

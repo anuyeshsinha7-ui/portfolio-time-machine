@@ -56,7 +56,7 @@ def controls(where: str) -> None:
         prob = ui.coverage_problem(s[f"{kind}_id"], s["pick_A"] + s["pick_B"], s["window_mode"])
         if prob:
             s[f"{kind}_unavailable"] = prob
-            s[f"{kind}_id"] = ui.default_results()["official"][kind]
+            s[f"{kind}_id"] = ui.fallback_event(kind, s["pick_A"] + s["pick_B"], s["window_mode"])
     if s["amount_confirmed"]:
         mode = s["amount_mode"]
         if mode == "split_total":
@@ -88,7 +88,7 @@ def controls(where: str) -> None:
             s["custom_calm"] = (str(m[0]), str(m[1]))
     for kind in ("crisis", "calm"):
         if s.get(f"{kind}_unavailable"):
-            st.warning(f"That {kind} event can't be tested with your picks ({s.pop(f'{kind}_unavailable')}); showing the official pick.")
+            st.warning(f"That {kind} event can't be tested with your picks ({s.pop(f'{kind}_unavailable')}); switched to the nearest event they all cover.")
     st.segmented_control("Window", ["standard", "event_only"], key="window_mode",
                          format_func={"standard": "Standard (252 days)", "event_only": "Event only"}.get, required=True)
     st.segmented_control("Confidence level", [0.95, 0.99], key="conf", format_func=lambda c: f"{c:.0%}", required=True)
