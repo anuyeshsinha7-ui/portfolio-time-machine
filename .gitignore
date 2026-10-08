@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+_site/
+data/raw/
+data/manual_csv/*.csv
+.venv/
+*.egg-info/
+results/tmp/
+test-results/

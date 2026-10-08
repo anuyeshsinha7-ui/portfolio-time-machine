@@ -1,0 +1,7 @@
+-r requirements.txt
+# Local-only: data download, solver cross-check, tests. Never imported by the app.
+yfinance==1.7.0
+requests
+cvxpy==1.9.3
+pytest
+playwright
