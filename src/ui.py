@@ -71,7 +71,13 @@ def inject_css() -> None:
 
 # ---------------------------------------------------------------- layout
 def split():
-    """(left, right): Client view and The Backing; right is None when the Backing is hidden."""
+    """(left, right): Client view and The Backing; right is None when the Backing is hidden.
+    On phones the Backing becomes a tap-to-open section under the client view."""
+    if st.session_state.get("phone"):
+        left = st.container()
+        right = st.expander("📐 The Backing — logic, maths and evidence", expanded=False) \
+            if st.session_state.get("show_backing", True) else None
+        return left, right
     if not st.session_state.get("show_backing", True):
         c = st.container()
         with c:
@@ -152,7 +158,12 @@ def fig_style(fig: go.Figure, height: int = 380, title: str | None = None) -> go
 
 
 def show(fig: go.Figure) -> None:
-    st.plotly_chart(fig, width="stretch", config={"displayModeBar": False, "responsive": True})
+    if st.session_state.get("phone"):
+        h = fig.layout.height or 380
+        fig.update_layout(height=min(int(h * 0.82), 420) if h < 600 else 520,
+                          margin=dict(l=4, r=4, t=36 if (fig.layout.title.text or "") else 8, b=4),
+                          legend=dict(font=dict(size=10)), font=dict(size=11))
+    st.plotly_chart(fig, width="stretch", config={"displayModeBar": False, "responsive": True, "scrollZoom": False})
 
 
 # ---------------------------------------------------------------- state
@@ -161,6 +172,21 @@ DEFAULT_STATE = {
     "amount_mode": config.AMOUNT_MODE, "amount_confirmed": False, "conf": 0.99, "horizon": 1,
     "window_mode": config.EVENT_WINDOW_MODE, "show_backing": True, "tolerance": None,
 }
+MOBILE_UA = ("iphone", "android", "mobile", "ipod", "blackberry", "opera mini", "iemobile")
+
+
+def detect_phone() -> bool:
+    """Phone if the stlite loader flagged a narrow screen (?phone=1) or the browser says it is mobile."""
+    try:
+        if st.query_params.get("phone") == "1":
+            return True
+    except Exception:
+        pass
+    try:
+        ua = (st.context.headers.get("User-Agent") or "").lower()
+    except Exception:
+        ua = ""
+    return any(k in ua for k in MOBILE_UA)
 
 
 @st.cache_data(show_spinner=False)
@@ -177,6 +203,7 @@ def universe_table() -> pd.DataFrame:
 def init_state() -> None:
     for k, v in DEFAULT_STATE.items():
         st.session_state.setdefault(k, v)
+    st.session_state.setdefault("phone", detect_phone())
     res = default_results()
     st.session_state.setdefault("pick_A", list(res["picks"]["A"]))
     st.session_state.setdefault("pick_B", list(res["picks"]["B"]))
@@ -310,6 +337,8 @@ def event_label(eid: str) -> str:
     if eid == "custom":
         return "Custom: a date range"
     ev = default_results()["events"][eid]
+    if eid.startswith("auto_"):
+        return "Auto · " + ev["label"]
     return ev["label"] if ev["available"] else f"{ev['name']} · not available ({'; '.join(ev['notes'])[:80]})"
 
 
@@ -416,3 +445,97 @@ def health_badge() -> str:
 
 def universe_symbols() -> list[str]:
     return U.usable()["symbol"].tolist()
+
+
+def _sync(src: str, dst: str) -> None:
+    st.session_state[dst] = st.session_state[src]
+
+
+def event_selectors(page: str) -> None:
+    """The crisis and calm dropdowns repeated at the top of a page, kept in sync with the sidebar."""
+    s = st.session_state
+    c1, c2 = st.columns(2)
+    for col, kind in ((c1, "crisis"), (c2, "calm")):
+        key = f"top_{kind}_{page}"
+        opts = event_options(kind)
+        s[key] = s[f"{kind}_id"] if s[f"{kind}_id"] in opts else opts[0]
+        labels = {e: event_label_for(e, s["pick_A"] + s["pick_B"], s["window_mode"]) for e in opts}
+        col.selectbox(f"{'🔴 Crisis' if kind == 'crisis' else '🟢 Calm'} to test against", opts, format_func=labels.get,
+                      key=key, on_change=_sync, args=(key, f"{kind}_id"))
+
+
+def event_label_for(eid: str, symbols: list[str], mode: str) -> str:
+    lab = event_label(eid)
+    if eid != "custom":
+        prob = coverage_problem(eid, symbols, mode)
+        if prob and "not supported" not in prob:
+            return f"⛔ {lab} — unavailable: {prob}"
+    return lab
+
+
+def story_cards(ctx: "Ctx") -> None:
+    c1, c2 = st.columns(2)
+    for col, ev, kind in ((c1, ctx.crisis_ev, "crisis"), (c2, ctx.calm_ev, "calm")):
+        w = ev["windows"].get(ctx.mode) or ev["windows"]["standard"]
+        col.html(f"<div class='ptm-card ptm-{kind}'><h4>{'🔴' if kind == 'crisis' else '🟢'} {ev['name']}</h4>"
+                 f"<div class='sub'>Window used: {w[0]} → {w[1]} ({'standard 252 days' if ctx.mode == 'standard' else 'event only'})</div>"
+                 f"<p style='margin:.4rem 0 0'>{ev['story']}</p></div>")
+
+
+# ---------------------------------------------------------------- phone chrome
+TABS = [("home", "🏠", "Home"), ("pick", "🧺", "Pick"), ("test1", "🌪️", "Test 1"), ("test2", "🔁", "Test 2"),
+        ("verdict", "✅", "Verdict")]
+MORE = [("start", "💰", "Your amount"), ("how", "🧭", "How it works"), ("call", "⚖️", "The risk call"),
+        ("weights", "🎯", "Optimum weights"), ("method", "📚", "Methodology & data")]
+
+PHONE_CSS = f"""
+<style>
+.block-container {{ padding: 4.2rem .85rem 6.5rem .85rem !important; }}
+.st-key-ptm_topbar {{ position: sticky; top: 3.1rem; z-index: 990; background: rgba(255,255,255,.96); backdrop-filter: blur(6px);
+  border-bottom: 1px solid #E8EAEE; margin: -.6rem -.85rem .6rem -.85rem; padding: .45rem .85rem; }}
+.st-key-ptm_topbar p {{ margin: 0; font-size: .82rem; line-height: 1.25; }}
+.st-key-ptm_topbar [data-testid="stPopover"] button {{ border-radius: 999px; padding: .25rem .8rem; min-height: 2.4rem; }}
+.st-key-ptm_tabbar {{ position: fixed; left: 0; right: 0; bottom: 0; z-index: 999; background: #fff; border-top: 1px solid #E3E6EB;
+  box-shadow: 0 -6px 18px rgba(31,36,48,.07); padding: .25rem .2rem calc(.3rem + env(safe-area-inset-bottom)); gap: 0 !important;
+  justify-content: space-around; }}
+.st-key-ptm_tabbar > div {{ flex: 1 1 0; min-width: 0; }}
+.st-key-ptm_tabbar a {{ display: flex !important; flex-direction: column; align-items: center; gap: 0; padding: .3rem .1rem !important;
+  border-radius: 12px; min-height: 3rem; justify-content: center; }}
+.st-key-ptm_tabbar a p, .st-key-ptm_tabbar a span {{ font-size: .68rem !important; line-height: 1.1; text-align: center; white-space: nowrap; }}
+.st-key-ptm_tabbar [data-testid="stPopover"] button {{ border: none; min-height: 3rem; font-size: .7rem; padding: .2rem; width: 100%; }}
+.ptm-tab-active a {{ background: #FCE9E4; }}
+.ptm-hero, h2 {{ font-size: 1.4rem !important; }}
+h4 {{ font-size: 1.05rem !important; }}
+.ptm-card {{ border-radius: 16px; box-shadow: 0 2px 10px rgba(31,36,48,.05); margin-bottom: .5rem; }}
+.ptm-card .big {{ font-size: 1.45rem; }}
+div[data-testid="stExpander"] details {{ border-radius: 14px; border-color: #D9DEF0; background: #F8F9FD; }}
+div[data-testid="stExpander"] summary {{ min-height: 3rem; font-weight: 600; }}
+button[kind="primary"], button[kind="secondary"] {{ min-height: 2.8rem; border-radius: 12px; }}
+[data-testid="stMetricValue"] {{ font-size: 1.35rem; }}
+.ptm-footer {{ margin-bottom: 1rem; }}
+</style>
+"""
+
+
+def top_bar(page_title: str):
+    """Sticky app header: page name, the client's amount, and the ⚙️ settings sheet. Returns the sheet's container."""
+    st.html(PHONE_CSS)
+    s = st.session_state
+    bar = st.container(key="ptm_topbar", horizontal=True, vertical_alignment="center", horizontal_alignment="distribute")
+    with bar:
+        a, b = amounts()
+        st.markdown(f"**⏳ {page_title.split(' — ')[0]}**  \n"
+                    f"<span style='color:#5B6170'>A {inr_short(a)} · B {inr_short(b)}</span>", unsafe_allow_html=True)
+        sheet = st.popover("⚙️", width="content", help="Settings: amount, events, confidence, horizon")
+    return sheet
+
+
+def tab_bar(pages: dict, current_title: str) -> None:
+    """Fixed bottom navigation, like a phone app."""
+    bar = st.container(key="ptm_tabbar", horizontal=True)
+    with bar:
+        for key, icon, label in TABS:
+            st.page_link(pages[key], label=label, icon=icon)
+        with st.popover("☰", width="stretch", help="More pages"):
+            for key, icon, label in MORE:
+                st.page_link(pages[key], label=label, icon=icon)

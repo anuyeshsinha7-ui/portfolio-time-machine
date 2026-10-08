@@ -33,6 +33,9 @@
   <script type="module">
     import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@{{STLITE_VERSION}}/build/stlite.js";
     const files = {{FILES}};
+    // Phones get the app-style layout: tell the Python side through the query string before Streamlit starts.
+    const u = new URL(window.location.href);
+    if (window.innerWidth < 768 && !u.searchParams.has("phone")) { u.searchParams.set("phone", "1"); history.replaceState(null, "", u); }
     const t0 = performance.now();
     window.__ptmBoot = { start: t0 };
     mount({

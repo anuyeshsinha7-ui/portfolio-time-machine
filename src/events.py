@@ -128,7 +128,8 @@ def resolve_all(close: pd.Series, mret: pd.Series, catalogue: list[dict] | None 
     ac = RG.auto_crisis(close)
     acal = RG.auto_calm(mret, exclude=[cur, (ac["start"], ac["end"])])
     out[AUTO_CRISIS] = {
-        "id": AUTO_CRISIS, "name": "Auto: deepest drawdown", "type": "crisis",
+        "id": AUTO_CRISIS, "name": f"{ac['peak'].year}{'' if ac['trough'].year == ac['peak'].year else '–' + str(ac['trough'].year)[2:]}"
+                                    " crash (deepest in the data)", "type": "crisis",
         "story": ("The window around the Nifty 50's deepest peak-to-trough fall in the whole sample, found by "
                   "the data with no human choice. It starts 21 trading days before the pre-crash peak."),
         "source": "Computed from the Nifty 50 snapshot",
@@ -138,7 +139,7 @@ def resolve_all(close: pd.Series, mret: pd.Series, catalogue: list[dict] | None 
         "notes": [], "available": True,
     }
     out[AUTO_CALM] = {
-        "id": AUTO_CALM, "name": "Auto: calmest year", "type": "calm",
+        "id": AUTO_CALM, "name": f"{acal['start'].year}–{str(acal['end'].year)[2:]} calm (calmest year in the data)", "type": "calm",
         "story": ("The 252-day stretch with the lowest Nifty 50 volatility in the sample that overlaps neither "
                   "the Current window nor the automatic crisis window."),
         "source": "Computed from the Nifty 50 snapshot",

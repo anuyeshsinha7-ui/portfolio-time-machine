@@ -8,7 +8,7 @@ from src import config
 from src import data as D
 from src import ui
 
-st.set_page_config(page_title=config.APP_NAME, page_icon="⏳", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title=config.APP_NAME, page_icon="⏳", layout="wide", initial_sidebar_state="auto")
 ui.init_state()
 ui.inject_css()
 
@@ -49,9 +49,14 @@ def _amount_changed(key: str, target: str) -> None:
         st.session_state["amount_error"] = str(e)
 
 
-with st.sidebar:
-    st.markdown(f"### ⏳ {config.APP_NAME}")
+def controls(where: str) -> None:
+    """Every setting. Rendered in the sidebar on wide screens and in the ⚙️ settings sheet on phones."""
     s = st.session_state
+    for kind in ("crisis", "calm"):  # an event the picks can't cover falls back to the official pick (before the widget exists)
+        prob = ui.coverage_problem(s[f"{kind}_id"], s["pick_A"] + s["pick_B"], s["window_mode"])
+        if prob:
+            s[f"{kind}_unavailable"] = prob
+            s[f"{kind}_id"] = ui.default_results()["official"][kind]
     if s["amount_confirmed"]:
         mode = s["amount_mode"]
         if mode == "split_total":
@@ -67,36 +72,50 @@ with st.sidebar:
         if s.get("amount_error"):
             st.error(s["amount_error"])
         st.selectbox("Amount mode", list(config.AMOUNT_MODES), format_func=config.AMOUNT_MODES.get, key="amount_mode")
-        st.divider()
-    st.selectbox("Which past **crisis** should we test against?", ui.event_options("crisis"),
-                 format_func=ui.event_label, key="crisis_id")
+    labels = {e: ui.event_label_for(e, s["pick_A"] + s["pick_B"], s["window_mode"])
+              for e in ui.event_options("crisis") + ui.event_options("calm")}
+    st.selectbox("Which past **crisis** should we test against?", ui.event_options("crisis"), format_func=labels.get, key="crisis_id")
     if s["crisis_id"] == "custom":
-        _c = st.date_input("Crisis date range (at least 126 trading days)", value=s.get("custom_crisis", ()),
-                           min_value=D.calendar()[0].date(), max_value=D.calendar()[-1].date())
-        if isinstance(_c, (list, tuple)) and len(_c) == 2:
-            s["custom_crisis"] = (str(_c[0]), str(_c[1]))
-    st.selectbox("Which past **calm** period?", ui.event_options("calm"), format_func=ui.event_label, key="calm_id")
+        c = st.date_input("Crisis date range (at least 126 trading days)", value=s.get("custom_crisis", ()),
+                          min_value=D.calendar()[0].date(), max_value=D.calendar()[-1].date(), key=f"cc_{where}")
+        if isinstance(c, (list, tuple)) and len(c) == 2:
+            s["custom_crisis"] = (str(c[0]), str(c[1]))
+    st.selectbox("Which past **calm** period?", ui.event_options("calm"), format_func=labels.get, key="calm_id")
     if s["calm_id"] == "custom":
-        _m = st.date_input("Calm date range (at least 126 trading days)", value=s.get("custom_calm", ()),
-                           min_value=D.calendar()[0].date(), max_value=D.calendar()[-1].date())
-        if isinstance(_m, (list, tuple)) and len(_m) == 2:
-            s["custom_calm"] = (str(_m[0]), str(_m[1]))
+        m = st.date_input("Calm date range (at least 126 trading days)", value=s.get("custom_calm", ()),
+                          min_value=D.calendar()[0].date(), max_value=D.calendar()[-1].date(), key=f"cm_{where}")
+        if isinstance(m, (list, tuple)) and len(m) == 2:
+            s["custom_calm"] = (str(m[0]), str(m[1]))
     for kind in ("crisis", "calm"):
-        prob = ui.coverage_problem(s[f"{kind}_id"], s["pick_A"] + s["pick_B"], s["window_mode"])
-        if prob:
-            st.warning(f"{kind.title()} event unavailable for your picks: {prob}. Showing the official pick instead.")
-            s[f"{kind}_id"] = ui.default_results()["official"][kind]
+        if s.get(f"{kind}_unavailable"):
+            st.warning(f"That {kind} event can't be tested with your picks ({s.pop(f'{kind}_unavailable')}); showing the official pick.")
     st.segmented_control("Window", ["standard", "event_only"], key="window_mode",
                          format_func={"standard": "Standard (252 days)", "event_only": "Event only"}.get, required=True)
     st.segmented_control("Confidence level", [0.95, 0.99], key="conf", format_func=lambda c: f"{c:.0%}", required=True)
     st.segmented_control("Horizon", [1, 10], key="horizon", format_func=lambda h: f"{h} day" + ("s" if h > 1 else ""), required=True)
-    st.toggle("Show the Backing", key="show_backing", help="Off = the client view at full width")
-    if st.button("Reset to team picks", width="stretch"):
+    st.toggle("Show the Backing", key="show_backing", help="Off = the client view only")
+    st.toggle("📱 Phone layout", key="phone", help="App-style layout for small screens (switched on automatically on phones)")
+    if st.button("Reset to team picks", width="stretch", key=f"reset_{where}"):
         ui.reset_team_picks()
         st.rerun()
     st.caption(f"Data as of **{D.as_of()}** · {ui.health_badge()}")
+
+
+if st.session_state["phone"]:
+    with st.sidebar:
+        st.markdown(f"### ⏳ {config.APP_NAME}")
+        st.caption("Settings live behind ⚙️ at the top of each page.")
+    if nav.title != PAGES["start"].title or st.session_state["amount_confirmed"]:
+        with ui.top_bar(nav.title):
+            controls("sheet")
+else:
+    with st.sidebar:
+        st.markdown(f"### ⏳ {config.APP_NAME}")
+        controls("sidebar")
 
 if not st.session_state["amount_confirmed"] and nav.title != PAGES["start"].title:
     st.switch_page(PAGES["start"])
 nav.run()
 ui.footer()
+if st.session_state["phone"] and st.session_state["amount_confirmed"]:
+    ui.tab_bar(PAGES, nav.title)
