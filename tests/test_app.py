@@ -30,14 +30,19 @@ def visit_all(at, pages=PAGES):
 
 
 def text(at) -> str:
-    return " ".join(m.value for m in at.markdown) + " ".join(str(h.value) for h in at.get("html") if hasattr(h, "value"))
+    """All visible text: markdown plus the app's HTML components."""
+    html = []
+    for h in at.get("html"):
+        body = getattr(getattr(h, "proto", None), "body", None)
+        html.append(str(body if body is not None else getattr(h, "value", "")))
+    return " ".join(m.value for m in at.markdown) + " " + " ".join(html)
 
 
 def test_start_page_gate_and_amount_parsing():
     at = AppTest.from_file(str(ROOT / "app.py"), default_timeout=120)
     at.run()
     assert not at.exception
-    assert any("How much would you like to invest?" in m.value for m in at.markdown)
+    assert "How much would you like to invest?" in text(at)
     at.text_input(key="start_amt").set_value("abc").run()
     assert at.error and not at.exception
     at.text_input(key="start_amt").set_value("1.5 crore").run()
@@ -64,7 +69,7 @@ def test_small_amount_warns_about_unbuyable_stocks():
     at = app(amount_a=10_000.0, amount_b=10_000.0)
     at.switch_page("views/05_weights.py").run()
     assert not at.exception
-    assert any("too small to buy" in w.value for w in at.warning)
+    assert "too small to buy" in text(at)
 
 
 @pytest.mark.parametrize("crisis", CRISES)

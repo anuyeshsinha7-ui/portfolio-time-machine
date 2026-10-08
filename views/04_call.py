@@ -4,41 +4,54 @@ import pandas as pd
 import streamlit as st
 
 from src import charts as CH
+from src.ui import compare
 from src import narrative as NR
 from src import ui
 
 ctx = ui.context()
 ev = ctx.evidence
-ui.page_header("call", "The risk call: why A is high risk and B is low risk",
-               f"Numbers from the trailing three years ({ev['window']['start']} → {ev['window']['end']}), the same window as the labels.")
 left, right = ui.split()
 a, b = ev["A"], ev["B"]
 vr = ev["vol_ratio"]
 
 with left:
-    st.markdown(f"<div class='ptm-verdict'>{NR.call_finding(ev, ctx.amount_a, ctx.amount_b)}</div>", unsafe_allow_html=True)
-    st.write("")
-    rows = [("How much it moves with the market (weighted beta)", f"{a['weighted_beta']:.2f}", f"{b['weighted_beta']:.2f}"),
-            ("How bumpy the ride is (volatility a year)", ui.pct(a["portfolio_vol"]), ui.pct(b["portfolio_vol"])),
-            ("…in rupees, a typical bad year (1 standard deviation)", ui.inr_short(a["portfolio_vol"] * ctx.amount_a),
-             ui.inr_short(b["portfolio_vol"] * ctx.amount_b)),
-            ("Worst peak-to-trough fall in 3 years", ui.pct(a["max_drawdown"]), ui.pct(b["max_drawdown"])),
-            ("…in rupees on your amount", ui.inr_short(a["max_drawdown"] * ctx.amount_a), ui.inr_short(b["max_drawdown"] * ctx.amount_b)),
-            ("How alike the stocks move (average correlation)", f"{a['avg_pairwise_corr']:.2f}", f"{b['avg_pairwise_corr']:.2f}"),
-            ("Share in large companies (Nifty 100)", ui.pct(a["cap_mix"].get("Large cap", 0), 0), ui.pct(b["cap_mix"].get("Large cap", 0), 0)),
-            ("Stocks with a matching label", f"{sum(v == 'High risk' for v in a['stock_labels'].values())} of {len(a['stock_labels'])}",
-             f"{sum(v == 'Low risk' for v in b['stock_labels'].values())} of {len(b['stock_labels'])}")]
-    st.dataframe(pd.DataFrame(rows, columns=["Evidence", "Portfolio A", "Portfolio B"]), hide_index=True, width="stretch")
-    sig = vr["significant"]
-    st.html(f"<div class='ptm-card ptm-{'a' if sig else 'n'}'><h4>Is the difference real or luck?</h4>"
-            f"<div class='big'>{vr['ratio']:.2f}× {ui.pill('statistically backed', 'ok') if sig else ui.pill('not significant', 'bad')}</div>"
-            f"<div class='sub'>A's volatility ÷ B's. Re-drawing the last three years {vr['resamples']} times, the ratio stays between "
-            f"<b>{vr['lo']:.2f}</b> and <b>{vr['hi']:.2f}</b> 95% of the time — {'entirely above 1, so A really is riskier.' if sig else 'the range includes 1.'}</div></div>")
-    st.markdown("#### Industry weights")
-    ui.show(CH.industry_bars({"Portfolio A": ctx.P["A"]["industry_weights"], "Portfolio B": ctx.P["B"]["industry_weights"]}))
+    ui.hero("Why A is the bold one", f"{vr['ratio']:.1f}× the ups and downs",
+            "Portfolio A swings about this much more than B — measured over the last 3 years", "a")
+    compare("If the market moves 10%, the portfolio tends to move…", a["weighted_beta"], b["weighted_beta"],
+            ui.pct(a["weighted_beta"] * 0.10, 0), ui.pct(b["weighted_beta"] * 0.10, 0), "Based on beta: how strongly each rides the market.")
+    compare("A typical bad year could swing your money by…", a["portfolio_vol"] * ctx.amount_a, b["portfolio_vol"] * ctx.amount_b,
+            ui.inr_short(a["portfolio_vol"] * ctx.amount_a), ui.inr_short(b["portfolio_vol"] * ctx.amount_b),
+            f"One standard deviation of yearly returns ({ui.pct(a['portfolio_vol'])} vs {ui.pct(b['portfolio_vol'])}).")
+    compare("Biggest fall from a peak in the last 3 years", a["max_drawdown"] * ctx.amount_a, b["max_drawdown"] * ctx.amount_b,
+            ui.inr_short(a["max_drawdown"] * ctx.amount_a), ui.inr_short(b["max_drawdown"] * ctx.amount_b))
+    compare("How much the stocks move together", a["avg_pairwise_corr"], b["avg_pairwise_corr"],
+            f"{a['avg_pairwise_corr']:.2f}", f"{b['avg_pairwise_corr']:.2f}", "Lower = better spread out (0 = independent, 1 = in lockstep).")
+    if vr["significant"]:
+        ui.note(f"<b>Not luck.</b> Re-running the last three years {vr['resamples']} times, A stays {vr['lo']:.1f}–{vr['hi']:.1f}× "
+                "bumpier than B in 95% of cases.", "✅", "good")
+    else:
+        ui.note(f"<b>Not clear-cut.</b> Re-running history, the ratio ranges {vr['lo']:.1f}–{vr['hi']:.1f}×, which includes 1.", "⚠️", "warn")
+    ui.section("Where your money goes", "by industry")
+    ui.show(CH.industry_bars({"A · Bold": ctx.P["A"]["industry_weights"], "B · Steady": ctx.P["B"]["industry_weights"]}))
+    big_a = a["cap_mix"].get("Large cap", 0)
+    big_b = b["cap_mix"].get("Large cap", 0)
+    ui.tiles([("Large companies in A", ui.pct(big_a, 0), "Nifty 100 members", "a"), ("Large companies in B", ui.pct(big_b, 0), "Nifty 100 members", "b")])
 
 if right is not None:
     with right:
+        st.caption(f"Trailing three years: {ev['window']['start']} → {ev['window']['end']} (the same window as the labels).")
+        st.markdown(f"<div class='ptm-verdict'>{NR.call_finding(ev, ctx.amount_a, ctx.amount_b)}</div>", unsafe_allow_html=True)
+        rows = [("Weighted beta Σwβ", f"{a['weighted_beta']:.2f}", f"{b['weighted_beta']:.2f}"),
+                ("Regression beta of the portfolio", f"{a['portfolio_beta']:.2f}", f"{b['portfolio_beta']:.2f}"),
+                ("Volatility √(wᵀΣw)", ui.pct(a["portfolio_vol"]), ui.pct(b["portfolio_vol"])),
+                ("Maximum drawdown", ui.pct(a["max_drawdown"]), ui.pct(b["max_drawdown"])),
+                ("Average pairwise correlation", f"{a['avg_pairwise_corr']:.2f}", f"{b['avg_pairwise_corr']:.2f}"),
+                ("Annualised return / Sharpe", f"{ui.pct(a['ann_return'])} / {a['sharpe']:.2f}", f"{ui.pct(b['ann_return'])} / {b['sharpe']:.2f}"),
+                ("Large-cap share", ui.pct(a["cap_mix"].get("Large cap", 0), 0), ui.pct(b["cap_mix"].get("Large cap", 0), 0)),
+                ("Stocks with matching label", f"{sum(v == 'High risk' for v in a['stock_labels'].values())}/{len(a['stock_labels'])}",
+                 f"{sum(v == 'Low risk' for v in b['stock_labels'].values())}/{len(b['stock_labels'])}"),
+                ("σA/σB with 95% bootstrap CI", f"{vr['ratio']:.2f} ({vr['lo']:.2f}–{vr['hi']:.2f})", "")]
+        st.dataframe(pd.DataFrame(rows, columns=["Evidence", "A", "B"]), hide_index=True, width="stretch")
         st.markdown("#### Portfolio beta, worked")
         st.latex(r"\beta_p = \sum_i w_i\,\beta_i")
         for k, e in (("A", a), ("B", b)):

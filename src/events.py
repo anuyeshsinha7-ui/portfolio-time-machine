@@ -181,6 +181,18 @@ def resolve_all(close: pd.Series, mret: pd.Series, catalogue: list[dict] | None 
         wa = out[a]["windows"]["standard"]
         out[a]["overlaps"] = [out[b]["name"] for b in ids if b != a and out[b]["windows"]["standard"]
                               and RG.overlaps(wa, out[b]["windows"]["standard"])]
+    # the automatic picks borrow the plain-language story of the catalogue event they coincide with
+    for auto in (AUTO_CRISIS, AUTO_CALM):
+        a = out[auto]
+        for k, v in out.items():
+            if k in (AUTO_CRISIS, AUTO_CALM) or not v.get("available") or v["type"] != a["type"]:
+                continue
+            ws, wa = v["windows"]["standard"], a["windows"]["standard"]
+            if ws and abs((ws[0] - wa[0]).days) <= 31 and abs((ws[1] - wa[1]).days) <= 31:
+                a["story"] = v["story"] + " (Picked automatically: " + ("the deepest fall in our data.)" if auto == AUTO_CRISIS
+                                                                       else "the calmest year in our data.)")
+                a["source"] = v["source"]
+                break
     for k, v in out.items():
         v["label"] = label(v, close)
     return out

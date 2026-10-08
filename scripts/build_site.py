@@ -38,7 +38,7 @@ def app_file_list() -> list[str]:
 
 
 def write_loader(files: list[str]) -> None:
-    theme = {"theme.base": "light", "theme.primaryColor": config.COLOR_ACCENT, "theme.backgroundColor": config.COLOR_BG,
+    theme = {"theme.base": "dark", "theme.primaryColor": config.COLOR_ACCENT, "theme.backgroundColor": config.COLOR_BG,
              "theme.secondaryBackgroundColor": config.COLOR_PANEL, "theme.textColor": config.COLOR_INK,
              "theme.font": "sans serif", "client.toolbarMode": "minimal"}
     file_map = {f: {"url": f"files/{f}"} for f in files}
