@@ -46,3 +46,8 @@ Every default chosen without asking the team. ⚠️ marks an item the team shou
 31. **"Greyed-out" events:** Streamlit select boxes cannot disable single options, so an event the chosen stocks cannot cover is labelled "unavailable — {stock} listed in {year}" in the dropdown; picking it shows the reason and falls back to the official pick.
 32. **Phone layout (added at the team's request: "a working mobile app interface").** On screens under 768 px the stlite loader adds `?phone=1` (locally, a mobile User-Agent does the same; a "📱 Phone layout" toggle overrides). Phone mode gives an app-style sticky top bar (page name, amounts, ⚙️ settings sheet holding every sidebar control), a fixed bottom tab bar (Home · Pick · Test 1 · Test 2 · Verdict · ☰ more), The Backing as a tap-to-open section under each page, shorter charts and larger touch targets. Desktop keeps the side-by-side split.
 33. **Auto picks are named after what the data found** ("2008 crash (deepest in the data)", "2017–18 calm (calmest year in the data)") and tagged "Auto ·" in the dropdowns.
+
+## Deployment
+
+34. **Public repository** `anuyeshsinha7-ui/portfolio-time-machine`, GitHub Pages built by Actions (`.github/workflows/deploy.yml`): pytest (unit + AppTest) → precompute → build `_site/` → Playwright smoke test (landing page, amount hand-off, every page on desktop and phone) → deploy. The Playwright test ran reliably in CI, so it stays in the workflow. Runner pinned to `ubuntu-24.04` to avoid the `ubuntu-latest` migration on 19 Oct 2026.
+35. **No teammates added as collaborators** — none were listed in the brief. Add them with `gh repo edit … ` or Settings → Collaborators.

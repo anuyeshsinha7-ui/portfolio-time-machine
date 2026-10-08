@@ -58,12 +58,12 @@ NAV_PHONE = {"home": "Home", "how": "How it works", "pick": "Pick", "call": "The
              "test1": "Test 1", "test2": "Test 2", "verdict": "Verdict", "methodology": "Methodology & data"}
 
 
-def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int = 2500000) -> list[str]:
+def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int = 2500000, url: str | None = None) -> list[str]:
     from playwright.sync_api import sync_playwright
 
     problems: list[str] = []
-    srv = serve(site, port)
-    base = f"http://127.0.0.1:{port}"
+    srv = None if url else serve(site, port)
+    base = (url or f"http://127.0.0.1:{port}").rstrip("/")
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch()
@@ -75,6 +75,7 @@ def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int =
                 # landing page and amount hand-off
                 t0 = time.time()
                 page.goto(base + "/")
+                print(f"[{label}] landing page loaded in {time.time() - t0:.1f}s")
                 if "Portfolio Time Machine" not in page.title():
                     problems.append(f"{label}: landing page title missing")
                 if screens:
@@ -104,7 +105,8 @@ def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int =
                 ctx.close()
             browser.close()
     finally:
-        srv.shutdown()
+        if srv:
+            srv.shutdown()
     return problems
 
 
@@ -120,9 +122,10 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--screens", type=Path)
     ap.add_argument("--port", type=int, default=8791)
+    ap.add_argument("--url", help="test a deployed site instead of _site/")
     a = ap.parse_args()
     if a.screens:
         a.screens.mkdir(parents=True, exist_ok=True)
-    probs = run(ROOT / "_site", a.port, a.screens)
+    probs = run(ROOT / "_site", a.port, a.screens, url=a.url)
     print("\n".join(probs) if probs else "ALL PAGES OK")
     sys.exit(1 if probs else 0)
