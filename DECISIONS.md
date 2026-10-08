@@ -38,3 +38,9 @@ Every default chosen without asking the team. ⚠️ marks an item the team shou
 26. **Monte Carlo Student-t:** degrees of freedom fitted by maximum likelihood to the window's standardised portfolio returns, floored at 3; asset scale matrix Σ·(ν−2)/ν so the simulated covariance equals the sample covariance; seed 42, 10,000 draws.
 27. **Historical VaR** = the k-th worst return with k = ⌊n(1−c)⌋ (e.g. 2nd worst of 252 at 99%); ES = mean of the k worst. Cornish–Fisher ES averages the (monotone-rearranged) CF quantile over the tail.
 28. **Pure formatting helpers live in `src/fmt.py`** (not `ui.py`) so the analytics, narrative and landing-page builder can format rupees without importing Streamlit; `ui.py` re-exports them.
+
+## Interface
+
+29. **stlite boot proven before building pages:** a minimal app (Start + Home + sidebar dropdowns, all of `src/`) booted in headless Chromium from `_site/` in about 12 s; `st.navigation`, multi-file imports, `st.query_params` and `st.graphviz_chart` all work under stlite 1.9.2, so no fallbacks were needed. The landing page → dashboard amount hand-off (`app/?amount=…`) works.
+30. **Browser packages:** numpy, pandas, scipy (Pyodide builds) + plotly 5.24.1 and openpyxl 3.1.5 (PyPI wheels).
+31. **"Greyed-out" events:** Streamlit select boxes cannot disable single options, so an event the chosen stocks cannot cover is labelled "unavailable — {stock} listed in {year}" in the dropdown; picking it shows the reason and falls back to the official pick.

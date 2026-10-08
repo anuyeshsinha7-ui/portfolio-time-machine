@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>{{APP_NAME}} — interactive dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏳</text></svg>" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@{{STLITE_VERSION}}/build/stlite.css" />
+  <style>
+    #ptm-loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1F2430; z-index: 10; padding: 16px; }
+    #ptm-loading .box { max-width: 460px; text-align: center; }
+    #ptm-loading h1 { font-size: 1.35rem; margin: 0 0 .5rem; }
+    #ptm-loading p { color: #5B6170; line-height: 1.5; margin: .3rem 0; }
+    #ptm-loading .bar { height: 6px; background: #F1F2F5; border-radius: 99px; overflow: hidden; margin: 1rem 0 .4rem; }
+    #ptm-loading .bar span { display: block; height: 100%; width: 40%; background: linear-gradient(90deg, #E8735A, #3B7DD8);
+      border-radius: 99px; animation: slide 1.6s ease-in-out infinite; }
+    @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
+    #ptm-loading .err { color: #8E2424; display: none; }
+  </style>
+</head>
+<body>
+  <div id="ptm-loading"><div class="box">
+    <h1>⏳ Starting the Portfolio Time Machine…</h1>
+    <p>The dashboard runs Python <b>inside your browser</b> — no server. The first visit downloads the Python runtime
+       (about 30&nbsp;MB, cached afterwards), so it can take 15–30 seconds.</p>
+    <div class="bar"><span></span></div>
+    <p id="ptm-step">Downloading Python…</p>
+    <p class="err" id="ptm-err">This is taking longer than usual. Check your connection, or use the summary on the
+       <a href="../">landing page</a>.</p>
+  </div></div>
+  <div id="root"></div>
+  <script type="module">
+    import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@{{STLITE_VERSION}}/build/stlite.js";
+    const files = {{FILES}};
+    const t0 = performance.now();
+    window.__ptmBoot = { start: t0 };
+    mount({
+      requirements: {{REQUIREMENTS}},
+      entrypoint: "app.py",
+      files,
+      streamlitConfig: {{CONFIG}},
+    }, document.getElementById("root"));
+    const steps = ["Downloading Python…", "Installing pandas, NumPy, SciPy and Plotly…", "Loading the data snapshot…", "Almost there…"];
+    let i = 0;
+    const ticker = setInterval(() => { i = Math.min(i + 1, steps.length - 1); document.getElementById("ptm-step").textContent = steps[i]; }, 6000);
+    setTimeout(() => { document.getElementById("ptm-err").style.display = "block"; }, 90000);
+    const ready = () => document.querySelector('[data-testid="stMarkdownContainer"], [data-testid="stHeading"], [data-testid="stException"], [data-testid="stAlert"]');
+    const obs = new MutationObserver(() => {
+      if (ready()) {
+        document.getElementById("ptm-loading").remove();
+        window.__ptmBoot.ready = performance.now() - t0;
+        console.log("PTM ready in", Math.round(window.__ptmBoot.ready), "ms");
+        clearInterval(ticker);
+        obs.disconnect();
+      }
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+  </script>
+</body>
+</html>
