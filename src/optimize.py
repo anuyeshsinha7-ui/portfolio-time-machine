@@ -7,6 +7,7 @@ explicit constraint check. Local tests cross-check against cvxpy.
 """
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -116,7 +117,8 @@ def random_feasible(n: int, cons: Constraints, k: int, seed: int = config.SEED, 
 
 def _starts(n, cons, extra=None, k=4):
     s = [np.full(n, 1 / n)]
-    s += list(random_feasible(n, cons, k, seed=config.SEED + 7))
+    if k > 0:
+        s += list(random_feasible(n, cons, k, seed=config.SEED + 7))
     if extra is not None:
         s.insert(0, np.asarray(extra, dtype=float))
     return s
@@ -126,9 +128,11 @@ def _solve(obj, jac, n, cons, mu=None, target=None, x0=None, starts=4):
     bounds = [(cons.w_min, cons.w_max)] * n
     best = None
     for s in _starts(n, cons, x0, starts):
-        res = minimize(obj, s, jac=jac, method="SLSQP", bounds=bounds,
-                       constraints=_scipy_constraints(cons, n, mu, target),
-                       options={"ftol": 1e-14, "maxiter": 1000})
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)  # SLSQP clips steps to the bounds; checked below
+            res = minimize(obj, s, jac=jac, method="SLSQP", bounds=bounds,
+                           constraints=_scipy_constraints(cons, n, mu, target),
+                           options={"ftol": 1e-14, "maxiter": 1000})
         w = np.clip(res.x, cons.w_min, cons.w_max)
         w = w / w.sum()
         viol = check(w, cons)
@@ -144,9 +148,9 @@ def _solve(obj, jac, n, cons, mu=None, target=None, x0=None, starts=4):
     return best[1]
 
 
-def min_variance(mu, S, cons: Constraints, x0=None) -> np.ndarray:
+def min_variance(mu, S, cons: Constraints, x0=None, starts: int = 4) -> np.ndarray:
     S = np.asarray(S)
-    return _solve(lambda w: w @ S @ w, lambda w: 2 * S @ w, len(S), cons, x0=x0)
+    return _solve(lambda w: w @ S @ w, lambda w: 2 * S @ w, len(S), cons, x0=x0, starts=starts)
 
 
 def max_sharpe(mu, S, cons: Constraints, rf: float = config.RISK_FREE_RATE, x0=None) -> tuple[np.ndarray, bool]:
@@ -171,9 +175,10 @@ def max_sharpe(mu, S, cons: Constraints, rf: float = config.RISK_FREE_RATE, x0=N
     return w, False
 
 
-def target_return(mu, S, cons: Constraints, target: float, x0=None) -> np.ndarray:
+def target_return(mu, S, cons: Constraints, target: float, x0=None, starts: int = 4) -> np.ndarray:
     S = np.asarray(S)
-    return _solve(lambda w: w @ S @ w, lambda w: 2 * S @ w, len(S), cons, mu=np.asarray(mu), target=target, x0=x0)
+    return _solve(lambda w: w @ S @ w, lambda w: 2 * S @ w, len(S), cons, mu=np.asarray(mu), target=target,
+                  x0=x0, starts=starts)
 
 
 def max_return(mu, cons: Constraints) -> tuple[float, np.ndarray]:
@@ -206,7 +211,7 @@ def frontier(mu, S, cons: Constraints, points: int = config.FRONTIER_POINTS) -> 
     prev = w_mv
     for t in targets:
         try:
-            w = target_return(mu, S, cons, float(t), x0=prev) if t > r_min + 1e-10 else w_mv
+            w = target_return(mu, S, cons, float(t), x0=prev, starts=0) if t > r_min + 1e-10 else w_mv
         except RuntimeError:
             w = w_rmax if t >= r_max - 1e-9 else prev
         prev = w
@@ -244,10 +249,10 @@ def target_case(target: float, r_minvar: float, r_max: float) -> str:
     return "reachable"
 
 
-def solve_target_case(mu, S, cons: Constraints, target: float) -> dict:
+def solve_target_case(mu, S, cons: Constraints, target: float, starts: int = 4) -> dict:
     """§6.9: minimise variance s.t. μ·w ≥ min(target, R_max); report which case applied."""
     mu, S = np.asarray(mu), np.asarray(S)
-    w_mv = min_variance(mu, S, cons)
+    w_mv = min_variance(mu, S, cons, starts=starts)
     r_mv = float(mu @ w_mv)
     r_max, w_rmax = max_return(mu, cons)
     case = target_case(target, r_mv, r_max)
@@ -255,11 +260,11 @@ def solve_target_case(mu, S, cons: Constraints, target: float) -> dict:
         w = w_mv
     elif case == "unreachable":
         try:
-            w = target_return(mu, S, cons, r_max - 1e-9, x0=w_rmax)
+            w = target_return(mu, S, cons, r_max - 1e-9, x0=w_rmax, starts=starts)
         except RuntimeError:
             w = w_rmax
     else:
-        w = target_return(mu, S, cons, target, x0=w_mv)
+        w = target_return(mu, S, cons, target, x0=w_mv, starts=starts)
     return {"weights": w, "case": case, "r_minvar": r_mv, "r_max": r_max, **port_stats(w, mu, S)}
 
 

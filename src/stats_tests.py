@@ -73,3 +73,16 @@ def bootstrap_target_weights(R: pd.DataFrame, solve, resamples: int, block: int 
         if progress is not None:
             progress((i + 1) / resamples)
     return np.array(out)
+
+
+def breach_test(calibration: np.ndarray, test: np.ndarray, c: float, dates=None) -> dict:
+    """Historical VaR calibrated on one window, breaches counted in another, Kupiec POF test."""
+    from .var_es import historical
+
+    var, _ = historical(np.asarray(calibration), c)
+    test = np.asarray(test, dtype=float)
+    hit = test < -var
+    k = kupiec(int(hit.sum()), int(len(test)), c)
+    k["var"] = var
+    k["breach_dates"] = [str(d) for d, h in zip(dates, hit) if h] if dates is not None else []
+    return k

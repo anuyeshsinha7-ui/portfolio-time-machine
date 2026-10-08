@@ -2,10 +2,11 @@
 
 Dates in data/events.json are only *search ranges*. The window itself comes from the Nifty 50:
 * crisis → the deepest peak-to-trough fall inside the range;
-* calm   → the lowest-volatility CALM_ANCHOR_DAYS stretch inside the range.
+* calm   → the lowest-volatility stretch inside the range.
 Two window modes:
-* standard   → REGIME_DAYS (252) days: crises start EVENT_PRE_DAYS before the peak; calm windows are
-               centred on the calm stretch. Equal length everywhere, so comparisons are fair.
+* standard   → REGIME_DAYS (252) days: crises start EVENT_PRE_DAYS before the peak; a calm window is the
+               lowest-volatility 252-day window whose midpoint lies in the range. Equal length everywhere,
+               so comparisons are fair.
 * event_only → crisis: peak to trough; calm: the calm stretch; padded symmetrically to MIN_WINDOW_DAYS.
 No window may overlap the Current window: a window that would is slid earlier (same length) and the
 label says so; if the event no longer fits, it is marked unavailable.
@@ -37,14 +38,30 @@ def anchor_crisis(close: pd.Series, start, end) -> dict:
     return {"peak": peak, "trough": trough, "fall": fall}
 
 
-def anchor_calm(mret: pd.Series, start, end, days: int = config.CALM_ANCHOR_DAYS) -> dict:
-    r = mret.loc[pd.Timestamp(start):pd.Timestamp(end)]
+def anchor_calm(mret: pd.Series, start, end, days: int = config.CALM_ANCHOR_DAYS,
+                n: int = config.REGIME_DAYS) -> dict:
+    """Lowest-volatility `days` stretch inside the range (event-only window) and the lowest-volatility
+    n-day window whose midpoint lies inside the range (standard window)."""
+    s, e = pd.Timestamp(start), pd.Timestamp(end)
+    r = mret.loc[s:e]
     days = min(days, len(r))
     rv = r.rolling(days).std(ddof=1).dropna()
-    e = rv.idxmin()
-    epos = r.index.get_loc(e)
-    s = r.index[epos - days + 1]
-    return {"calm_start": s, "calm_end": e, "calm_vol": float(rv.min() * np.sqrt(config.TRADING_DAYS))}
+    ce = rv.idxmin()
+    epos = r.index.get_loc(ce)
+    cs = r.index[epos - days + 1]
+    cal = mret.index
+    roll = mret.rolling(n).std(ddof=1)
+    best, best_v = None, np.inf
+    for end_pos in range(n - 1, len(cal)):
+        mid = cal[end_pos - n // 2]
+        if mid < s or mid > e:
+            continue
+        v = roll.iloc[end_pos]
+        if v < best_v:
+            best, best_v = (cal[end_pos - n + 1], cal[end_pos]), v
+    return {"calm_start": cs, "calm_end": ce, "calm_vol": float(rv.min() * np.sqrt(config.TRADING_DAYS)),
+            "std_start": best[0] if best else None, "std_end": best[1] if best else None,
+            "std_vol": float(best_v * np.sqrt(config.TRADING_DAYS)) if best else None}
 
 
 def _pad(cal, s: int, e: int, min_days: int) -> tuple[int, int]:
@@ -71,8 +88,12 @@ def build_windows(anchor: dict, kind: str, cal: pd.DatetimeIndex, current: tuple
         must_contain = (p, p)  # the peak must stay inside
     else:
         a, b = _pos(cal, anchor["calm_start"]), _pos(cal, anchor["calm_end"])
-        mid = (a + b) // 2
-        std = (mid - n // 2, mid - n // 2 + n - 1)
+        if anchor.get("std_start") is not None:
+            sa = _pos(cal, anchor["std_start"])
+            std = (sa, sa + n - 1)
+        else:
+            mid = (a + b) // 2
+            std = (mid - n // 2, mid - n // 2 + n - 1)
         ev = _pad(cal, a, b, mn)
         must_contain = (a, b)
     out, notes = {}, []
