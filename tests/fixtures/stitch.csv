@@ -1,0 +1,11 @@
+# TEST DATA - hand-made fixture for unit tests, NOT market data
+# old symbol trades to 2024-01-10, new symbol from 2024-01-09 (2 overlapping days that agree)
+Date,old,new,new_bad
+2024-01-03,90,,
+2024-01-04,91,,
+2024-01-05,92,,
+2024-01-08,93,,
+2024-01-09,94,94.2,110
+2024-01-10,95,95.1,111
+2024-01-11,,96,112
+2024-01-12,,97,113

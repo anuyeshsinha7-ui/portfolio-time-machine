@@ -1,0 +1,201 @@
+symbol,company,industry,cap_bucket,isin,status,first_date,n_days,reason,adj_close_max_gap,nse_anchor_matched,yahoo_level_fixes,dividend_source
+360ONE,360 ONE WAM Ltd.,Financial Services,Mid cap,INE466L01038,extended,2019-10-04,1735,history starts 2019-10-04 — usable for custom picks; events before it are greyed out,0.07044,85,1,NSE corporate actions
+ABB,ABB India Ltd.,Capital Goods,Large cap,INE117A01022,core,2007-09-17,4689,,0.10149,230,1,NSE corporate actions
+APLAPOLLO,APL Apollo Tubes Ltd.,Capital Goods,Mid cap,INE702C01027,extended,2011-12-14,3651,history starts 2011-12-14 — usable for custom picks; events before it are greyed out,0.01516,179,0,NSE corporate actions
+AUBANK,AU Small Finance Bank Ltd.,Financial Services,Mid cap,INE949L01017,extended,2017-07-11,2284,history starts 2017-07-11 — usable for custom picks; events before it are greyed out,0.02481,112,0,NSE corporate actions
+ADANIENSOL,Adani Energy Solutions Ltd.,Power,Large cap,INE931S01010,extended,2015-08-14,2751,history starts 2015-08-14 — usable for custom picks; events before it are greyed out,0.0044,127,0,yfinance action history
+ADANIENT,Adani Enterprises Ltd.,Metals & Mining,Large cap,INE423A01024,core,2007-09-17,4689,,0.37859,231,3,NSE corporate actions
+ADANIGREEN,Adani Green Energy Ltd.,Power,Large cap,INE364U01010,extended,2018-06-18,2051,history starts 2018-06-18 — usable for custom picks; events before it are greyed out,0.00496,98,0,yfinance action history
+ADANIPORTS,Adani Ports and Special Economic Zone Ltd.,Services,Large cap,INE742F01042,extended,2007-11-27,4640,history starts 2007-11-27 — usable for custom picks; events before it are greyed out,0.01904,228,1,NSE corporate actions
+ADANIPOWER,Adani Power Ltd.,Power,Large cap,INE814H01029,extended,2009-08-20,4219,history starts 2009-08-20 — usable for custom picks; events before it are greyed out,0.00968,198,0,yfinance action history
+ATGL,Adani Total Gas Ltd.,Oil Gas & Consumable Fuels,Mid cap,INE399L01023,extended,2018-11-05,1957,history starts 2018-11-05 — usable for custom picks; events before it are greyed out,0.00936,88,0,NSE corporate actions
+ABCAPITAL,Aditya Birla Capital Ltd.,Financial Services,Mid cap,INE674K01013,extended,2017-09-15,2238,history starts 2017-09-15 — usable for custom picks; events before it are greyed out,0.02886,110,0,yfinance action history
+AMBUJACEM,Ambuja Cements Ltd.,Construction Materials,Large cap,INE079A01024,core,2007-09-17,4689,,0.02812,231,0,NSE corporate actions
+APARINDS,Apar Industries Ltd.,Capital Goods,Mid cap,INE372A01015,core,2007-09-17,4689,,0.08099,231,0,NSE corporate actions
+APOLLOHOSP,Apollo Hospitals Enterprise Ltd.,Healthcare,Large cap,INE437A01024,core,2007-09-17,4689,,0.01464,231,0,NSE corporate actions
+ASHOKLEY,Ashok Leyland Ltd.,Capital Goods,Mid cap,INE208A01029,core,2007-09-17,4689,,0.0266,231,0,NSE corporate actions
+ASIANPAINT,Asian Paints Ltd.,Consumer Durables,Large cap,INE021A01026,core,2007-09-17,4689,,0.02451,231,0,NSE corporate actions
+ASTRAL,Astral Ltd.,Capital Goods,Mid cap,INE006I01046,core,2007-09-17,4689,,0.01308,231,0,NSE corporate actions
+AUROPHARMA,Aurobindo Pharma Ltd.,Healthcare,Mid cap,INE406A01037,core,2007-09-17,4689,,0.03418,231,0,NSE corporate actions
+DMART,Avenue Supermarts Ltd.,Consumer Services,Large cap,INE192R01011,extended,2017-03-21,2360,history starts 2017-03-21 — usable for custom picks; events before it are greyed out,0.00224,114,0,yfinance action history
+AXISBANK,Axis Bank Ltd.,Financial Services,Large cap,INE238A01034,core,2007-09-17,4689,,0.01771,231,0,NSE corporate actions
+BSE,BSE Ltd.,Financial Services,Large cap,INE118H01025,extended,2017-02-03,2390,history starts 2017-02-03 — usable for custom picks; events before it are greyed out,0.04653,117,0,NSE corporate actions
+BAJAJ-AUTO,Bajaj Auto Ltd.,Automobile and Auto Components,Large cap,INE917I01010,extended,2008-05-26,4520,history starts 2008-05-26 — usable for custom picks; events before it are greyed out,0.01701,222,0,NSE corporate actions
+BAJFINANCE,Bajaj Finance Ltd.,Financial Services,Large cap,INE296A01032,core,2007-09-17,4689,,0.01191,231,3,NSE corporate actions
+BAJAJFINSV,Bajaj Finserv Ltd.,Financial Services,Large cap,INE918I01026,extended,2008-05-26,4520,history starts 2008-05-26 — usable for custom picks; events before it are greyed out,0.0144,222,2,NSE corporate actions
+BAJAJHLDNG,Bajaj Holdings & Investment Ltd.,Financial Services,Large cap,INE118A01012,core,2007-09-17,4689,,0.63785,231,0,NSE corporate actions
+BANKBARODA,Bank of Baroda,Financial Services,Large cap,INE028A01039,core,2007-09-17,4689,,0.03139,231,0,NSE corporate actions
+BANKINDIA,Bank of India,Financial Services,Mid cap,INE084A01016,core,2007-09-17,4689,,0.03987,231,0,NSE corporate actions
+MAHABANK,Bank of Maharashtra,Financial Services,Mid cap,INE457A01014,core,2007-09-17,4689,,0.03328,231,0,NSE corporate actions
+BDL,Bharat Dynamics Ltd.,Capital Goods,Mid cap,INE171Z01026,extended,2018-03-23,2109,history starts 2018-03-23 — usable for custom picks; events before it are greyed out,0.01775,104,0,NSE corporate actions
+BEL,Bharat Electronics Ltd.,Capital Goods,Large cap,INE263A01024,core,2007-09-17,4689,,0.01922,231,0,NSE corporate actions
+BHARATFORG,Bharat Forge Ltd.,Automobile and Auto Components,Mid cap,INE465A01025,core,2007-09-17,4689,,0.02193,231,0,NSE corporate actions
+BHEL,Bharat Heavy Electricals Ltd.,Capital Goods,Mid cap,INE257A01026,core,2007-09-17,4689,,0.04324,231,0,NSE corporate actions
+BPCL,Bharat Petroleum Corporation Ltd.,Oil Gas & Consumable Fuels,Large cap,INE029A01011,core,2007-09-17,4689,,0.05362,231,0,NSE corporate actions
+BHARTIARTL,Bharti Airtel Ltd.,Telecommunication,Large cap,INE397D01024,core,2007-09-17,4689,,0.00835,231,2,NSE corporate actions
+GROWW,Billionbrains Garage Ventures Ltd.,Financial Services,Mid cap,INE0HOQ01053,excluded,2025-11-12,224,"history starts 2025-11-12 — under 3 years, too short for the risk label",0.0,12,0,yfinance action history
+BIOCON,Biocon Ltd.,Healthcare,Mid cap,INE376G01013,core,2007-09-17,4689,,0.0093,231,0,NSE corporate actions
+BLUESTARCO,Blue Star Ltd.,Consumer Durables,Mid cap,INE472A01039,core,2007-09-17,4689,,0.07103,231,0,NSE corporate actions
+BOSCHLTD,Bosch Ltd.,Automobile and Auto Components,Large cap,INE323A01026,core,2007-09-17,4689,,0.03787,231,0,NSE corporate actions
+BRITANNIA,Britannia Industries Ltd.,Fast Moving Consumer Goods,Large cap,INE216A01030,core,2007-09-17,4689,,0.01998,231,0,NSE corporate actions
+CGPOWER,CG Power and Industrial Solutions Ltd.,Capital Goods,Large cap,INE067A01029,core,2007-09-17,4689,,0.18222,222,1,NSE corporate actions
+CANBK,Canara Bank,Financial Services,Large cap,INE476A01022,core,2007-09-17,4689,,0.03066,231,1,NSE corporate actions
+CHOLAFIN,Cholamandalam Investment and Finance Company Ltd.,Financial Services,Large cap,INE121A01024,core,2007-09-17,4689,,0.04098,229,0,NSE corporate actions
+CIPLA,Cipla Ltd.,Healthcare,Large cap,INE059A01026,core,2007-09-17,4689,,0.01075,231,0,NSE corporate actions
+COALINDIA,Coal India Ltd.,Oil Gas & Consumable Fuels,Large cap,INE522F01014,extended,2010-11-04,3920,history starts 2010-11-04 — usable for custom picks; events before it are greyed out,0.0092,192,0,NSE corporate actions
+COCHINSHIP,Cochin Shipyard Ltd.,Capital Goods,Mid cap,INE704P01025,extended,2017-08-11,2261,history starts 2017-08-11 — usable for custom picks; events before it are greyed out,0.03488,108,0,NSE corporate actions
+COFORGE,Coforge Ltd.,Information Technology,Mid cap,INE591G01025,core,2007-09-17,4689,,0.02728,231,0,NSE corporate actions
+COLPAL,Colgate Palmolive (India) Ltd.,Fast Moving Consumer Goods,Mid cap,INE259A01022,extended,2007-12-17,4626,history starts 2007-12-17 — usable for custom picks; events before it are greyed out,0.02449,230,0,NSE corporate actions
+CONCOR,Container Corporation of India Ltd.,Services,Mid cap,INE111A01025,core,2007-09-17,4689,,0.2278,231,1,NSE corporate actions
+CUMMINSIND,Cummins India Ltd.,Capital Goods,Large cap,INE298A01020,core,2007-09-17,4689,,0.0236,231,0,NSE corporate actions
+DLF,DLF Ltd.,Realty,Large cap,INE271C01023,core,2007-09-17,4689,,0.02936,231,0,NSE corporate actions
+DABUR,Dabur India Ltd.,Fast Moving Consumer Goods,Mid cap,INE016A01026,core,2007-09-17,4689,,0.00808,231,0,NSE corporate actions
+DIVISLAB,Divi's Laboratories Ltd.,Healthcare,Large cap,INE361B01024,core,2007-09-17,4689,,0.018,231,0,NSE corporate actions
+DIXON,Dixon Technologies (India) Ltd.,Consumer Durables,Mid cap,INE935N01020,extended,2017-09-18,2237,history starts 2017-09-18 — usable for custom picks; events before it are greyed out,0.0284,110,0,NSE corporate actions
+DRREDDY,Dr. Reddy's Laboratories Ltd.,Healthcare,Large cap,INE089A01031,core,2007-09-17,4689,,0.0113,231,0,NSE corporate actions
+EICHERMOT,Eicher Motors Ltd.,Automobile and Auto Components,Large cap,INE066A01021,core,2007-09-17,4689,,0.03284,231,0,NSE corporate actions
+ETERNAL,Eternal Ltd.,Consumer Services,Large cap,INE758T01015,extended,2021-07-23,1288,history starts 2021-07-23 — usable for custom picks; events before it are greyed out,0.07119,64,0,yfinance action history
+EXIDEIND,Exide Industries Ltd.,Automobile and Auto Components,Mid cap,INE302A01020,core,2007-09-17,4689,,0.02574,231,1,NSE corporate actions
+NYKAA,FSN E-Commerce Ventures Ltd.,Consumer Services,Mid cap,INE388Y01029,extended,2021-11-10,1214,history starts 2021-11-10 — usable for custom picks; events before it are greyed out,0.01359,60,0,yfinance action history
+FEDERALBNK,Federal Bank Ltd.,Financial Services,Mid cap,INE171A01029,core,2007-09-17,4689,,0.01809,231,1,NSE corporate actions
+FORTIS,Fortis Healthcare Ltd.,Healthcare,Mid cap,INE061F01013,core,2007-09-17,4689,,0.02816,231,0,NSE corporate actions
+GAIL,GAIL (India) Ltd.,Oil Gas & Consumable Fuels,Large cap,INE129A01019,core,2007-09-17,4689,,0.041,231,0,NSE corporate actions
+GVT&D,GE Vernova T&D India Ltd.,Capital Goods,Mid cap,INE200A01026,extended,2017-01-10,2407,history starts 2017-01-10 — usable for custom picks; events before it are greyed out,0.08509,202,6,NSE corporate actions
+GMRAIRPORT,GMR Airports Ltd.,Services,Mid cap,INE776C01039,core,2007-09-17,4689,,0.02876,231,2,NSE corporate actions
+GLENMARK,Glenmark Pharmaceuticals Ltd.,Healthcare,Mid cap,INE935A01035,core,2007-09-17,4689,,0.01871,231,0,NSE corporate actions
+GODFRYPHLP,Godfrey Phillips India Ltd.,Fast Moving Consumer Goods,Mid cap,INE260B01028,core,2007-09-17,4689,,0.04233,231,0,NSE corporate actions
+GODREJCP,Godrej Consumer Products Ltd.,Fast Moving Consumer Goods,Large cap,INE102D01028,core,2007-09-17,4689,,0.02979,231,0,NSE corporate actions
+GODREJPROP,Godrej Properties Ltd.,Realty,Mid cap,INE484J01027,extended,2010-01-05,4130,history starts 2010-01-05 — usable for custom picks; events before it are greyed out,0.02759,202,1,NSE corporate actions
+GRASIM,Grasim Industries Ltd.,Construction Materials,Large cap,INE047A01021,core,2007-09-17,4689,,0.16762,231,1,NSE corporate actions
+HCLTECH,HCL Technologies Ltd.,Information Technology,Large cap,INE860A01027,core,2007-09-17,4689,,0.00845,231,0,NSE corporate actions
+HDFCAMC,HDFC Asset Management Company Ltd.,Financial Services,Large cap,INE127D01025,extended,2018-08-06,2016,history starts 2018-08-06 — usable for custom picks; events before it are greyed out,0.02161,99,0,NSE corporate actions
+HDFCBANK,HDFC Bank Ltd.,Financial Services,Large cap,INE040A01034,core,2007-09-17,4689,,0.01275,231,1,NSE corporate actions
+HDFCLIFE,HDFC Life Insurance Company Ltd.,Financial Services,Large cap,INE795G01014,extended,2017-11-17,2195,history starts 2017-11-17 — usable for custom picks; events before it are greyed out,0.01707,108,0,NSE corporate actions
+HAVELLS,Havells India Ltd.,Consumer Durables,Mid cap,INE176B01034,core,2007-09-17,4689,,0.03827,231,0,NSE corporate actions
+HEROMOTOCO,Hero MotoCorp Ltd.,Automobile and Auto Components,Mid cap,INE158A01026,core,2007-09-17,4689,,0.02048,231,0,NSE corporate actions
+HINDALCO,Hindalco Industries Ltd.,Metals & Mining,Large cap,INE038A01020,core,2007-09-17,4689,,0.10492,231,1,NSE corporate actions
+HAL,Hindustan Aeronautics Ltd.,Capital Goods,Large cap,INE066F01020,extended,2018-04-02,2105,history starts 2018-04-02 — usable for custom picks; events before it are greyed out,0.04071,104,0,NSE corporate actions
+HINDCOPPER,Hindustan Copper Ltd.,Metals & Mining,Mid cap,INE531E01026,extended,2010-01-08,4127,history starts 2010-01-08 — usable for custom picks; events before it are greyed out,0.02774,202,0,NSE corporate actions
+HINDPETRO,Hindustan Petroleum Corporation Ltd.,Oil Gas & Consumable Fuels,Mid cap,INE094A01015,core,2007-09-17,4689,,0.07011,231,0,NSE corporate actions
+HINDUNILVR,Hindustan Unilever Ltd.,Fast Moving Consumer Goods,Large cap,INE030A01027,core,2007-09-17,4689,,0.01633,231,0,NSE corporate actions
+HINDZINC,Hindustan Zinc Ltd.,Metals & Mining,Large cap,INE267A01025,core,2007-09-17,4689,,0.02934,231,1,NSE corporate actions
+POWERINDIA,Hitachi Energy India Ltd.,Capital Goods,Large cap,INE07Y701011,extended,2020-04-17,1605,history starts 2020-04-17 — usable for custom picks; events before it are greyed out,0.05602,79,0,NSE corporate actions
+HYUNDAI,Hyundai Motor India Ltd.,Automobile and Auto Components,Large cap,INE0V6F01027,excluded,2024-10-22,486,"history starts 2024-10-22 — under 3 years, too short for the risk label",0.01139,25,0,NSE corporate actions
+ICICIBANK,ICICI Bank Ltd.,Financial Services,Large cap,INE090A01021,core,2007-09-17,4689,,0.03219,231,0,NSE corporate actions
+ICICIGI,ICICI Lombard General Insurance Company Ltd.,Financial Services,Mid cap,INE765G01017,extended,2017-09-27,2230,history starts 2017-09-27 — usable for custom picks; events before it are greyed out,0.0155,110,0,NSE corporate actions
+ICICIAMC,ICICI Prudential Asset Management Company Ltd.,Financial Services,Mid cap,INE346A01027,excluded,2025-12-19,197,"history starts 2025-12-19 — under 3 years, too short for the risk label",0.0,11,0,NSE corporate actions
+IDFCFIRSTB,IDFC First Bank Ltd.,Financial Services,Mid cap,INE092T01019,extended,2015-11-06,2695,history starts 2015-11-06 — usable for custom picks; events before it are greyed out,0.03271,132,0,NSE corporate actions
+ITC,ITC Ltd.,Fast Moving Consumer Goods,Large cap,INE154A01025,core,2007-09-17,4689,,0.01755,231,1,NSE corporate actions
+INDIANB,Indian Bank,Financial Services,Mid cap,INE562A01011,core,2007-09-17,4689,,0.02662,231,0,NSE corporate actions
+INDHOTEL,Indian Hotels Co. Ltd.,Consumer Services,Mid cap,INE053A01029,core,2007-09-17,4689,,0.04374,231,2,NSE corporate actions
+IOC,Indian Oil Corporation Ltd.,Oil Gas & Consumable Fuels,Large cap,INE242A01010,core,2007-09-17,4689,,0.00838,231,0,NSE corporate actions
+IRCTC,Indian Railway Catering And Tourism Corporation Ltd.,Consumer Services,Mid cap,INE335Y01020,extended,2019-10-14,1730,history starts 2019-10-14 — usable for custom picks; events before it are greyed out,0.02208,85,0,NSE corporate actions
+IRFC,Indian Railway Finance Corporation Ltd.,Financial Services,Large cap,INE053F01010,extended,2021-01-29,1406,history starts 2021-01-29 — usable for custom picks; events before it are greyed out,0.02551,70,0,NSE corporate actions
+IREDA,Indian Renewable Energy Development Agency Ltd.,Financial Services,Mid cap,INE202E01016,excluded,2023-11-29,706,"history starts 2023-11-29 — under 3 years, too short for the risk label",0.05638,36,0,NSE corporate actions
+INDUSTOWER,Indus Towers Ltd.,Telecommunication,Mid cap,INE121J01017,extended,2012-12-28,3397,history starts 2012-12-28 — usable for custom picks; events before it are greyed out,0.0189,167,0,NSE corporate actions
+INDUSINDBK,IndusInd Bank Ltd.,Financial Services,Mid cap,INE095A01012,core,2007-09-17,4689,,0.00598,231,0,NSE corporate actions
+NAUKRI,Info Edge (India) Ltd.,Consumer Services,Mid cap,INE663F01032,core,2007-09-17,4689,,0.03185,231,0,NSE corporate actions
+INFY,Infosys Ltd.,Information Technology,Large cap,INE009A01021,core,2007-09-17,4689,,0.01516,231,0,NSE corporate actions
+INDIGO,InterGlobe Aviation Ltd.,Services,Large cap,INE646L01027,extended,2015-11-10,2693,history starts 2015-11-10 — usable for custom picks; events before it are greyed out,0.0054,132,0,NSE corporate actions
+JSWENERGY,JSW Energy Ltd.,Power,Mid cap,INE121E01018,extended,2010-01-04,4131,history starts 2010-01-04 — usable for custom picks; events before it are greyed out,0.03874,194,0,NSE corporate actions
+JSWSTEEL,JSW Steel Ltd.,Metals & Mining,Large cap,INE019A01038,core,2007-09-17,4689,,0.01228,231,0,NSE corporate actions
+JINDALSTEL,Jindal Steel Ltd.,Metals & Mining,Large cap,INE749A01030,core,2007-09-17,4689,,0.02926,231,0,NSE corporate actions
+JIOFIN,Jio Financial Services Ltd.,Financial Services,Large cap,INE758E01017,extended,2023-09-04,763,history starts 2023-09-04 — usable for custom picks; events before it are greyed out,0.02578,38,0,NSE corporate actions
+JUBLFOOD,Jubilant Foodworks Ltd.,Consumer Services,Mid cap,INE797F01020,extended,2010-02-08,4107,history starts 2010-02-08 — usable for custom picks; events before it are greyed out,0.01495,201,0,NSE corporate actions
+KEI,KEI Industries Ltd.,Capital Goods,Mid cap,INE878B01027,core,2007-09-17,4689,,0.04542,226,0,NSE corporate actions
+KALYANKJIL,Kalyan Jewellers India Ltd.,Consumer Durables,Mid cap,INE303R01014,extended,2021-03-26,1367,history starts 2021-03-26 — usable for custom picks; events before it are greyed out,0.01507,68,0,NSE corporate actions
+KOTAKBANK,Kotak Mahindra Bank Ltd.,Financial Services,Large cap,INE237A01036,core,2007-09-17,4689,,0.02052,231,0,NSE corporate actions
+LTF,L&T Finance Ltd.,Financial Services,Mid cap,INE498L01015,extended,2011-08-12,3729,history starts 2011-08-12 — usable for custom picks; events before it are greyed out,0.01748,180,1,NSE corporate actions
+LGEINDIA,LG Electronics India Ltd.,Consumer Durables,Mid cap,INE324D01010,excluded,2025-10-14,243,"history starts 2025-10-14 — under 3 years, too short for the risk label",0.0,13,0,yfinance action history
+LICHSGFIN,LIC Housing Finance Ltd.,Financial Services,Mid cap,INE115A01026,core,2007-09-17,4689,,0.03668,231,0,NSE corporate actions
+LTM,LTM Ltd.,Information Technology,Large cap,INE214T01019,extended,2016-07-21,2523,history starts 2016-07-21 — usable for custom picks; events before it are greyed out,0.01967,124,0,NSE corporate actions
+LT,Larsen & Toubro Ltd.,Construction,Large cap,INE018A01030,core,2007-09-17,4689,,0.03064,231,0,NSE corporate actions
+LAURUSLABS,Laurus Labs Ltd.,Healthcare,Mid cap,INE947Q01028,extended,2016-12-19,2423,history starts 2016-12-19 — usable for custom picks; events before it are greyed out,0.00998,119,0,NSE corporate actions
+LENSKART,Lenskart Solutions Ltd.,Consumer Services,Mid cap,INE956O01016,excluded,2025-11-10,226,"history starts 2025-11-10 — under 3 years, too short for the risk label",0.0,12,0,yfinance action history
+LICI,Life Insurance Corporation of India,Financial Services,Mid cap,INE0J1Y01017,extended,2022-05-17,1087,history starts 2022-05-17 — usable for custom picks; events before it are greyed out,0.0161,54,0,NSE corporate actions
+LODHA,Lodha Developers Ltd.,Realty,Mid cap,INE670K01029,extended,2021-04-19,1354,history starts 2021-04-19 — usable for custom picks; events before it are greyed out,0.04521,67,0,NSE corporate actions
+LUPIN,Lupin Ltd.,Healthcare,Mid cap,INE326A01037,core,2007-09-17,4689,,0.02149,231,0,NSE corporate actions
+MRF,MRF Ltd.,Automobile and Auto Components,Mid cap,INE883A01011,core,2007-09-17,4689,,0.02304,231,0,NSE corporate actions
+M&MFIN,Mahindra & Mahindra Financial Services Ltd.,Financial Services,Mid cap,INE774D01024,core,2007-09-17,4689,,0.03053,231,1,NSE corporate actions
+M&M,Mahindra & Mahindra Ltd.,Automobile and Auto Components,Large cap,INE101A01026,core,2007-09-17,4689,,0.03188,231,0,NSE corporate actions
+MANKIND,Mankind Pharma Ltd.,Healthcare,Mid cap,INE634S01028,extended,2023-05-09,845,history starts 2023-05-09 — usable for custom picks; events before it are greyed out,0.01158,42,0,NSE corporate actions
+MARICO,Marico Ltd.,Fast Moving Consumer Goods,Mid cap,INE196A01026,core,2007-09-17,4689,,0.02271,230,0,NSE corporate actions
+MARUTI,Maruti Suzuki India Ltd.,Automobile and Auto Components,Large cap,INE585B01010,core,2007-09-17,4689,,0.01392,231,0,NSE corporate actions
+MFSL,Max Financial Services Ltd.,Financial Services,Mid cap,INE180A01020,core,2007-09-17,4689,,0.26081,230,0,NSE corporate actions
+MAXHEALTH,Max Healthcare Institute Ltd.,Healthcare,Large cap,INE027H01010,extended,2020-09-04,1507,history starts 2020-09-04 — usable for custom picks; events before it are greyed out,0.01909,74,0,NSE corporate actions
+MAZDOCK,Mazagoan Dock Shipbuilders Ltd.,Capital Goods,Large cap,INE249Z01020,extended,2020-10-12,1482,history starts 2020-10-12 — usable for custom picks; events before it are greyed out,0.02345,73,0,NSE corporate actions
+MEESHO,Meesho Ltd.,Consumer Services,Mid cap,INE0VDM01015,excluded,2025-12-10,204,"history starts 2025-12-10 — under 3 years, too short for the risk label",0.0,11,0,yfinance action history
+MOTILALOFS,Motilal Oswal Financial Services Ltd.,Financial Services,Mid cap,INE338I01027,core,2007-09-17,4689,,0.78127,229,1,NSE corporate actions
+MPHASIS,MphasiS Ltd.,Information Technology,Mid cap,INE356A01018,core,2007-09-17,4689,,0.04236,231,0,NSE corporate actions
+MCX,Multi Commodity Exchange of India Ltd.,Financial Services,Mid cap,INE745G01043,extended,2012-03-09,3594,history starts 2012-03-09 — usable for custom picks; events before it are greyed out,0.03104,176,0,NSE corporate actions
+MUTHOOTFIN,Muthoot Finance Ltd.,Financial Services,Large cap,INE414G01012,extended,2011-05-06,3797,history starts 2011-05-06 — usable for custom picks; events before it are greyed out,0.0121,186,0,NSE corporate actions
+NHPC,NHPC Ltd.,Power,Mid cap,INE848E01016,extended,2009-09-01,4211,history starts 2009-09-01 — usable for custom picks; events before it are greyed out,0.01021,207,0,NSE corporate actions
+NLCINDIA,NLC India Ltd.,Power,Mid cap,INE589A01014,core,2007-09-17,4689,,0.04076,231,0,NSE corporate actions
+NMDC,NMDC Ltd.,Metals & Mining,Mid cap,INE584A01023,extended,2008-03-03,4573,history starts 2008-03-03 — usable for custom picks; events before it are greyed out,0.29522,225,1,NSE corporate actions
+NTPC,NTPC Ltd.,Power,Large cap,INE733E01010,core,2007-09-17,4689,,0.01719,231,0,NSE corporate actions
+NATIONALUM,National Aluminium Co. Ltd.,Metals & Mining,Mid cap,INE139A01034,core,2007-09-17,4689,,0.01902,231,1,NSE corporate actions
+NESTLEIND,Nestle India Ltd.,Fast Moving Consumer Goods,Large cap,INE239A01024,extended,2010-01-08,4127,history starts 2010-01-08 — usable for custom picks; events before it are greyed out,0.01274,202,0,NSE corporate actions
+OBEROIRLTY,Oberoi Realty Ltd.,Realty,Mid cap,INE093I01010,extended,2010-10-20,3931,history starts 2010-10-20 — usable for custom picks; events before it are greyed out,0.0294,193,0,NSE corporate actions
+ONGC,Oil & Natural Gas Corporation Ltd.,Oil Gas & Consumable Fuels,Large cap,INE213A01029,core,2007-09-17,4689,,0.0197,231,1,NSE corporate actions
+OIL,Oil India Ltd.,Oil Gas & Consumable Fuels,Mid cap,INE274J01014,extended,2009-09-30,4192,history starts 2009-09-30 — usable for custom picks; events before it are greyed out,0.02023,206,0,NSE corporate actions
+PAYTM,One 97 Communications Ltd.,Financial Services,Mid cap,INE982J01020,extended,2021-11-18,1208,history starts 2021-11-18 — usable for custom picks; events before it are greyed out,0.07621,60,0,yfinance action history
+OFSS,Oracle Financial Services Software Ltd.,Information Technology,Mid cap,INE881D01027,core,2007-09-17,4689,,0.01375,231,0,NSE corporate actions
+POLICYBZR,PB Fintech Ltd.,Financial Services,Mid cap,INE417T01026,extended,2021-11-15,1211,history starts 2021-11-15 — usable for custom picks; events before it are greyed out,0.07322,60,0,yfinance action history
+PIIND,PI Industries Ltd.,Chemicals,Mid cap,INE603J01030,extended,2011-07-04,3757,history starts 2011-07-04 — usable for custom picks; events before it are greyed out,0.01334,184,0,NSE corporate actions
+PAGEIND,Page Industries Ltd.,Textiles,Mid cap,INE761H01022,core,2007-09-17,4689,,0.00589,231,0,NSE corporate actions
+PATANJALI,Patanjali Foods Ltd.,Fast Moving Consumer Goods,Mid cap,INE619A01035,extended,2020-01-27,1658,history starts 2020-01-27 — usable for custom picks; events before it are greyed out,0.00951,37,0,NSE corporate actions
+PERSISTENT,Persistent Systems Ltd.,Information Technology,Mid cap,INE262H01021,extended,2010-04-06,4070,history starts 2010-04-06 — usable for custom picks; events before it are greyed out,0.02748,199,0,NSE corporate actions
+PHOENIXLTD,Phoenix Mills Ltd.,Realty,Mid cap,INE211B01039,core,2007-09-17,4689,,0.02993,231,0,NSE corporate actions
+PIDILITIND,Pidilite Industries Ltd.,Chemicals,Large cap,INE318A01026,core,2007-09-17,4689,,0.01039,231,0,NSE corporate actions
+POLYCAB,Polycab India Ltd.,Capital Goods,Large cap,INE455K01017,extended,2019-04-16,1848,history starts 2019-04-16 — usable for custom picks; events before it are greyed out,0.0351,91,0,NSE corporate actions
+PFC,Power Finance Corporation Ltd.,Financial Services,Large cap,INE134E01011,core,2007-09-17,4689,,0.03159,231,0,NSE corporate actions
+POWERGRID,Power Grid Corporation of India Ltd.,Power,Large cap,INE752E01010,extended,2007-10-05,4676,history starts 2007-10-05 — usable for custom picks; events before it are greyed out,0.0129,229,0,NSE corporate actions
+PREMIERENE,Premier Energies Ltd.,Capital Goods,Mid cap,INE0BS701011,excluded,2024-09-03,520,"history starts 2024-09-03 — under 3 years, too short for the risk label",0.00704,26,0,NSE corporate actions
+PRESTIGE,Prestige Estates Projects Ltd.,Realty,Mid cap,INE811K01011,extended,2010-10-27,3926,history starts 2010-10-27 — usable for custom picks; events before it are greyed out,0.03001,193,0,NSE corporate actions
+PNB,Punjab National Bank,Financial Services,Large cap,INE160A01022,core,2007-09-17,4689,,0.02096,231,0,NSE corporate actions
+RECLTD,REC Ltd.,Financial Services,Mid cap,INE020B01018,extended,2008-03-12,4567,history starts 2008-03-12 — usable for custom picks; events before it are greyed out,0.02095,224,0,NSE corporate actions
+RADICO,Radico Khaitan Ltd,Fast Moving Consumer Goods,Mid cap,INE944F01028,core,2007-09-17,4689,,0.01511,231,0,NSE corporate actions
+RVNL,Rail Vikas Nigam Ltd.,Construction,Mid cap,INE415G01027,extended,2019-04-11,1851,history starts 2019-04-11 — usable for custom picks; events before it are greyed out,0.01431,91,0,NSE corporate actions
+RELIANCE,Reliance Industries Ltd.,Oil Gas & Consumable Fuels,Large cap,INE002A01018,core,2007-09-17,4689,,0.01549,231,1,NSE corporate actions
+SBICARD,SBI Cards and Payment Services Ltd.,Financial Services,Mid cap,INE018E01016,extended,2020-03-16,1625,history starts 2020-03-16 — usable for custom picks; events before it are greyed out,0.00439,80,0,NSE corporate actions
+SBILIFE,SBI Life Insurance Company Ltd.,Financial Services,Large cap,INE123W01016,extended,2017-10-03,2227,history starts 2017-10-03 — usable for custom picks; events before it are greyed out,0.01621,110,0,NSE corporate actions
+SRF,SRF Ltd.,Chemicals,Mid cap,INE647A01010,core,2007-09-17,4689,,0.00711,231,0,NSE corporate actions
+MOTHERSON,Samvardhana Motherson International Ltd.,Automobile and Auto Components,Large cap,INE775A01035,core,2007-09-17,4689,,0.44467,231,1,NSE corporate actions
+SHRIRAMFIN,Shriram Finance Ltd.,Financial Services,Large cap,INE721A01047,core,2007-09-17,4689,,0.03057,231,1,NSE corporate actions
+ENRIN,Siemens Energy India Ltd.,Capital Goods,Large cap,INE1NPP01017,excluded,2025-07-03,313,"history starts 2025-07-03 — under 3 years, too short for the risk label",0.0,16,0,NSE corporate actions
+SIEMENS,Siemens Ltd.,Capital Goods,Large cap,INE003A01024,core,2007-09-17,4689,,0.15308,231,1,NSE corporate actions
+SOLARINDS,Solar Industries India Ltd.,Chemicals,Large cap,INE343H01029,core,2007-09-17,4689,,0.00765,228,0,NSE corporate actions
+SBIN,State Bank of India,Financial Services,Large cap,INE062A01020,core,2007-09-17,4689,,0.01874,231,1,NSE corporate actions
+SAIL,Steel Authority of India Ltd.,Metals & Mining,Mid cap,INE114A01011,core,2007-09-17,4689,,0.0261,231,0,NSE corporate actions
+SUNPHARMA,Sun Pharmaceutical Industries Ltd.,Healthcare,Large cap,INE044A01036,core,2007-09-17,4689,,0.02552,231,0,NSE corporate actions
+SUPREMEIND,Supreme Industries Ltd.,Capital Goods,Mid cap,INE195A01028,core,2007-09-17,4689,,0.04696,231,0,NSE corporate actions
+SUZLON,Suzlon Energy Ltd.,Capital Goods,Mid cap,INE040H01021,core,2007-09-17,4689,,0.00881,219,1,NSE corporate actions
+SWIGGY,Swiggy Ltd.,Consumer Services,Mid cap,INE00H001014,excluded,2024-11-13,470,"history starts 2024-11-13 — under 3 years, too short for the risk label",0.00381,24,0,yfinance action history
+TVSMOTOR,TVS Motor Company Ltd.,Automobile and Auto Components,Large cap,INE494B01023,core,2007-09-17,4689,,0.01983,231,0,NSE corporate actions
+TATACAP,Tata Capital Ltd.,Financial Services,Large cap,INE976I01016,excluded,2025-10-13,244,"history starts 2025-10-13 — under 3 years, too short for the risk label",0.0,13,0,NSE corporate actions
+TATACOMM,Tata Communications Ltd.,Telecommunication,Mid cap,INE151A01013,core,2007-09-17,4689,,0.72951,231,1,NSE corporate actions
+TCS,Tata Consultancy Services Ltd.,Information Technology,Large cap,INE467B01029,core,2007-09-17,4689,,0.01565,231,0,NSE corporate actions
+TATACONSUM,Tata Consumer Products Ltd.,Fast Moving Consumer Goods,Large cap,INE192A01025,core,2007-09-17,4689,,0.02055,231,0,NSE corporate actions
+TMCV,Tata Motors Ltd.,Capital Goods,Large cap,INE1TAE01010,excluded,2025-11-12,224,"history starts 2025-11-12 — under 3 years, too short for the risk label",0.0,12,0,NSE corporate actions
+TMPV,Tata Motors Passenger Vehicles Ltd.,Automobile and Auto Components,Large cap,INE155A01022,core,2007-09-17,4689,,0.39463,231,2,NSE corporate actions
+TATAPOWER,Tata Power Co. Ltd.,Power,Large cap,INE245A01021,core,2007-09-17,4689,,0.03407,231,1,NSE corporate actions
+TATASTEEL,Tata Steel Ltd.,Metals & Mining,Large cap,INE081A01020,core,2007-09-17,4689,,0.376,231,2,NSE corporate actions
+TECHM,Tech Mahindra Ltd.,Information Technology,Large cap,INE669C01036,core,2007-09-17,4689,,0.04369,231,1,NSE corporate actions
+TITAN,Titan Company Ltd.,Consumer Durables,Large cap,INE280A01028,core,2007-09-17,4689,,0.02133,231,1,NSE corporate actions
+TORNTPHARM,Torrent Pharmaceuticals Ltd.,Healthcare,Large cap,INE685A01028,core,2007-09-17,4689,,0.02262,231,0,NSE corporate actions
+TRENT,Trent Ltd.,Consumer Services,Large cap,INE849A01020,core,2007-09-17,4689,,0.34745,231,2,NSE corporate actions
+TIINDIA,Tube Investments of India Ltd.,Automobile and Auto Components,Mid cap,INE974X01010,extended,2017-11-02,2206,history starts 2017-11-02 — usable for custom picks; events before it are greyed out,0.01345,108,0,NSE corporate actions
+UPL,UPL Ltd.,Chemicals,Mid cap,INE628A01036,core,2007-09-17,4689,,0.04528,231,0,NSE corporate actions
+ULTRACEMCO,UltraTech Cement Ltd.,Construction Materials,Large cap,INE481G01011,core,2007-09-17,4689,,0.01432,231,0,NSE corporate actions
+UNIONBANK,Union Bank of India,Financial Services,Large cap,INE692A01016,core,2007-09-17,4689,,0.04585,231,0,NSE corporate actions
+UNITDSPR,United Spirits Ltd.,Fast Moving Consumer Goods,Mid cap,INE854D01024,core,2007-09-17,4689,,0.01064,231,0,NSE corporate actions
+VBL,Varun Beverages Ltd.,Fast Moving Consumer Goods,Large cap,INE200M01039,extended,2016-11-08,2451,history starts 2016-11-08 — usable for custom picks; events before it are greyed out,0.04978,120,0,NSE corporate actions
+VAML,Vedanta Aluminium Metal Ltd.,Metals & Mining,Large cap,INE1CDF01017,excluded,2026-06-15,81,"history starts 2026-06-15 — under 3 years, too short for the risk label",0.0,5,0,NSE corporate actions
+VEDL,Vedanta Ltd.,Metals & Mining,Large cap,INE205A01025,core,2007-09-17,4689,,0.62578,231,1,NSE corporate actions
+VMM,Vishal Mega Mart Ltd.,Consumer Services,Mid cap,INE01EA01019,excluded,2024-12-18,447,"history starts 2024-12-18 — under 3 years, too short for the risk label",0.01125,23,0,yfinance action history
+IDEA,Vodafone Idea Ltd.,Telecommunication,Large cap,INE669E01016,core,2007-09-17,4689,,0.02305,231,1,NSE corporate actions
+VOLTAS,Voltas Ltd.,Consumer Durables,Mid cap,INE226A01021,core,2007-09-17,4689,,0.00614,231,0,NSE corporate actions
+WAAREEENER,Waaree Energies Ltd.,Capital Goods,Mid cap,INE377N01017,excluded,2024-10-28,482,"history starts 2024-10-28 — under 3 years, too short for the risk label",0.03021,25,0,NSE corporate actions
+WIPRO,Wipro Ltd.,Information Technology,Large cap,INE075A01022,core,2007-09-17,4689,,0.12277,231,0,NSE corporate actions
+YESBANK,Yes Bank Ltd.,Financial Services,Mid cap,INE528G01035,core,2007-09-17,4689,,0.02048,231,0,NSE corporate actions
+ZYDUSLIFE,Zydus Lifesciences Ltd.,Healthcare,Large cap,INE010B01027,core,2007-09-17,4689,,0.03501,231,1,NSE corporate actions

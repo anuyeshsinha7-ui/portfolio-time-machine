@@ -1,0 +1,89 @@
+{
+  "_note": "Search ranges only. Each window is anchored on the Nifty 50 data by src/events.py (crisis: deepest peak-to-trough fall inside the range; calm: lowest-volatility 126-day stretch). An event the data does not support is shown as unavailable. min_fall is the smallest Nifty 50 fall that counts as a crisis.",
+  "events": [
+    {
+      "id": "gfc_2008", "name": "Global Financial Crisis (2008–09)", "type": "crisis",
+      "search_start": "2008-01-01", "search_end": "2009-03-31", "min_fall": 0.07,
+      "story": "US housing loans went bad, Lehman Brothers collapsed and banks everywhere stopped lending to each other. Foreign investors pulled money out of India, and the Nifty 50 lost more than half its value in ten months.",
+      "source": "https://en.wikipedia.org/wiki/2008_financial_crisis"
+    },
+    {
+      "id": "euro_2011", "name": "European debt crisis and US credit downgrade (2011)", "type": "crisis",
+      "search_start": "2010-11-01", "search_end": "2011-12-31", "min_fall": 0.07,
+      "story": "Greece, Italy and Spain struggled to repay their debts while S&P cut the US credit rating for the first time ever. Indian stocks also faced high inflation and rising interest rates at home, so foreign money left.",
+      "source": "https://en.wikipedia.org/wiki/August_2011_stock_markets_fall"
+    },
+    {
+      "id": "taper_2013", "name": "Taper tantrum and rupee crash (2013)", "type": "crisis",
+      "search_start": "2013-05-01", "search_end": "2013-09-30", "min_fall": 0.07,
+      "story": "The US Federal Reserve hinted it would slow its bond buying, and money rushed out of emerging markets. The rupee fell to a record low and Indian banks and importers were hit hard.",
+      "source": "https://en.wikipedia.org/wiki/Taper_tantrum"
+    },
+    {
+      "id": "china_2015", "name": "China devaluation and global sell-off (2015–16)", "type": "crisis",
+      "search_start": "2015-03-01", "search_end": "2016-02-29", "min_fall": 0.07,
+      "story": "China surprised markets by devaluing the yuan while its stock market and oil prices crashed. Fears of a global slowdown dragged Indian stocks down for almost a year.",
+      "source": "https://en.wikipedia.org/wiki/2015%E2%80%932016_stock_market_selloff"
+    },
+    {
+      "id": "demon_2016", "name": "Demonetisation (2016)", "type": "crisis",
+      "search_start": "2016-11-01", "search_end": "2016-12-31", "min_fall": 0.07,
+      "story": "On 8 November 2016 the government withdrew ₹500 and ₹1,000 notes, about 86% of the cash in circulation. Consumer spending froze for weeks, and the US election result the same night added global jitters.",
+      "source": "https://en.wikipedia.org/wiki/2016_Indian_banknote_demonetisation"
+    },
+    {
+      "id": "ilfs_2018", "name": "IL&FS default and NBFC crisis (2018)", "type": "crisis",
+      "search_start": "2018-08-01", "search_end": "2018-10-31", "min_fall": 0.07,
+      "story": "Infrastructure lender IL&FS defaulted on its debt, and investors stopped trusting non-bank lenders (NBFCs). Finance stocks crashed while oil prices and a weak rupee added pressure.",
+      "source": "https://en.wikipedia.org/wiki/Infrastructure_Leasing_%26_Financial_Services"
+    },
+    {
+      "id": "covid_2020", "name": "COVID-19 crash (2020)", "type": "crisis",
+      "search_start": "2020-01-01", "search_end": "2020-03-31", "min_fall": 0.07,
+      "story": "The pandemic shut down economies and India announced a nationwide lockdown in March 2020. The Nifty 50 fell almost 40% in about two months, its fastest fall on record.",
+      "source": "https://en.wikipedia.org/wiki/2020_stock_market_crash"
+    },
+    {
+      "id": "ukraine_2022", "name": "Russia–Ukraine war and rate hikes (2022)", "type": "crisis",
+      "search_start": "2021-10-01", "search_end": "2022-06-30", "min_fall": 0.07,
+      "story": "Russia invaded Ukraine, oil and food prices jumped and central banks raised interest rates fast to fight inflation. Foreign investors sold Indian shares heavily for months.",
+      "source": "https://en.wikipedia.org/wiki/2022_stock_market_decline"
+    },
+    {
+      "id": "adani_2023", "name": "Adani–Hindenburg sell-off (2023)", "type": "crisis",
+      "search_start": "2023-01-01", "search_end": "2023-03-31", "min_fall": 0.07,
+      "story": "US short-seller Hindenburg Research accused the Adani Group of fraud, and Adani shares lost over $100 billion in value. The wider market wobbled on worries about bank exposure and global rate hikes.",
+      "source": "https://en.wikipedia.org/wiki/Hindenburg_Research"
+    },
+    {
+      "id": "fpi_2024", "name": "Foreign-investor sell-off correction (2024–25)", "type": "crisis",
+      "search_start": "2024-09-01", "search_end": "2025-03-31", "min_fall": 0.07,
+      "story": "After a record high in September 2024, foreign investors sold Indian shares at the fastest pace in years as earnings slowed and Chinese stocks looked cheaper. The Nifty 50 slid for five straight months.",
+      "source": "NSDL FPI Monitor, foreign portfolio investment net equity flows Oct 2024 – Feb 2025 (https://www.fpi.nsdl.co.in/)"
+    },
+    {
+      "id": "tariff_2025", "name": "US tariff shock (2025)", "type": "crisis",
+      "search_start": "2025-03-01", "search_end": "2025-04-30", "min_fall": 0.07,
+      "story": "The US announced sweeping 'Liberation Day' import tariffs on 2 April 2025 and markets worldwide sold off. Indian stocks fell sharply for a few days before recovering.",
+      "source": "https://en.wikipedia.org/wiki/Liberation_Day_tariffs"
+    },
+    {
+      "id": "calm_2017", "name": "Low-volatility rally (2017)", "type": "calm",
+      "search_start": "2017-01-01", "search_end": "2017-12-31",
+      "story": "With steady domestic investor inflows into mutual funds and little global turmoil, the Nifty 50 climbed almost every month. India VIX, the market's 'fear gauge', sat near record lows.",
+      "source": "https://www.nseindia.com/reports-indices-historical-vix"
+    },
+    {
+      "id": "calm_2014", "name": "Post-election steady market (2014)", "type": "calm",
+      "search_start": "2014-06-01", "search_end": "2015-02-28",
+      "story": "A single-party majority in the May 2014 general election raised hopes of stable reforms. Falling oil prices helped India, and the market rose steadily with few sharp swings.",
+      "source": "https://en.wikipedia.org/wiki/2014_Indian_general_election"
+    },
+    {
+      "id": "calm_2023", "name": "Low-VIX stretch (2023–24)", "type": "calm",
+      "search_start": "2023-04-01", "search_end": "2024-03-31",
+      "story": "Strong economic growth and record inflows from domestic retail investors kept the market climbing calmly. India VIX touched multi-year lows for much of the year.",
+      "source": "https://www.nseindia.com/reports-indices-historical-vix"
+    }
+  ]
+}

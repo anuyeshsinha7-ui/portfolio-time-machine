@@ -1,0 +1,16 @@
+# TEST DATA - hand-made fixture for unit tests, NOT market data
+# Yahoo-style series. Close is Yahoo's split-adjusted close.
+# missing_split: a real 1:1 bonus on 2024-01-10 that Yahoo did not record (raw price halves, no split event).
+# known_split: a 1:5 split on 2024-01-10 that Yahoo recorded and applied (Close is smooth; Stock Splits = 5).
+# late_split: a 1:2 split whose true ex-date is 2024-01-10 but Yahoo recorded it on 2024-01-11.
+Date,missing_split,known_split,known_split_events,late_split,late_split_events
+2024-01-03,1000,100,0,200,0
+2024-01-04,1010,101,0,202,0
+2024-01-05,1005,100.5,0,201,0
+2024-01-08,1020,102,0,204,0
+2024-01-09,1030,103,0,206,0
+2024-01-10,516,103.2,5,103.2,0
+2024-01-11,520,104,0,208,2
+2024-01-12,522,104.4,0,209,0
+2024-01-15,525,105,0,210,0
+2024-01-16,526,105.2,0,210.4,0

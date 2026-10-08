@@ -1,0 +1,9 @@
+# TEST DATA - hand-made fixture for unit tests, NOT market data
+# dividend of 10 on 2024-01-05 (prev close 200 -> factor 0.95); Yahoo Adj Close in yahoo_adj (correct) and yahoo_adj_bad (off by 2% before 01-05)
+Date,Close,Dividends,yahoo_adj,yahoo_adj_bad
+2024-01-01,198,0,188.1,184.338
+2024-01-02,199,0,189.05,185.269
+2024-01-03,201,0,190.95,187.131
+2024-01-04,200,0,190,186.2
+2024-01-05,192,10,192,192
+2024-01-08,194,0,194,194

@@ -1,0 +1,19 @@
+{
+ "as_of": "2026-10-08",
+ "history_start": "2007-09-17",
+ "benchmark_first_date": "2007-09-17",
+ "fetched_at": "2026-10-08 18:12:33",
+ "n_constituents": 200,
+ "n_core": 119,
+ "n_extended": 66,
+ "n_excluded": 15,
+ "sessions": 4689,
+ "prices_sha256": "3fd6bbe1102fdb9bc9523db3fda9db6034fea449d8b3b3833e9c6d1fee886b12",
+ "benchmark_sha256": "d4536299567e3dc812abebb737887c0d8a2af6b03255dcc91a1918c37e8d04ab",
+ "sources": {
+  "prices": "Yahoo Finance via yfinance (auto_adjust=False), anchored to NSE bhavcopies",
+  "universe": "NSE Nifty 200 / Nifty 100 constituent lists (archives.nseindia.com)",
+  "corporate_actions": "NSE corporate-actions API; yfinance action history"
+ },
+ "restated_prices_vs_previous": 0
+}
