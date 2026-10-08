@@ -84,10 +84,10 @@ def main(site: Path) -> None:
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{config.APP_NAME} — does 'safe' stay safe when the market crashes?</title>
 <meta name="description" content="A Financial Risk Analytics project: two Nifty 200 portfolios (high risk, low risk) sent back to real Indian market crises. VaR, Expected Shortfall and Markowitz re-optimisation.">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#161D2C">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏳</text></svg>">
 <style>
-:root {{ --a:{config.COLOR_A}; --b:{config.COLOR_B}; --n:{config.COLOR_NIFTY}; --ink:#1F2430; --mut:#5B6170; --bg:#FFFFFF; --panel:#F5F6F8; --line:#E3E6EB; }}
+:root {{ --a:{config.COLOR_A}; --b:{config.COLOR_B}; --n:{config.COLOR_NIFTY}; --ink:#E6E9EF; --mut:#9AA3B5; --bg:#0B0F17; --panel:#161D2C; --card:#121826; --line:#2A3448; }}
 * {{ box-sizing: border-box; }}
 body {{ margin:0; background:var(--bg); color:var(--ink); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }}
 main {{ max-width: 1080px; margin: 0 auto; padding: 28px 16px 48px; }}
@@ -95,16 +95,16 @@ main {{ max-width: 1080px; margin: 0 auto; padding: 28px 16px 48px; }}
 h1 {{ font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.12; margin: .3rem 0 .6rem; }}
 .lede {{ color: var(--mut); font-size: 1.08rem; max-width: 760px; }}
 .verdict {{ margin: 18px 0; padding: 16px 18px; border-radius: 16px; background: var(--panel); font-size: 1.08rem; }}
-.verdict b.v {{ color: #1F6B40; }}
+.verdict b.v {{ color: #7FD3A0; }}
 .cta {{ display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin: 18px 0 8px; padding: 16px; border:1px solid var(--line); border-radius:16px; }}
 .cta label {{ font-weight: 700; display:block; margin-bottom: 6px; }}
-.cta input {{ font-size: 1.1rem; padding: 12px 14px; border-radius: 12px; border:1px solid #C9CED8; width: 220px; max-width: 100%; }}
+.cta input {{ font-size: 1.1rem; padding: 12px 14px; border-radius: 12px; border:1px solid #3A4560; background:#121826; color:var(--ink); width: 220px; max-width: 100%; }}
 .cta .go {{ background: var(--a); color: #fff; border: 0; border-radius: 12px; padding: 13px 18px; font-size: 1.05rem; font-weight: 700; text-decoration:none; display:inline-block; }}
 .chips {{ display:flex; flex-wrap:wrap; gap:6px; width: 100%; }}
-.chip {{ border:1px solid var(--line); background:#fff; border-radius:999px; padding:6px 12px; font-size:.9rem; cursor:pointer; }}
-.err {{ color:#8E2424; font-size:.9rem; width:100%; min-height:1.2em; }}
+.chip {{ border:1px solid var(--line); background: #161D2C; color: var(--ink); border-radius:999px; padding:6px 12px; font-size:.9rem; cursor:pointer; }}
+.err {{ color:#F19A9A; font-size:.9rem; width:100%; min-height:1.2em; }}
 .cards {{ display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin: 18px 0; }}
-.card {{ border:1px solid var(--line); border-top: 6px solid; border-radius: 16px; padding: 14px 16px; }}
+.card {{ background: var(--card); border:1px solid var(--line); border-top: 6px solid; border-radius: 16px; padding: 14px 16px; }}
 .card .k {{ font-weight:800; }} .card .nm {{ color: var(--mut); font-size:.92rem; }}
 .card .big {{ font-size: 1.9rem; font-weight: 800; margin: 4px 0; }}
 .card ul {{ padding-left: 1.1rem; margin: .3rem 0; }} .card li {{ margin: .15rem 0; }}
@@ -113,11 +113,11 @@ h1 {{ font-size: clamp(1.8rem, 5vw, 2.8rem); line-height: 1.12; margin: .3rem 0 
 h2 {{ font-size: 1.3rem; margin: 28px 0 8px; }}
 ol.f li {{ margin: .45rem 0; }}
 .flow {{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; }}
-.step {{ border:1px solid var(--line); border-radius:12px; padding:8px 10px; font-size:.9rem; background:#fff; }}
+.step {{ border:1px solid var(--line); border-radius:12px; padding:8px 10px; font-size:.9rem; background: #161D2C; }}
 .step span {{ display:inline-block; width:20px; height:20px; border-radius:50%; background:var(--a); color:#fff; font-size:.75rem; text-align:center; line-height:20px; margin-right:6px; }}
 .arr {{ color: var(--mut); }}
 footer {{ margin-top: 36px; color: var(--mut); font-size: .85rem; border-top: 1px solid var(--line); padding-top: 12px; }}
-a {{ color: var(--b); }}
+a {{ color: #8FB8F2; }}
 @media (max-width: 600px) {{ .arr {{ display:none; }} .flow {{ flex-direction: column; align-items: stretch; }} .cta input {{ width:100%; }} .cta .go {{ width:100%; text-align:center; }} }}
 </style></head>
 <body><main>

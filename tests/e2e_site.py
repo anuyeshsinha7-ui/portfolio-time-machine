@@ -17,9 +17,9 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGES = [("home", "Does 'safe' stay safe"), ("how", "How this app works"), ("pick", "Pick stocks"), ("call", "The risk call"),
-         ("weights", "Optimum weights"), ("test1", "Test #1"), ("test2", "Test #2"), ("verdict", "Verdict and recommendation"),
-         ("methodology", "Methodology and data")]
+PAGES = [("home", "Your money in two portfolios"), ("how", "5 simple steps"), ("pick", "Build your portfolios"),
+         ("call", "Why A is the bold one"), ("weights", "Your shopping list"), ("test1", "Travel back to a crash"),
+         ("test2", "Would we change your portfolio?"), ("verdict", "Does 'safe' stay safe?"), ("methodology", "Checked against the exchange")]
 
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -38,17 +38,15 @@ def errors_on(page) -> list[str]:
 
 
 def click_nav(page, label: str, phone: bool) -> None:
-    if phone:
-        tab = page.locator(".st-key-ptm_tabbar").get_by_text(label, exact=True)
+    if True:  # desktop and phone both navigate through the app's tab bar
+        tab = page.locator(".st-key-ptm_tabs").get_by_text(label, exact=True)
         if tab.count():
             tab.first.click()
             return
         body = page.locator('[data-testid="stPopoverBody"]').get_by_text(label, exact=True)
         if not (body.count() and body.first.is_visible()):
-            page.locator(".st-key-ptm_tabbar").get_by_role("button").last.click()
+            page.locator(".st-key-ptm_tabs").get_by_role("button").last.click()
         body.first.click()
-    else:
-        page.locator('[data-testid="stSidebarNav"]').get_by_text(label).first.click()
 
 
 NAV_DESKTOP = {"home": "Home — the 30-second verdict", "how": "How this app works", "pick": "Pick stocks", "call": "The risk call",
@@ -84,16 +82,16 @@ def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int =
                 page.wait_for_selector("text=How much would you like to invest?", timeout=240_000)
                 boot = time.time() - t0
                 print(f"[{label}] dashboard booted in {boot:.1f}s")
-                if "25,00,000" not in page.inner_text("body"):
+                if "25,00,000" not in page.inner_text("body") and "25 lakh" not in page.inner_text("body"):
                     problems.append(f"{label}: amount from the landing page did not carry through")
                 if screens:
                     page.screenshot(path=str(screens / f"{label}_00_start.png"), full_page=not phone)
                 page.get_by_role("button", name="Continue →").click()
-                page.locator("h2").filter(has_text="Does 'safe' stay safe").first.wait_for(timeout=120_000)
+                page.get_by_text("Your money in two portfolios").first.wait_for(timeout=120_000)
                 for key, heading in PAGES:
                     if key != "home":
-                        click_nav(page, (NAV_PHONE if phone else NAV_DESKTOP)[key], phone)
-                        page.locator("h2").filter(has_text=heading).first.wait_for(timeout=120_000)
+                        click_nav(page, NAV_PHONE[key], phone)
+                        page.get_by_text(heading).first.wait_for(timeout=120_000)
                     time.sleep(2.5)
                     err = errors_on(page)
                     if err:

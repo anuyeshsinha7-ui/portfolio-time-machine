@@ -6,26 +6,24 @@ from src import config
 from src import data as D
 from src import ui
 
-ui.page_header("how", "How this app works", "Your journey through the app, and what happens behind each step.")
 left, right = ui.split()
 meta = D.metadata()
 
 with left:
-    st.markdown(f"""
-0. **Tell us how much you want to invest.** Every rupee figure follows your amount.
-1. **The 30-second verdict** on Home — the answer first, details after.
-2. **The stock universe.** Today's Nifty 200 companies; {meta['n_core']} of them have a clean price history all the way back to
-   September 2007, so they can be tested in every crisis since the 2008 crash.
-3. **Your choice — Industry → Stock.** Each stock carries a *High risk* or *Low risk* tag from two numbers: how much it moves
-   with the market (**beta**) and how much it swings on its own (**volatility**).
-4. **Optimum weights for today.** We work out how much of your money goes into each stock — the high-risk portfolio aims for the
-   best return per unit of risk, the low-risk one for the smallest swings — and turn that into whole shares you could buy.
-5. **Pick a historical event** — the 2008 crash, COVID-19, the taper tantrum… — and watch how both portfolios would have fared.
-6. **Weights at the time of crisis, calm and today**, and the money you could lose on a bad day **before and after** re-optimising.
-7. **Verdict** — does the risk label hold, are the weights robust, and which portfolio fits the loss you can live with.
-""")
-    st.info("Three situations appear everywhere: **Current** (the latest 12 months), **Crisis** (a historical crash you choose) "
-            "and **Calm** (a historical quiet spell you choose).")
+    ui.hero("How it works", "5 simple steps", "From your amount to a clear answer", "")
+    steps = [("Tell us your amount", "Every result is shown in rupees on it."),
+             ("Meet two portfolios", "A is bold, B is steady — 10 big Indian companies each."),
+             ("See what to buy", "Exact rupees and number of shares for each company."),
+             ("Travel back in time", "Replay the 2008 crash, COVID-19 and more on today's portfolios."),
+             ("Get your answer", "Does 'safe' stay safe? Which portfolio fits the loss you can live with?")]
+    st.html("<div class='app-steps'>" + "".join(f"<div class='app-step'><div class='n'>{i}</div><div><div class='t1'>{a}</div>"
+                                                 f"<div class='t2'>{b}</div></div></div>" for i, (a, b) in enumerate(steps, 1)) + "</div>")
+    ui.section("Three moments we compare")
+    ui.list_rows([("📅", "Today", "The latest 12 months", "", ""),
+                  ("🌪️", "A crash", "Pick any past crisis", "", ""),
+                  ("🌤️", "A calm year", "Pick any quiet spell", "", "")])
+    ui.note(f"Built on {meta['n_core'] + meta['n_extended']} Nifty 200 companies, every price double-checked against the "
+            "stock exchange's own records.", "🔍", "good")
 
 if right is not None:
     with right:
@@ -42,11 +40,11 @@ if right is not None:
         st.markdown("#### Cleaning, in one picture")
         st.graphviz_chart("""
 digraph C { rankdir=TB; bgcolor="transparent"; node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10,
- fillcolor="#FFFFFF", color="#C9CED8"]; edge [color="#9AA1AE", arrowsize=.6];
+ fillcolor="#161D2C", color="#3A4560"]; edge [color="#6B7690", arrowsize=.6];
  y [label="Yahoo raw closes\\n+ split & dividend history"]; a [label="Anchor to NSE official closes\\n(monthly checks, bisect to the day)"];
  s [label="Re-apply splits, bonuses, rights\\nfrom NSE records"]; d [label="Demergers: NSE price-discovery ratio\\nor drop that day"];
  b [label="Bad ticks, decimal errors,\\nstale prices (checked vs NSE)"]; c [label="Align to Nifty 50 calendar\\n(fill ≤ 2 days, ≤ 2% missing)"];
- v [label="Dividends reinvested\\n→ total-return prices", fillcolor="#FCE9E4", color="#E8735A"];
+ v [label="Dividends reinvested\\n→ total-return prices", fillcolor="#3A2420", color="#E8735A"];
  y -> a -> s -> d -> b -> c -> v; }""", width="stretch")
         st.markdown("#### Key assumptions")
         st.dataframe(pd.DataFrame([

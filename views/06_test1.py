@@ -11,74 +11,80 @@ from src import stats_tests as ST
 from src import ui
 from src import var_es as V
 
-ui.page_header("test1", "Test #1 — does the risk label hold?",
-               "We take today's portfolios back in time. If 'high risk' is real, A should lose more than B in every period — "
-               "and if 'low risk' is real, B should hold up better than the market in a crisis.")
+left, right = ui.split()
+with left:
+    ui.hero("Time machine", "Travel back to a crash", "Same portfolios, same amount — see what would have happened", "crisis")
 ui.event_selectors("t1")
 ctx = ui.context()
-ui.story_cards(ctx)
 k = ctx.ck()
-left, right = ui.split()
 regs = ctx.regimes()
+odds = round(1 / (1 - ctx.conf))
 
 with left:
     cr = ctx.crisis
-    st.markdown(f"#### If you had invested at the start of the {ctx.crisis_ev['name']} window")
+    ev = ctx.crisis_ev
+    w = ev["windows"].get(ctx.mode) or ev["windows"]["standard"]
+    ui.note(f"<b>{ui.short(ev)}</b> · {w[0]} → {w[1]}<br>{ev['story']}", "🌪️", "bad")
+    ui.section("Your money through the crash", "bought on day one")
     ui.show(CH.replay(cr["nifty"]["dates"], cr["A"]["replay"]["value"], cr["B"]["replay"]["value"], cr["nifty"]["value"],
                       ctx.amount_a, ctx.amount_b))
-    c1, c2, c3 = st.columns(3)
-    c1.metric("A — lowest value", ui.inr_short(cr["A"]["replay"]["low"] * ctx.amount_a),
-              f"−{ui.inr_short(cr['A']['replay']['largest_fall'] * ctx.amount_a)}", delta_color="inverse")
-    c2.metric("B — lowest value", ui.inr_short(cr["B"]["replay"]["low"] * ctx.amount_b),
-              f"−{ui.inr_short(cr['B']['replay']['largest_fall'] * ctx.amount_b)}", delta_color="inverse")
-    c3.metric("Nifty 50 — largest fall", ui.pct(cr["nifty"]["largest_fall"]))
-    st.caption("Buy-and-hold from the first day of the window: you buy once and do not rebalance.")
-
-    st.markdown("#### Verdict in each period")
-    cols = st.columns(3)
-    for col, (name, reg, ev) in zip(cols, regs):
+    ui.tiles([("A fell as low as", ui.inr_short(cr["A"]["replay"]["low"] * ctx.amount_a),
+               f"−{ui.inr_short(cr['A']['replay']['largest_fall'] * ctx.amount_a)} at worst", "a"),
+              ("B fell as low as", ui.inr_short(cr["B"]["replay"]["low"] * ctx.amount_b),
+               f"−{ui.inr_short(cr['B']['replay']['largest_fall'] * ctx.amount_b)} at worst", "b")])
+    ui.section("Did the labels hold?", f"worst {100 // odds if odds < 100 else 1}% of days")
+    rows = []
+    for name, reg, e_ in regs:
         held = RC.label_holds(reg["A"], reg["B"])
         ea, eb = ctx.h(reg["A"]["risk"]["Historical"][k]["es"]), ctx.h(reg["B"]["risk"]["Historical"][k]["es"])
-        bh = RC.b_held_up(reg["B"])
-        kind = {"Current": "n", "Crisis": "crisis", "Calm": "calm"}[name]
-        col.html(f"<div class='ptm-card ptm-{kind}'><h4>{name}{': ' + ev['name'] if ev else ''}</h4>"
-                 f"<div>{ui.pill('label held ✓', 'ok') if held else ui.pill('label did not hold ✗', 'bad')}</div>"
-                 f"<div class='sub' style='margin-top:.4rem'>Bad-day average loss beyond VaR (ES {ctx.conf:.0%}, {ctx.horizon}d):<br>"
-                 f"A <b>{ui.inr_short(ea * ctx.amount_a)}</b> ({ui.pct(ea)}) · B <b>{ui.inr_short(eb * ctx.amount_b)}</b> ({ui.pct(eb)})<br>"
-                 f"Volatility: A {ui.pct(reg['A']['volatility'])} · B {ui.pct(reg['B']['volatility'])}<br>"
-                 f"{'B beat the Nifty 50 ✓' if bh else 'B did not beat the Nifty 50'} (ES and drawdown)</div></div>")
-
-    st.markdown("#### Do the labels survive inside the period?")
-    for name, reg, ev in regs:
-        sa, sb = reg["A"]["stability"], reg["B"]["stability"]
-        if sa and sb:
-            st.markdown(f"* **{name}:** {sa['same']} of {sa['of']} of A's stocks are still *High risk* and "
-                        f"{sb['same']} of {sb['of']} of B's are still *Low risk* when the rule is re-run on that period's data.")
-
-    st.markdown("#### All-events scoreboard")
+        icon = {"Current": "📅", "Crisis": "🌪️", "Calm": "🌤️"}[name]
+        rows.append((icon, f"{name}{' · ' + ui.short(e_) if e_ else ' · last 12 months'}",
+                     f"Average loss on the worst days: A {ui.inr_short(ea * ctx.amount_a)} · B {ui.inr_short(eb * ctx.amount_b)}",
+                     ui.chip("held ✓", "ok") if held else ui.chip("did not hold", "bad"), ""))
+    ui.list_rows(rows)
+    bh = RC.b_held_up(cr["B"])
+    ui.note(f"In this crash, Portfolio B {'<b>beat the market</b> — smaller worst-day losses and a smaller fall than the Nifty 50.' if bh else '<b>did not beat the market</b> on both worst-day losses and the biggest fall.'}",
+            "🛡️", "good" if bh else "warn")
     board = ctx.scoreboard()
+    ui.section("Every crash and calm year we tested")
     if board is None:
-        st.info("The scoreboard for your own picks tests every catalogue event — this takes a little while in the browser.")
-        if st.button("Run the all-events scoreboard"):
+        if st.button("Test my picks in every event", width="stretch"):
             board = ui.compute_scoreboard(ctx)
     if board:
+        ui.list_rows([("🌪️" if r["type"] == "crisis" else "🌤️", ui.esc(r["event"]),
+                       f"Worst fall: A −{ui.inr_short(r['fall_A'] * ctx.amount_a)} · B −{ui.inr_short(r['fall_B'] * ctx.amount_b)}",
+                       ui.chip("✓ held", "ok") if r["label_held"] else ui.chip("✗", "bad"),
+                       ("B beat market" if r["b_held_up"] else "B lagged market") if r["type"] == "crisis" else "") for r in board])
         n = sum(r["label_held"] for r in board)
-        st.markdown(f"The high-risk label held in **{n} of {len(board)}** events. "
-                    f"B beat the Nifty 50 in **{sum(r['b_held_up'] for r in board if r['type'] == 'crisis')} of "
-                    f"{sum(r['type'] == 'crisis' for r in board)}** crises.")
-        tbl = pd.DataFrame([{"Event": r["event"], "Type": r["type"], "ES99 A": r["es99_A"], "ES99 B": r["es99_B"],
-                             "Worst ₹ fall A": ui.inr_short(r["fall_A"] * ctx.amount_a), "Worst ₹ fall B": ui.inr_short(r["fall_B"] * ctx.amount_b),
-                             "Label held": "✓" if r["label_held"] else "✗",
-                             "B beat Nifty": ("✓" if r["b_held_up"] else "✗") if r["type"] == "crisis" else "—"} for r in board])
-        st.dataframe(tbl, hide_index=True, width="stretch",
-                     column_config={"ES99 A": st.column_config.NumberColumn(format="percent"),
-                                    "ES99 B": st.column_config.NumberColumn(format="percent")})
-        ui.show(CH.scoreboard_heatmap(board, ctx.amount_a, ctx.amount_b))
-        st.caption("Shading runs from green (least risk in that column) to red (most). Standard 252-day windows unless "
-                   "'Event only' is selected in the sidebar.")
+        ui.verdict("🏁", f"Labels held in {n} of {len(board)} events",
+                   f"Steady beat the market in {sum(r['b_held_up'] for r in board if r['type'] == 'crisis')} of "
+                   f"{sum(r['type'] == 'crisis' for r in board)} crashes.")
 
 if right is not None:
     with right:
+        st.markdown("#### Verdict rules and the numbers behind them")
+        st.markdown(f"* {RC.RULES['label_holds']}\n* {RC.RULES['b_held_up']}")
+        rows = []
+        for name, reg, e_ in regs:
+            rows.append({"Period": name, "ES A": ctx.h(reg["A"]["risk"]["Historical"][k]["es"]), "ES B": ctx.h(reg["B"]["risk"]["Historical"][k]["es"]),
+                         "Vol A": reg["A"]["volatility"], "Vol B": reg["B"]["volatility"], "ES99 Nifty": reg["B"]["nifty"]["es99"],
+                         "MDD B": reg["B"]["max_drawdown"], "MDD Nifty": reg["B"]["nifty"]["max_drawdown"],
+                         "A stocks still High": f"{reg['A']['stability']['same']}/{reg['A']['stability']['of']}" if reg["A"]["stability"] else "",
+                         "B stocks still Low": f"{reg['B']['stability']['same']}/{reg['B']['stability']['of']}" if reg["B"]["stability"] else ""})
+        df = pd.DataFrame(rows)
+        st.dataframe(df, hide_index=True, width="stretch",
+                     column_config={c: st.column_config.NumberColumn(format="percent") for c in df.columns[1:8]})
+        st.caption("Label stability re-runs the High/Low rule with each period's own data and universe median.")
+        board_w = ctx.scoreboard()
+        if board_w:
+            st.markdown("#### All-events scoreboard")
+            tbl = pd.DataFrame([{"Event": r["event"], "Type": r["type"], "Window": f"{r['start']} → {r['end']}", "ES99 A": r["es99_A"],
+                                 "ES99 B": r["es99_B"], "Vol A": r["vol_A"], "Vol B": r["vol_B"], "MDD A": r["mdd_A"], "MDD B": r["mdd_B"],
+                                 "Label held": "✓" if r["label_held"] else "✗",
+                                 "B beat Nifty": ("✓" if r["b_held_up"] else "✗") if r["type"] == "crisis" else "—"} for r in board_w])
+            st.dataframe(tbl, hide_index=True, width="stretch",
+                         column_config={c: st.column_config.NumberColumn(format="percent") for c in tbl.columns[3:9]})
+            ui.show(CH.scoreboard_heatmap(board_w, ctx.amount_a, ctx.amount_b))
         st.markdown("#### How the windows were found")
         for ev in (ctx.crisis_ev, ctx.calm_ev):
             anc = ev.get("anchor") or {}

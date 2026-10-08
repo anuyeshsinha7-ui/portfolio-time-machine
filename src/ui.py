@@ -34,28 +34,28 @@ CSS = f"""
 :root {{ --a:{A_COL}; --b:{B_COL}; --n:{N_COL}; --crisis:{CRISIS_COL}; --calm:{CALM_COL}; }}
 .block-container {{ padding-top: 2.2rem; padding-bottom: 3rem; max-width: 1400px; }}
 .ptm-panel-label {{ font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700;
-  color: #5B6170; margin: 0 0 .4rem 0; display:flex; align-items:center; gap:.4rem; }}
+  color: #9AA3B5; margin: 0 0 .4rem 0; display:flex; align-items:center; gap:.4rem; }}
 .ptm-panel-label .dot {{ width:.55rem; height:.55rem; border-radius:50%; display:inline-block; }}
-.ptm-card {{ border: 1px solid #E3E6EB; border-radius: 14px; padding: 14px 16px; background: #fff; height: 100%; }}
+.ptm-card {{ border: 1px solid #2A3448; border-radius: 14px; padding: 14px 16px; background: #161D2C; height: 100%; }}
 .ptm-card h4 {{ margin: 0 0 6px 0; font-size: 1rem; }}
 .ptm-card .big {{ font-size: 1.7rem; font-weight: 700; line-height: 1.15; }}
-.ptm-card .sub {{ color: #5B6170; font-size: .86rem; }}
+.ptm-card .sub {{ color: #9AA3B5; font-size: .86rem; }}
 .ptm-a {{ border-top: 5px solid var(--a); }} .ptm-b {{ border-top: 5px solid var(--b); }}
 .ptm-n {{ border-top: 5px solid var(--n); }}
-.ptm-crisis {{ border-left: 5px solid var(--crisis); background: #FDF5F5; }}
-.ptm-calm {{ border-left: 5px solid var(--calm); background: #F3FAF6; }}
-.ptm-concept {{ border: 1px solid #D9DEF0; background: #F6F8FD; border-radius: 14px; padding: 12px 16px; margin: .6rem 0 1rem 0; }}
+.ptm-crisis {{ border-left: 5px solid var(--crisis); background: #2A1A1D; }}
+.ptm-calm {{ border-left: 5px solid var(--calm); background: #15281E; }}
+.ptm-concept {{ border: 1px solid #2B3756; background: #162036; border-radius: 14px; padding: 12px 16px; margin: .6rem 0 1rem 0; }}
 .ptm-concept .t {{ font-weight: 700; font-size: .95rem; margin-bottom: .35rem; }}
-.ptm-concept .k {{ font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: #3B4A8C; font-weight: 700; margin-top:.45rem; }}
+.ptm-concept .k {{ font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: #9DB1F0; font-weight: 700; margin-top:.45rem; }}
 .ptm-concept p {{ margin: .1rem 0 .2rem 0; font-size: .9rem; }}
 .ptm-pill {{ display:inline-block; padding: 2px 9px; border-radius: 999px; font-size: .78rem; font-weight: 600; }}
-.ptm-pill.a {{ background: #FCE9E4; color: #9A3B26; }} .ptm-pill.b {{ background: #E3EDFB; color: #1E4F94; }}
-.ptm-pill.ok {{ background: #E3F4EA; color: #1F6B40; }} .ptm-pill.bad {{ background: #FBE5E5; color: #8E2424; }}
-.ptm-pill.mid {{ background: #FFF3D6; color: #7A5A00; }} .ptm-pill.grey {{ background:#EEF0F3; color:#3F4654; }}
+.ptm-pill.a {{ background: #3A2420; color: #F4A48F; }} .ptm-pill.b {{ background: #1C2C47; color: #8FB8F2; }}
+.ptm-pill.ok {{ background: #163225; color: #7FD3A0; }} .ptm-pill.bad {{ background: #3A1D1F; color: #F19A9A; }}
+.ptm-pill.mid {{ background: #3A3016; color: #F2C96B; }} .ptm-pill.grey {{ background:#263043; color:#C9CFDB; }}
 .ptm-verdict {{ font-size: 1.05rem; line-height: 1.5; }}
-.ptm-footer {{ color: #6B7280; font-size: .8rem; border-top: 1px solid #E5E7EB; padding-top: .6rem; margin-top: 2rem; }}
+.ptm-footer {{ color: #8E97A8; font-size: .8rem; border-top: 1px solid #2A3448; padding-top: .6rem; margin-top: 2rem; }}
 .ptm-hero {{ font-size: 1.9rem; font-weight: 750; line-height: 1.2; margin: .2rem 0 .3rem 0; }}
-.ptm-tag {{ color:#5B6170; font-size: 1.02rem; margin-bottom: .8rem; }}
+.ptm-tag {{ color:#9AA3B5; font-size: 1.02rem; margin-bottom: .8rem; }}
 @media (max-width: 640px) {{
   .block-container {{ padding-left: 1rem; padding-right: 1rem; padding-top: 1rem; }}
   .ptm-hero {{ font-size: 1.45rem; }}
@@ -70,37 +70,17 @@ def inject_css() -> None:
 
 
 # ---------------------------------------------------------------- layout
-def split():
-    """(left, right): Client view and The Backing; right is None when the Backing is hidden.
-    On phones the Backing becomes a tap-to-open section under the client view."""
-    if st.session_state.get("phone"):
-        left = st.container()
-        right = st.expander("📐 The Backing — logic, maths and evidence", expanded=False) \
-            if st.session_state.get("show_backing", True) else None
-        return left, right
-    if not st.session_state.get("show_backing", True):
-        c = st.container()
-        with c:
-            panel_label("Client view", A_COL)
-        return c, None
-    left, right = st.columns([1.05, 1], gap="large")
-    with left:
-        panel_label("Client view", A_COL)
-    with right:
-        panel_label("The Backing — logic, maths and evidence", B_COL)
-    return left, right
-
-
 def panel_label(text: str, colour: str) -> None:
     st.html(f'<div class="ptm-panel-label"><span class="dot" style="background:{colour}"></span>{text}</div>')
 
 
 def page_header(step_key: str, title: str, subtitle: str = "") -> None:
-    step = dict(STEPS).get(step_key, "")
-    st.caption(step)
-    st.markdown(f"## {title}")
-    if subtitle:
-        st.markdown(f"<div class='ptm-tag'>{subtitle}</div>", unsafe_allow_html=True)
+    client, _ = split()
+    with client:
+        st.caption(dict(STEPS).get(step_key, ""))
+        st.markdown(f"## {title}")
+        if subtitle:
+            st.markdown(f"<div class='ptm-tag'>{subtitle}</div>", unsafe_allow_html=True)
 
 
 def card(title: str, value: str, sub: str = "", kind: str = "") -> None:
@@ -124,21 +104,26 @@ def concept_box(title: str, plain: str, formally: str, why: str, where: str, lat
 
 
 def flowchart(current: str) -> None:
-    """Pipeline flowchart with the current step highlighted."""
-    nodes = [("data", "Yahoo Finance +\nNSE data"), ("clean", "Clean & verify\n(splits, demergers…)")] + \
+    """Pipeline flowchart (two rows) with the current step highlighted."""
+    nodes = [("data", "Yahoo Finance +\nNSE data"), ("clean", "Clean & verify")] + \
             [(k, lbl.split(" · ")[1]) for k, lbl in STEPS[:9]]
-    lines = ['digraph G { rankdir=LR; bgcolor="transparent"; nodesep=0.25; ranksep=0.25;',
-             'node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, color="#C9CED8", fillcolor="#FFFFFF", fontcolor="#1F2430", margin="0.12,0.06"];',
-             'edge [color="#9AA1AE", arrowsize=0.6];']
+    lines = ['digraph G { rankdir=TB; bgcolor="transparent"; nodesep=0.25; ranksep=0.45; newrank=true; size="11,3";',
+             'node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11, color="#3A4560", fillcolor="#161D2C", fontcolor="#E6E9EF", margin="0.15,0.08"];',
+             'edge [color="#6B7690", arrowsize=0.7];']
     for k, lbl in nodes:
         lbl = lbl.replace('"', "'")
-        if k == current:
-            lines.append(f'"{k}" [label="{lbl}", fillcolor="{A_COL}", fontcolor="white", color="{A_COL}", penwidth=2];')
-        else:
-            lines.append(f'"{k}" [label="{lbl}"];')
+        style = f', fillcolor="{A_COL}", fontcolor="white", color="{A_COL}", penwidth=2' if k == current else ""
+        lines.append(f'"{k}" [label="{lbl}"{style}];')
     order = [k for k, _ in nodes]
-    for a, b in zip(order[:-1], order[1:]):
+    half = (len(order) + 1) // 2
+    lines.append("{rank=same; " + " ".join(f'"{k}"' for k in order[:half]) + "}")
+    lines.append("{rank=same; " + " ".join(f'"{k}"' for k in order[half:]) + "}")
+    for a, b in zip(order[:half - 1], order[1:half]):
         lines.append(f'"{a}" -> "{b}";')
+    lines.append(f'"{order[half - 1]}" -> "{order[half]}" [constraint=false];')
+    for a, b in zip(order[half:-1], order[half + 1:]):
+        lines.append(f'"{a}" -> "{b}";')
+    lines.append(f'"{order[0]}" -> "{order[half]}" [style=invis];')
     lines.append("}")
     st.graphviz_chart("\n".join(lines), width="stretch")
 
@@ -151,14 +136,14 @@ def footer() -> None:
 def fig_style(fig: go.Figure, height: int = 380, title: str | None = None) -> go.Figure:
     fig.update_layout(height=height, margin=dict(l=10, r=10, t=40 if title else 10, b=10), title=title,
                       legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0), font=dict(size=12),
-                      plot_bgcolor="white", paper_bgcolor="white", hovermode="x unified")
-    fig.update_xaxes(gridcolor="#EEF0F3", zeroline=False)
-    fig.update_yaxes(gridcolor="#EEF0F3", zeroline=False)
+                      plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", hovermode="x unified")
+    fig.update_xaxes(gridcolor="#263043", zeroline=False)
+    fig.update_yaxes(gridcolor="#263043", zeroline=False)
     return fig
 
 
 def show(fig: go.Figure) -> None:
-    if st.session_state.get("phone"):
+    if st.session_state.get("phone") or _CTX["in_client"]:
         h = fig.layout.height or 380
         fig.update_layout(height=min(int(h * 0.82), 420) if h < 600 else 520,
                           margin=dict(l=4, r=4, t=36 if (fig.layout.title.text or "") else 8, b=4),
@@ -469,12 +454,14 @@ def _sync(src: str, dst: str) -> None:
 def event_selectors(page: str) -> None:
     """The crisis and calm dropdowns repeated at the top of a page, kept in sync with the sidebar."""
     s = st.session_state
-    c1, c2 = st.columns(2)
+    client, _ = split()
+    with client:
+        c1, c2 = st.columns(2)
     for col, kind in ((c1, "crisis"), (c2, "calm")):
         key = f"top_{kind}_{page}"
         opts = event_options(kind)
         s[key] = s[f"{kind}_id"] if s[f"{kind}_id"] in opts else opts[0]
-        labels = {e: event_label_for(e, s["pick_A"] + s["pick_B"], s["window_mode"]) for e in opts}
+        labels = {e: compact_label(e, s["pick_A"] + s["pick_B"], s["window_mode"]) for e in opts}
         col.selectbox(f"{'🔴 Crisis' if kind == 'crisis' else '🟢 Calm'} to test against", opts, format_func=labels.get,
                       key=key, on_change=_sync, args=(key, f"{kind}_id"))
 
@@ -489,7 +476,9 @@ def event_label_for(eid: str, symbols: list[str], mode: str) -> str:
 
 
 def story_cards(ctx: "Ctx") -> None:
-    c1, c2 = st.columns(2)
+    client, _ = split()
+    with client:
+        c1, c2 = st.columns(2)
     for col, ev, kind in ((c1, ctx.crisis_ev, "crisis"), (c2, ctx.calm_ev, "calm")):
         w = ev["windows"].get(ctx.mode) or ev["windows"]["standard"]
         col.html(f"<div class='ptm-card ptm-{kind}'><h4>{'🔴' if kind == 'crisis' else '🟢'} {ev['name']}</h4>"
@@ -497,60 +486,322 @@ def story_cards(ctx: "Ctx") -> None:
                  f"<p style='margin:.4rem 0 0'>{ev['story']}</p></div>")
 
 
-# ---------------------------------------------------------------- phone chrome
+# ---------------------------------------------------------------- frames: virtual phone (desktop) or full-screen app (phones)
 TABS = [("home", "🏠", "Home"), ("pick", "🧺", "Pick"), ("test1", "🌪️", "Test 1"), ("test2", "🔁", "Test 2"),
         ("verdict", "✅", "Verdict")]
 MORE = [("start", "💰", "Your amount"), ("how", "🧭", "How it works"), ("call", "⚖️", "The risk call"),
         ("weights", "🎯", "Optimum weights"), ("method", "📚", "Methodology & data")]
+_CTX = {"in_client": False}
 
-PHONE_CSS = f"""
+DEVICE_CSS = """
 <style>
-.block-container {{ padding: 4.2rem .85rem 6.5rem .85rem !important; }}
-.st-key-ptm_topbar {{ position: sticky; top: 3.1rem; z-index: 990; background: rgba(255,255,255,.96); backdrop-filter: blur(6px);
-  border-bottom: 1px solid #E8EAEE; margin: -.6rem -.85rem .6rem -.85rem; padding: .45rem .85rem; }}
-.st-key-ptm_topbar p {{ margin: 0; font-size: .82rem; line-height: 1.25; }}
-.st-key-ptm_topbar [data-testid="stPopover"] button {{ border-radius: 999px; padding: .25rem .8rem; min-height: 2.4rem; }}
-.st-key-ptm_tabbar {{ position: fixed; left: 0; right: 0; bottom: 0; z-index: 999; background: #fff; border-top: 1px solid #E3E6EB;
-  box-shadow: 0 -6px 18px rgba(31,36,48,.07); padding: .25rem .2rem calc(.3rem + env(safe-area-inset-bottom)); gap: 0 !important;
-  justify-content: space-around; }}
-.st-key-ptm_tabbar > div {{ flex: 1 1 0; min-width: 0; }}
-.st-key-ptm_tabbar a {{ display: flex !important; flex-direction: column; align-items: center; gap: 0; padding: .3rem .1rem !important;
-  border-radius: 12px; min-height: 3rem; justify-content: center; }}
-.st-key-ptm_tabbar a p, .st-key-ptm_tabbar a span {{ font-size: .68rem !important; line-height: 1.1; text-align: center; white-space: nowrap; }}
-.st-key-ptm_tabbar [data-testid="stPopover"] button {{ border: none; min-height: 3rem; font-size: .7rem; padding: .2rem; width: 100%; }}
-.ptm-tab-active a {{ background: #FCE9E4; }}
-.ptm-hero, h2 {{ font-size: 1.4rem !important; }}
-h4 {{ font-size: 1.05rem !important; }}
-.ptm-card {{ border-radius: 16px; box-shadow: 0 2px 10px rgba(31,36,48,.05); margin-bottom: .5rem; }}
-.ptm-card .big {{ font-size: 1.45rem; }}
-div[data-testid="stExpander"] details {{ border-radius: 14px; border-color: #D9DEF0; background: #F8F9FD; }}
-div[data-testid="stExpander"] summary {{ min-height: 3rem; font-weight: 600; }}
-button[kind="primary"], button[kind="secondary"] {{ min-height: 2.8rem; border-radius: 12px; }}
-[data-testid="stMetricValue"] {{ font-size: 1.35rem; }}
-.ptm-footer {{ margin-bottom: 1rem; }}
+[data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"] { display: none !important; }
+.block-container { padding-top: 1.4rem !important; max-width: 1500px !important; }
+.st-key-ptm_stage > div > [data-testid="stColumn"]:first-child { position: sticky; top: .8rem; align-self: flex-start; }
+.st-key-ptm_phone { width: 400px; max-width: 100%; margin: 0 auto; background: #161D2C; border: 13px solid #05070B; border-radius: 52px;
+  box-shadow: 0 0 0 2px #2E3445, 0 28px 70px rgba(0,0,0,.6), 0 0 80px rgba(232,115,90,.08); padding: 0 !important; gap: 0 !important; overflow: hidden; }
+.ptm-status { display: flex; justify-content: space-between; align-items: center; padding: 10px 26px 4px; font: 600 13px/1 -apple-system, "SF Pro Text", Helvetica, sans-serif; color: #E6E9EF; position: relative; background: #0F1521; }
+.ptm-status .island { position: absolute; left: 50%; top: 6px; transform: translateX(-50%); width: 112px; height: 28px; background: #000; border-radius: 20px; }
+.ptm-status .icons { letter-spacing: 3px; font-size: 11px; }
+.st-key-ptm_appbar { padding: 6px 14px 8px !important; border-bottom: 1px solid #263043; gap: 6px !important; }
+.st-key-ptm_appbar p { margin: 0; font-size: .82rem; line-height: 1.25; }
+.st-key-ptm_appbar [data-testid="stPopover"] button { border-radius: 999px; min-height: 2.1rem; padding: 0 .7rem; }
+.st-key-ptm_screen { padding: 10px 14px 18px !important; background: #0F1521; }
+.st-key-ptm_screen h2 { font-size: 1.28rem !important; line-height: 1.25; padding-top: .2rem; }
+.st-key-ptm_screen h4 { font-size: 1rem !important; }
+.st-key-ptm_screen .ptm-tag { font-size: .9rem; }
+.st-key-ptm_screen [data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; }
+.st-key-ptm_screen [data-testid="stColumn"] { min-width: 100% !important; flex: 1 1 100% !important; }
+.st-key-ptm_screen .ptm-card { border-radius: 16px; box-shadow: 0 2px 10px rgba(31,36,48,.06); margin-bottom: .4rem; }
+.st-key-ptm_screen .ptm-card .big { font-size: 1.35rem; }
+.st-key-ptm_screen [data-testid="stMetricValue"] { font-size: 1.25rem; }
+.st-key-ptm_tabs { border-top: 1px solid #2A3448; padding: 4px 2px 2px !important; gap: 0 !important; justify-content: space-around; background: #161D2C; }
+.st-key-ptm_tabs > div { flex: 1 1 0; min-width: 0; }
+.st-key-ptm_tabs a { display: flex !important; flex-direction: column; align-items: center; padding: .25rem .05rem !important; border-radius: 12px; min-height: 2.8rem; justify-content: center; }
+.st-key-ptm_tabs a p, .st-key-ptm_tabs a span { font-size: .64rem !important; line-height: 1.1; white-space: nowrap; }
+.st-key-ptm_tabs [data-testid="stPopover"] button { border: none; min-height: 2.8rem; padding: .1rem; width: 100%; }
+.ptm-homebar { height: 22px; display: flex; justify-content: center; align-items: center; background: #161D2C; }
+.ptm-homebar span { width: 120px; height: 5px; border-radius: 3px; background: #9AA3B5; }
+.st-key-ptm_working { padding-top: .2rem; }
+.ptm-working-head { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: #3B7DD8; }
+.ptm-working-title { font-size: 1.55rem; font-weight: 750; margin: .1rem 0 .2rem; }
+.ptm-caption-phone { text-align: center; color: #8E97A8; font-size: .8rem; margin-top: .6rem; }
+@media (max-width: 900px) {
+  .st-key-ptm_stage > div > [data-testid="stColumn"]:first-child { position: static; }
+}
+</style>
+"""
+
+MOBILE_CSS = """
+<style>
+.block-container { padding: 4.2rem .85rem 6.5rem .85rem !important; }
+[data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"] { display: none !important; }
+.st-key-ptm_appbar { position: sticky; top: 3.1rem; z-index: 990; background: rgba(15,21,33,.96); backdrop-filter: blur(6px);
+  border-bottom: 1px solid #263043; margin: -.6rem -.85rem .6rem -.85rem; padding: .45rem .85rem !important; }
+.st-key-ptm_appbar p { margin: 0; font-size: .82rem; line-height: 1.25; }
+.st-key-ptm_appbar [data-testid="stPopover"] button { border-radius: 999px; min-height: 2.4rem; }
+.st-key-ptm_tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 999; background: #161D2C; border-top: 1px solid #2A3448;
+  box-shadow: 0 -6px 18px rgba(31,36,48,.07); padding: .25rem .2rem calc(.3rem + env(safe-area-inset-bottom)) !important; gap: 0 !important;
+  justify-content: space-around; }
+.st-key-ptm_tabs > div { flex: 1 1 0; min-width: 0; }
+.st-key-ptm_tabs a { display: flex !important; flex-direction: column; align-items: center; padding: .3rem .1rem !important;
+  border-radius: 12px; min-height: 3rem; justify-content: center; }
+.st-key-ptm_tabs a p, .st-key-ptm_tabs a span { font-size: .68rem !important; line-height: 1.1; white-space: nowrap; }
+.st-key-ptm_tabs [data-testid="stPopover"] button { border: none; min-height: 3rem; padding: .2rem; width: 100%; }
+h2 { font-size: 1.4rem !important; }
+.ptm-card { border-radius: 16px; box-shadow: 0 2px 10px rgba(31,36,48,.05); margin-bottom: .5rem; }
+div[data-testid="stExpander"] details { border-radius: 14px; border-color: #2B3756; background: #141B2B; }
+div[data-testid="stExpander"] summary { min-height: 3rem; font-weight: 600; }
+button[kind="primary"], button[kind="secondary"] { min-height: 2.8rem; border-radius: 12px; }
 </style>
 """
 
 
-def top_bar(page_title: str):
-    """Sticky app header: page name, the client's amount, and the ⚙️ settings sheet. Returns the sheet's container."""
-    st.html(PHONE_CSS)
-    s = st.session_state
-    bar = st.container(key="ptm_topbar", horizontal=True, vertical_alignment="center", horizontal_alignment="distribute")
+class _Client:
+    """Wraps the customer-view container so charts drawn inside it are sized for a phone screen."""
+
+    def __init__(self, c):
+        self._c = c
+
+    def __enter__(self):
+        self._prev = _CTX["in_client"]
+        _CTX["in_client"] = True
+        return self._c.__enter__()
+
+    def __exit__(self, *a):
+        _CTX["in_client"] = self._prev
+        return self._c.__exit__(*a)
+
+    def __getattr__(self, name):
+        return getattr(self._c, name)
+
+
+def _app_bar(page_title: str, controls) -> None:
+    bar = st.container(key="ptm_appbar", horizontal=True, vertical_alignment="center", horizontal_alignment="distribute")
     with bar:
         a, b = amounts()
-        st.markdown(f"**⏳ {page_title.split(' — ')[0]}**  \n"
-                    f"<span style='color:#5B6170'>A {inr_short(a)} · B {inr_short(b)}</span>", unsafe_allow_html=True)
-        sheet = st.popover("⚙️", width="content", help="Settings: amount, events, confidence, horizon")
-    return sheet
+        right_txt = f"A {inr_short(a)} · B {inr_short(b)}" if st.session_state["amount_confirmed"] else "Portfolio Time Machine"
+        st.markdown(f"**⏳ {page_title.split(' — ')[0]}**  \n<span style='color:#9AA3B5'>{right_txt}</span>",
+                    unsafe_allow_html=True)
+        with st.popover("⚙️", width="content", help="Settings: amount, events, confidence, horizon"):
+            controls()
 
 
-def tab_bar(pages: dict, current_title: str) -> None:
-    """Fixed bottom navigation, like a phone app."""
-    bar = st.container(key="ptm_tabbar", horizontal=True)
-    with bar:
+def _tab_bar(pages: dict) -> None:
+    with st.container(key="ptm_tabs", horizontal=True):
         for key, icon, label in TABS:
             st.page_link(pages[key], label=label, icon=icon)
         with st.popover("☰", width="stretch", help="More pages"):
             for key, icon, label in MORE:
                 st.page_link(pages[key], label=label, icon=icon)
+
+
+def setup_frames(pages: dict, page_title: str, controls) -> None:
+    """Build the page skeleton before the page runs.
+
+    Computer: a virtual phone on the left (the customer app exactly as a client sees it) and "The working" on the right.
+    Phone: the app full screen, with the working as a tap-to-open section under each screen."""
+    s = st.session_state
+    confirmed = s["amount_confirmed"]
+    st.html(APP_CSS)
+    if s.get("phone"):
+        st.html(MOBILE_CSS)
+        _app_bar(page_title, controls)
+        client = st.container()
+        working = st.expander("📐 The working — logic, maths and evidence") if s.get("show_backing", True) else None
+        if confirmed:
+            _tab_bar(pages)
+        s["_frames"] = {"client": client, "working": working}
+        return
+    st.html(DEVICE_CSS)
+    show_working = s.get("show_backing", True)
+    stage = st.container(key="ptm_stage")
+    with stage:
+        cols = st.columns([0.36, 0.64], gap="large") if show_working else st.columns([1, 1.2, 1])[1:2]
+        with cols[0]:
+            with st.container(key="ptm_phone"):
+                st.html("<div class='ptm-status'><span>9:41</span><span class='island'></span><span class='icons'>▂▄▆ ᯤ ▮</span></div>")
+                _app_bar(page_title, controls)
+                screen = st.container(key="ptm_screen", height=640, border=False)
+                if confirmed:
+                    _tab_bar(pages)
+                st.html("<div class='ptm-homebar'><span></span></div>")
+            st.html("<div class='ptm-caption-phone'>The customer app, as a client sees it on their phone — tap through it.</div>")
+        working = None
+        if show_working:
+            with cols[1]:
+                working = st.container(key="ptm_working")
+                with working:
+                    st.html(f"<div class='ptm-working-head'>The working · logic, maths and evidence</div>"
+                            f"<div class='ptm-working-title'>Behind “{page_title.split(' — ')[0]}”</div>")
+    s["_frames"] = {"client": screen, "working": working}
+
+
+def split():
+    """(client, working): the customer screen (inside the virtual phone on a computer, full screen on a phone) and the
+    working panel (None when hidden)."""
+    f = st.session_state.get("_frames")
+    if not f:  # page run on its own (tests): plain two columns
+        left, right = st.columns([1.05, 1], gap="large")
+        return _Client(left), right
+    return _Client(f["client"]), f["working"]
+
+
+# ---------------------------------------------------------------- app components (the customer screens)
+APP_CSS = f"""
+<style>
+.app-hero {{ border-radius: 22px; padding: 18px 18px 16px; color: #fff; margin: 2px 0 12px;
+  background: linear-gradient(135deg, #2B3550 0%, #182032 100%); border: 1px solid #2E3A57; box-shadow: 0 10px 24px rgba(0,0,0,.35); }}
+.app-hero .l {{ font-size: .78rem; opacity: .8; letter-spacing: .02em; }}
+.app-hero .v {{ font-size: 2rem; font-weight: 800; line-height: 1.1; margin: 2px 0 4px; }}
+.app-hero .s {{ font-size: .82rem; opacity: .85; }}
+.app-hero.a {{ background: linear-gradient(135deg, #E8735A 0%, #C9533B 100%); }}
+.app-hero.b {{ background: linear-gradient(135deg, #3B7DD8 0%, #2457A5 100%); }}
+.app-hero.crisis {{ background: linear-gradient(135deg, #B83A3A 0%, #7E2020 100%); }}
+.app-hero.calm {{ background: linear-gradient(135deg, #2E9E5B 0%, #1C6B3C 100%); }}
+.app-sec {{ display:flex; justify-content: space-between; align-items: baseline; margin: 16px 2px 6px; }}
+.app-sec .t {{ font-weight: 750; font-size: .98rem; color: #E6E9EF; }}
+.app-sec .x {{ font-size: .75rem; color: #8E97A8; }}
+.app-plan {{ background: #161D2C; border-radius: 18px; padding: 14px 14px 10px; margin-bottom: 10px; border: 1px solid #263043;
+  box-shadow: 0 3px 12px rgba(31,36,48,.06); }}
+.app-plan .top {{ display:flex; align-items:center; gap: 10px; }}
+.app-plan .ic {{ width: 38px; height: 38px; border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size: 1.15rem; }}
+.app-plan .ic.a {{ background: #3A2420; }} .app-plan .ic.b {{ background: #1C2C47; }}
+.app-plan .nm {{ font-weight: 750; font-size: .98rem; line-height: 1.15; }}
+.app-plan .tg {{ font-size: .75rem; color: #8E97A8; }}
+.app-plan .amt {{ margin-left: auto; text-align: right; font-weight: 800; font-size: 1.05rem; }}
+.app-plan .rows {{ margin-top: 10px; border-top: 1px dashed #2A3448; }}
+.app-plan .row {{ display:flex; justify-content: space-between; padding: 7px 0; font-size: .85rem; border-bottom: 1px solid #1E2638; }}
+.app-plan .row:last-child {{ border-bottom: 0; }}
+.app-plan .row .k {{ color: #9AA3B5; }} .app-plan .row .v {{ font-weight: 700; }}
+.app-tiles {{ display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }}
+.app-tile {{ background: #161D2C; border: 1px solid #263043; border-radius: 16px; padding: 10px 12px; }}
+.app-tile .l {{ font-size: .72rem; color: #8E97A8; }} .app-tile .v {{ font-size: 1.15rem; font-weight: 800; margin-top: 2px; }}
+.app-tile .s {{ font-size: .7rem; color: #8E97A8; }}
+.app-tile.a {{ border-left: 4px solid {A_COL}; }} .app-tile.b {{ border-left: 4px solid {B_COL}; }}
+.app-cmp {{ background: #161D2C; border: 1px solid #263043; border-radius: 16px; padding: 12px 14px; margin-bottom: 10px; }}
+.app-cmp .q {{ font-weight: 700; font-size: .88rem; margin-bottom: 8px; }}
+.app-cmp .ln {{ display:grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items:center; margin: 5px 0; font-size: .8rem; }}
+.app-cmp .bar {{ height: 9px; border-radius: 6px; background: #1E2638; overflow: hidden; }}
+.app-cmp .bar span {{ display:block; height:100%; border-radius: 6px; }}
+.app-cmp .tag {{ font-weight: 800; font-size: .75rem; text-align:center; border-radius: 6px; color:#fff; }}
+.app-cmp .val {{ font-weight: 700; min-width: 70px; text-align: right; }}
+.app-cmp .note {{ font-size: .74rem; color: #8E97A8; margin-top: 6px; }}
+.app-list {{ background: #161D2C; border: 1px solid #263043; border-radius: 16px; padding: 2px 12px; margin-bottom: 10px; }}
+.app-li {{ display:flex; align-items:center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #1E2638; }}
+.app-li:last-child {{ border-bottom: 0; }}
+.app-li .ic {{ width: 34px; height: 34px; border-radius: 10px; background: #1E2638; display:flex; align-items:center; justify-content:center; font-size: 1rem; flex: none; }}
+.app-li .tx {{ flex: 1; min-width: 0; }}
+.app-li .t1 {{ font-weight: 650; font-size: .86rem; line-height: 1.2; }}
+.app-li .t2 {{ font-size: .72rem; color: #8E97A8; line-height: 1.25; }}
+.app-li .rt {{ text-align: right; flex: none; }}
+.app-li .r1 {{ font-weight: 750; font-size: .86rem; }} .app-li .r2 {{ font-size: .7rem; color: #8E97A8; }}
+.chip {{ display:inline-block; padding: 2px 8px; border-radius: 999px; font-size: .68rem; font-weight: 700; }}
+.chip.ok {{ background: #163225; color: #7FD3A0; }} .chip.bad {{ background: #3A1D1F; color: #F19A9A; }}
+.chip.mid {{ background: #3A3016; color: #F2C96B; }} .chip.a {{ background: #3A2420; color: #F4A48F; }}
+.chip.b {{ background: #1C2C47; color: #8FB8F2; }} .chip.grey {{ background: #263043; color: #C9CFDB; }}
+.app-note {{ display:flex; gap: 10px; background: #162036; border: 1px solid #2B3756; border-radius: 16px; padding: 10px 12px;
+  font-size: .82rem; line-height: 1.4; margin-bottom: 10px; }}
+.app-note .i {{ font-size: 1.1rem; }}
+.app-note.warn {{ background: #2E2814; border-color: #5A4A1E; }} .app-note.good {{ background: #15281E; border-color: #24503A; }}
+.app-note.bad {{ background: #2A1A1D; border-color: #5A2A2E; }}
+.app-verdict {{ text-align:center; background: #161D2C; border: 1px solid #263043; border-radius: 20px; padding: 16px 14px; margin-bottom: 10px; }}
+.app-verdict .e {{ font-size: 2rem; }} .app-verdict .h {{ font-weight: 800; font-size: 1.1rem; margin: 2px 0; }}
+.app-verdict .b {{ font-size: .82rem; color: #B4BCCB; }}
+.app-steps {{ counter-reset: s; }}
+.app-step {{ display:flex; gap: 10px; align-items:flex-start; margin: 0 0 10px; }}
+.app-step .n {{ flex:none; width: 26px; height: 26px; border-radius: 50%; background: {A_COL}; color:#fff; font-weight:800; font-size:.8rem;
+  display:flex; align-items:center; justify-content:center; }}
+.app-step .t1 {{ font-weight: 700; font-size: .88rem; }} .app-step .t2 {{ font-size: .78rem; color: #9AA3B5; }}
+.app-onb {{ text-align:center; padding: 6px 4px 2px; }}
+.app-onb .logo {{ font-size: 2.4rem; }} .app-onb .h {{ font-size: 1.35rem; font-weight: 800; line-height: 1.2; margin: 4px 0; }}
+.app-onb .p {{ font-size: .86rem; color: #9AA3B5; }}
+</style>
+"""
+
+PLAN = {"A": ("Portfolio A", "Bold · aims for higher returns", "🚀", "a", "High risk"),
+        "B": ("Portfolio B", "Steady · plays it safe", "🛡️", "b", "Low risk")}
+
+
+def app_css() -> None:
+    st.html(APP_CSS)
+
+
+def esc(x) -> str:
+    import html as _h
+    return _h.escape(str(x))
+
+
+def hero(label: str, value: str, sub: str = "", tone: str = "") -> None:
+    st.html(f"<div class='app-hero {tone}'><div class='l'>{label}</div><div class='v'>{value}</div><div class='s'>{sub}</div></div>")
+
+
+def section(title: str, extra: str = "") -> None:
+    st.html(f"<div class='app-sec'><span class='t'>{title}</span><span class='x'>{extra}</span></div>")
+
+
+def plan_card(k: str, amount: float, rows: list[tuple[str, str]]) -> None:
+    nm, tg, ic, tone, risk = PLAN[k]
+    body = "".join(f"<div class='row'><span class='k'>{a}</span><span class='v'>{b}</span></div>" for a, b in rows)
+    st.html(f"<div class='app-plan'><div class='top'><div class='ic {tone}'>{ic}</div><div><div class='nm'>{nm} "
+            f"<span class='chip {tone}'>{risk}</span></div><div class='tg'>{tg}</div></div>"
+            f"<div class='amt'>{inr_short(amount)}</div></div><div class='rows'>{body}</div></div>")
+
+
+def tiles(items: list[tuple]) -> None:
+    """items: (label, value, sub, tone)."""
+    st.html("<div class='app-tiles'>" + "".join(
+        f"<div class='app-tile {t}'><div class='l'>{l}</div><div class='v'>{v}</div><div class='s'>{s}</div></div>"
+        for l, v, s, t in items) + "</div>")
+
+
+def compare(question: str, a_val: float, b_val: float, a_txt: str, b_txt: str, note: str = "") -> None:
+    """A-vs-B bars, like a fintech comparison widget."""
+    m = max(abs(a_val), abs(b_val), 1e-12)
+    st.html(f"<div class='app-cmp'><div class='q'>{question}</div>"
+            f"<div class='ln'><span class='tag' style='background:{A_COL}'>A</span><div class='bar'><span style='width:{abs(a_val) / m * 100:.0f}%;background:{A_COL}'></span></div><span class='val'>{a_txt}</span></div>"
+            f"<div class='ln'><span class='tag' style='background:{B_COL}'>B</span><div class='bar'><span style='width:{abs(b_val) / m * 100:.0f}%;background:{B_COL}'></span></div><span class='val'>{b_txt}</span></div>"
+            + (f"<div class='note'>{note}</div>" if note else "") + "</div>")
+
+
+def list_rows(items: list[tuple]) -> None:
+    """items: (icon, title, subtitle, right_main, right_sub)."""
+    st.html("<div class='app-list'>" + "".join(
+        f"<div class='app-li'><div class='ic'>{i}</div><div class='tx'><div class='t1'>{t1}</div><div class='t2'>{t2}</div></div>"
+        f"<div class='rt'><div class='r1'>{r1}</div><div class='r2'>{r2}</div></div></div>" for i, t1, t2, r1, r2 in items) + "</div>")
+
+
+def note(text: str, icon: str = "💡", tone: str = "") -> None:
+    st.html(f"<div class='app-note {tone}'><span class='i'>{icon}</span><span>{text}</span></div>")
+
+
+def verdict(emoji: str, head: str, body: str) -> None:
+    st.html(f"<div class='app-verdict'><div class='e'>{emoji}</div><div class='h'>{head}</div><div class='b'>{body}</div></div>")
+
+
+def chip(text: str, tone: str = "grey") -> str:
+    return f"<span class='chip {tone}'>{text}</span>"
+
+
+def working_header(title: str, sub: str = "") -> None:
+    st.markdown(f"#### {title}")
+    if sub:
+        st.caption(sub)
+
+
+def short(ev: dict) -> str:
+    """Event name for the phone screens: '2008 crash (deepest in the data)' → '2008 crash'."""
+    return ev["name"].split(" (")[0] if ev["id"].startswith("auto_") else ev["name"]
+
+
+def compact_label(eid: str, symbols: list[str], mode: str) -> str:
+    """Short dropdown label for the phone: '2008 crash · Nifty −60%'."""
+    if eid == "custom":
+        return "Choose my own dates…"
+    ev = default_results()["events"][eid]
+    if not ev["available"]:
+        return f"{ev['name'].split(' (')[0]} · not available"
+    prob = coverage_problem(eid, symbols, mode)
+    tail = ev["label"].split(" · ")[2] if ev["label"].count(" · ") >= 2 else ""
+    base = f"{'⭐ ' if eid.startswith('auto_') else ''}{short(ev)}{' · ' + tail if tail else ''}"
+    return f"⛔ {base} (needs older data)" if prob and "not supported" not in prob else base

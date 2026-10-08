@@ -8,7 +8,7 @@ from src import config
 from src import data as D
 from src import ui
 
-st.set_page_config(page_title=config.APP_NAME, page_icon="⏳", layout="wide", initial_sidebar_state="auto")
+st.set_page_config(page_title=config.APP_NAME, page_icon="⏳", layout="wide", initial_sidebar_state="collapsed")
 ui.init_state()
 ui.inject_css()
 
@@ -30,7 +30,7 @@ st.session_state["_pages"] = PAGES
 nav = st.navigation({"Start": [PAGES["start"], PAGES["home"], PAGES["how"]],
                      "Build": [PAGES["pick"], PAGES["call"], PAGES["weights"]],
                      "Time-travel tests": [PAGES["test1"], PAGES["test2"]],
-                     "Decide": [PAGES["verdict"], PAGES["method"]]})
+                     "Decide": [PAGES["verdict"], PAGES["method"]]}, position="hidden")
 
 
 # ---------------------------------------------------------------- sidebar
@@ -94,28 +94,15 @@ def controls(where: str) -> None:
     st.segmented_control("Confidence level", [0.95, 0.99], key="conf", format_func=lambda c: f"{c:.0%}", required=True)
     st.segmented_control("Horizon", [1, 10], key="horizon", format_func=lambda h: f"{h} day" + ("s" if h > 1 else ""), required=True)
     st.toggle("Show the Backing", key="show_backing", help="Off = the client view only")
-    st.toggle("📱 Phone layout", key="phone", help="App-style layout for small screens (switched on automatically on phones)")
+    st.toggle("📱 Full-screen app", key="phone", help="On: the app fills the screen, as on a real phone. Off: virtual phone + the working.")
     if st.button("Reset to team picks", width="stretch", key=f"reset_{where}"):
         ui.reset_team_picks()
         st.rerun()
     st.caption(f"Data as of **{D.as_of()}** · {ui.health_badge()}")
 
 
-if st.session_state["phone"]:
-    with st.sidebar:
-        st.markdown(f"### ⏳ {config.APP_NAME}")
-        st.caption("Settings live behind ⚙️ at the top of each page.")
-    if nav.title != PAGES["start"].title or st.session_state["amount_confirmed"]:
-        with ui.top_bar(nav.title):
-            controls("sheet")
-else:
-    with st.sidebar:
-        st.markdown(f"### ⏳ {config.APP_NAME}")
-        controls("sidebar")
-
 if not st.session_state["amount_confirmed"] and nav.title != PAGES["start"].title:
     st.switch_page(PAGES["start"])
+ui.setup_frames(PAGES, nav.title, lambda: controls("sheet"))
 nav.run()
 ui.footer()
-if st.session_state["phone"] and st.session_state["amount_confirmed"]:
-    ui.tab_bar(PAGES, nav.title)

@@ -10,12 +10,11 @@ from src import ui
 from src import universe as U
 
 s = st.session_state
-ui.page_header("pick", "Pick stocks: Industry → Stock → Risk label",
-               "Every stock is tagged from two numbers over the last three years. Build your own A and B, or keep the team's picks.")
 t = ui.universe_table()
 med = float(t["vol_median"].iloc[0])
 left, right = ui.split()
 evs = ui.default_results()["events"]
+TAG = {"High risk": ("🔴", "a"), "Low risk": ("🔵", "b"), "Moderate": ("🟡", "mid")}
 
 
 def coverage_text(sym: str) -> str:
@@ -39,44 +38,47 @@ def add(sym: str, to: str) -> None:
 
 
 with left:
+    ui.hero("Build your portfolios", f"A: {len(s['pick_A'])} · B: {len(s['pick_B'])} stocks",
+            "Pick an industry, tap a company, add it to A or B", "")
     inds = sorted(t["industry"].unique())
-    ind = st.selectbox("1 · Choose an industry", inds, index=inds.index("Fast Moving Consumer Goods") if "Fast Moving Consumer Goods" in inds else 0)
+    ind = st.selectbox("Industry", inds, index=inds.index("Fast Moving Consumer Goods") if "Fast Moving Consumer Goods" in inds else 0)
     sub = t[t["industry"] == ind].sort_values("risk_score", ascending=False)
-    show = pd.DataFrame({
-        "Company": sub["company"], "Beta": sub["beta"].round(2), "Volatility": sub["volatility"],
-        "Risk label": sub["label"], "Cap": sub["cap_bucket"],
-        "Events covered": [coverage_text(x) for x in sub.index],
-        "In": ["A" if x in s["pick_A"] else ("B" if x in s["pick_B"] else "") for x in sub.index]})
-    st.markdown("**2 · Stocks in this industry** (three-year beta and volatility)")
-    st.dataframe(show, width="stretch", column_config={"Volatility": st.column_config.NumberColumn(format="percent")})
-    c1, c2, c3 = st.columns([2, 1, 1], vertical_alignment="bottom")
-    sym = c1.selectbox("3 · Stock", list(sub.index), format_func=lambda x: f"{x} — {t.loc[x, 'label']}")
-    if c2.button("Add to A", width="stretch"):
+    ui.list_rows([(TAG[r["label"]][0], ui.esc(r["company"]),
+                   f"Moves {r['beta']:.1f}× the market · swings {r['volatility']:.0%} a year · {coverage_text(x)}",
+                   ui.chip(r["label"], TAG[r["label"]][1]),
+                   "in A" if x in s["pick_A"] else ("in B" if x in s["pick_B"] else "")) for x, r in sub.head(8).iterrows()])
+    if len(sub) > 8:
+        st.caption(f"Showing the 8 riskiest of {len(sub)} — all are in the list below.")
+    sym = st.selectbox("Company", list(sub.index), format_func=lambda x: f"{t.loc[x, 'company']} ({t.loc[x, 'label']})")
+    c1, c2 = st.columns(2)
+    if c1.button("＋ Add to A (bold)", width="stretch"):
         add(sym, "A")
         st.rerun()
-    if c3.button("Add to B", width="stretch"):
+    if c2.button("＋ Add to B (steady)", width="stretch"):
         add(sym, "B")
         st.rerun()
     if s.get("pick_msg"):
         st.warning(s.pop("pick_msg"))
+    ui.section("Your portfolios", "tap × to remove")
     allsyms = list(t.index)
-    st.markdown("**Your portfolios** (remove a stock with its ×)")
-    st.multiselect("Portfolio A — high risk", allsyms, key="pick_A", format_func=lambda x: f"{x} ({t.loc[x, 'label']})")
-    st.multiselect("Portfolio B — low risk", allsyms, key="pick_B", format_func=lambda x: f"{x} ({t.loc[x, 'label']})")
+    st.multiselect("Portfolio A · Bold", allsyms, key="pick_A", format_func=lambda x: t.loc[x, "company"])
+    st.multiselect("Portfolio B · Steady", allsyms, key="pick_B", format_func=lambda x: t.loc[x, "company"])
     msgs = U.validate(s["pick_A"], s["pick_B"], t)
-    errors = [m for m in msgs if m["level"] == "error"]
     for m in msgs:
-        (st.error if m["level"] == "error" else st.warning)(m["text"])
+        ui.note(m["text"], "⛔" if m["level"] == "error" else "⚠️", "bad" if m["level"] == "error" else "warn")
     if not msgs:
-        st.success(f"✓ A: {len(s['pick_A'])} stocks · B: {len(s['pick_B'])} stocks · no overlap · labels match.")
-    if errors:
-        st.info("Until both portfolios are valid, the other pages keep using the last valid picks (the team's picks).")
-    if st.button("Reset to team picks", key="reset_page"):
+        ui.note("Both portfolios are ready: 10–20 stocks each, no overlap, labels match.", "✅", "good")
+    if st.button("↺ Reset to the team's picks", key="reset_page", width="stretch"):
         ui.reset_team_picks()
         st.rerun()
 
 if right is not None:
     with right:
+        st.markdown(f"#### {ind}: every stock, three-year numbers")
+        show = pd.DataFrame({"Company": sub["company"], "Beta": sub["beta"].round(2), "Volatility": sub["volatility"],
+                             "Label": sub["label"], "Score": sub["risk_score"].round(0), "Cap": sub["cap_bucket"],
+                             "Events covered": [coverage_text(x) for x in sub.index]})
+        st.dataframe(show, width="stretch", column_config={"Volatility": st.column_config.NumberColumn(format="percent")})
         r = t.loc[sym]
         st.markdown(f"#### The rule, worked for {sym}")
         st.latex(r"\beta_i = \frac{\operatorname{Cov}(r_i, r_m)}{\operatorname{Var}(r_m)} \qquad "
