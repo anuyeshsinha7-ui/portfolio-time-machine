@@ -92,15 +92,15 @@ def pill(text: str, kind: str = "grey") -> str:
 
 
 def concept_box(title: str, plain: str, formally: str, why: str, where: str, latex: str | None = None) -> None:
-    """Finance Concept Box: In plain words → Formally → Why an investor cares → Where you see it here."""
+    """Finance idea box: in simple words, the maths, why it matters to you, where it shows up in the app."""
     with st.container():
-        st.html(f"<div class='ptm-concept'><div class='t'>📘 Finance concept: {title}</div>"
-                f"<div class='k'>In plain words</div><p>{plain}</p>"
-                f"<div class='k'>Formally</div><p>{formally}</p></div>")
+        st.html(f"<div class='ptm-concept'><div class='t'>📘 Finance idea: {title}</div>"
+                f"<div class='k'>In simple words</div><p>{plain}</p>"
+                f"<div class='k'>The maths</div><p>{formally}</p></div>")
         if latex:
             st.latex(latex)
-        st.html(f"<div class='ptm-concept' style='margin-top:-.4rem'><div class='k'>Why an investor cares</div><p>{why}</p>"
-                f"<div class='k'>Where you see it here</div><p>{where}</p></div>")
+        st.html(f"<div class='ptm-concept' style='margin-top:-.4rem'><div class='k'>Why it matters to you</div><p>{why}</p>"
+                f"<div class='k'>Where it shows up in the app</div><p>{where}</p></div>")
 
 
 def flowchart(current: str) -> None:
@@ -650,7 +650,7 @@ def setup_frames(pages: dict, page_title: str, controls) -> None:
         st.html(MOBILE_CSS)
         _app_bar(page_title, controls)
         client = st.container()
-        working = st.expander("📐 The working — logic, maths and evidence") if s.get("show_backing", True) else None
+        working = st.expander("📐 How we got these numbers") if s.get("show_backing", True) else None
         if confirmed:
             _tab_bar(pages, page_title)
         s["_frames"] = {"client": client, "working": working}
@@ -674,8 +674,8 @@ def setup_frames(pages: dict, page_title: str, controls) -> None:
             with cols[1]:
                 working = st.container(key="ptm_working")
                 with working:
-                    st.html(f"<div class='ptm-working-head'>The working · logic, maths and evidence</div>"
-                            f"<div class='ptm-working-title'>Behind “{page_title.split(' — ')[0]}”</div>")
+                    st.html(f"<div class='ptm-working-head'>How we got these numbers</div>"
+                            f"<div class='ptm-working-title'>Behind the {page_title.split(' — ')[0]} screen</div>")
     s["_frames"] = {"client": screen, "working": working}
 
 

@@ -86,13 +86,13 @@ with left:
 
 if right is not None:
     with right:
-        st.markdown(f"#### {ind}: every stock, three-year numbers")
+        st.markdown(f"#### Every {ind} stock, measured over the last three years")
         show = pd.DataFrame({"Company": sub["company"], "Beta": sub["beta"].round(2), "Volatility": sub["volatility"],
                              "Label": sub["label"], "Score": sub["risk_score"].round(0), "Cap": sub["cap_bucket"],
-                             "Events covered": [coverage_text(x) for x in sub.index]})
+                             "Periods we can test": [coverage_text(x) for x in sub.index]})
         st.dataframe(show, width="stretch", column_config={"Volatility": st.column_config.NumberColumn(format="percent")})
         r = t.loc[sym]
-        st.markdown(f"#### The rule, worked for {sym}")
+        st.markdown(f"#### Working out the label for {sym}")
         st.latex(r"\beta_i = \frac{\operatorname{Cov}(r_i, r_m)}{\operatorname{Var}(r_m)} \qquad "
                  r"\sigma_i = \operatorname{sd}(r_i)\times\sqrt{252}")
         cal = D.calendar()
@@ -102,29 +102,30 @@ if right is not None:
         cov = both.cov().iloc[0, 1]
         var_m = both.iloc[:, 1].var()
         sd = both.iloc[:, 0].std()
-        st.markdown(f"Using {len(both)} daily returns from {both.index[0].date()} to {both.index[-1].date()}:")
+        st.markdown(f"We use {len(both)} daily returns, from {both.index[0].date()} to {both.index[-1].date()}:")
         st.latex(rf"\beta_{{\text{{{sym}}}}} = \frac{{{cov:.3e}}}{{{var_m:.3e}}} = {cov / var_m:.2f} \qquad "
                  rf"\sigma = {sd:.4f}\times\sqrt{{252}} = {sd * 252 ** 0.5:.1%}".replace("%", r"\%"))
         verdict = CL.label(r["beta"], r["volatility"], med)
-        st.markdown(f"β {'≥' if r['beta'] >= 1 else '<'} 1.0 and σ {'≥' if r['volatility'] >= med else '<'} median ({ui.pct(med)}) → "
-                    f"**{verdict}** (composite risk score {r['risk_score']:.0f}/100).")
+        st.markdown(f"Beta is {'1.0 or more' if r['beta'] >= 1 else 'below 1.0'} and volatility is "
+                    f"{'at or above' if r['volatility'] >= med else 'below'} the middle value ({ui.pct(med)}), so the label is "
+                    f"**{verdict}**. Risk score: {r['risk_score']:.0f} out of 100.")
         st.caption(CL.rule_text(med))
         ui.show(CH.beta_vol_scatter(t, med, s["pick_A"], s["pick_B"], highlight=sym))
-        st.markdown("#### Robustness: 3 years vs full history")
+        st.markdown("#### Does the label change if we use all the history?")
         rob = t.loc[[x for x in s["pick_A"] + s["pick_B"] if x in t.index], ["beta", "beta_full", "volatility", "vol_full", "label", "label_full"]]
         rob.columns = ["Beta 3y", "Beta full", "Vol 3y", "Vol full", "Label 3y", "Label full"]
         st.dataframe(rob, width="stretch", column_config={"Beta 3y": st.column_config.NumberColumn(format="%.2f"),
                      "Beta full": st.column_config.NumberColumn(format="%.2f"),
                      "Vol 3y": st.column_config.NumberColumn(format="percent"), "Vol full": st.column_config.NumberColumn(format="percent")})
         same = (rob["Label 3y"] == rob["Label full"]).sum()
-        st.caption(f"{same} of {len(rob)} picks keep the same label on their full history (since 2007 or listing).")
-        ui.concept_box("Beta", "If the whole market rises 1%, a stock with beta 1.5 tends to rise about 1.5% — and falls 1.5% when the "
-                       "market falls 1%. It measures how strongly a stock rides the market's waves.",
-                       "The slope of the stock's daily returns on the Nifty 50's daily returns: covariance ÷ market variance.",
-                       "High-beta stocks amplify market crashes; low-beta stocks cushion them.",
-                       "The vertical axis of the scatter above, the label rule, and weighted beta on The risk call.")
-        ui.concept_box("Volatility", "How bumpy the ride is. A stock with 40% volatility typically ends a year 40% above or below its "
-                       "average — a 20% stock half as far.",
+        st.caption(f"{same} of {len(rob)} picks keep the same label when we use all their history (since 2007, or since they listed).")
+        ui.concept_box("Beta", "If the whole market rises 1%, a stock with beta 1.5 tends to rise about 1.5%. When the market falls "
+                       "1%, it tends to fall about 1.5%. Beta measures how closely a stock follows the market, and by how much.",
+                       "The slope of the stock's daily returns against the Nifty 50's daily returns: covariance ÷ market variance.",
+                       "High-beta stocks fall harder in a market crash. Low-beta stocks fall less.",
+                       "The up-down axis of the chart above, the label rule, and portfolio beta on The risk call screen.")
+        ui.concept_box("Volatility", "How much the price jumps around. A stock with 40% volatility often ends a year up to 40% above or "
+                       "below its average. A stock with 20% volatility moves half as far.",
                        "Standard deviation of daily returns × √252 (trading days in a year).",
-                       "Bigger swings mean bigger possible losses over any horizon, even if the stock doesn't follow the market.",
-                       "The horizontal axis of the scatter, the label rule, and every portfolio volatility in the app.")
+                       "Bigger swings mean bigger possible losses, even for a stock that doesn't follow the market.",
+                       "The left-right axis of the chart, the label rule, and every portfolio volatility in the app.")

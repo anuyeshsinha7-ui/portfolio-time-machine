@@ -29,17 +29,18 @@ with left:
 
 if right is not None:
     with right:
-        st.markdown("#### Where you are")
+        st.markdown("#### Where this screen fits")
         ui.flowchart("how")
         st.markdown("#### Data sources")
         st.markdown(f"""
-* **Prices:** Yahoo Finance via the `yfinance` library — daily closes from {meta['history_start']} to {meta['as_of']},
-  downloaded once and frozen (no market data is downloaded while you use the app).
-* **Official checks:** NSE bhavcopies (the exchange's daily price files) and NSE's corporate-action and symbol-change records.
-* **Universe:** NSE's Nifty 500 list (industry) and the Nifty 100 / Midcap 150 / Smallcap 250 lists (large / mid / small cap).
+* **Prices:** Yahoo Finance, through the `yfinance` library. Daily closing prices from {meta['history_start']} to {meta['as_of']}.
+  We downloaded them once and saved them, so the app downloads nothing while you use it.
+* **Official checks:** the NSE's daily price files (bhavcopies) and its records of splits, bonuses, demergers and name changes.
+* **Which stocks:** the NSE's Nifty 500 list (for sectors) and its Nifty 100, Midcap 150 and Smallcap 250 lists (for large, mid
+  and small companies).
 * **Risk-free rate:** {config.RISK_FREE_SOURCE}.
 """)
-        st.markdown("#### Cleaning, in one picture")
+        st.markdown("#### How we cleaned the prices")
         st.graphviz_chart("""
 digraph C { rankdir=TB; bgcolor="transparent"; node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10,
  fillcolor="#161D2C", color="#3A4560"]; edge [color="#6B7690", arrowsize=.6];
@@ -48,13 +49,13 @@ digraph C { rankdir=TB; bgcolor="transparent"; node [shape=box, style="rounded,f
  b [label="Bad ticks, decimal errors,\\nstale prices (checked vs NSE)"]; c [label="Align to Nifty 50 calendar\\n(fill ≤ 2 days, ≤ 2% missing)"];
  v [label="Dividends reinvested\\n→ total-return prices", fillcolor="#3A2420", color="#E8735A"];
  y -> a -> s -> d -> b -> c -> v; }""", width="stretch")
-        st.markdown("#### Key assumptions")
+        st.markdown("#### The settings we used")
         st.dataframe(pd.DataFrame([
-            ("Trading days per year", config.TRADING_DAYS), ("Risk label window", f"{config.CLASSIFICATION_YEARS} years (trailing)"),
-            ("Regime window", f"{config.REGIME_DAYS} trading days ≈ 12 months"),
-            ("Crisis window start", f"{config.EVENT_PRE_DAYS} trading days before the pre-crash peak"),
-            ("Weight bounds", f"{config.W_MIN:.0%} – {config.W_MAX:.0%} per stock"), ("Industry cap", f"{config.INDUSTRY_MAX:.0%}"),
-            ("Risk-free rate", f"{config.RISK_FREE_RATE:.2%} (91-day T-bill)"), ("VaR confidence", "95% and 99%; ES also at 97.5%"),
-            ("Monte Carlo", f"{config.MC_DRAWS:,} Student-t draws, seed {config.SEED}"),
-            ("Bootstrap", f"{config.BOOTSTRAP_RESAMPLES} resamples (build) · {config.BLOCK_DAYS}-day blocks"),
+            ("Trading days in a year", config.TRADING_DAYS), ("Data used for risk labels", f"the last {config.CLASSIFICATION_YEARS} years"),
+            ("Length of each test period", f"{config.REGIME_DAYS} trading days (about 12 months)"),
+            ("Where a crisis period starts", f"{config.EVENT_PRE_DAYS} trading days before the market's peak"),
+            ("Weight per stock", f"{config.W_MIN:.0%} to {config.W_MAX:.0%}"), ("Most in one sector", f"{config.INDUSTRY_MAX:.0%}"),
+            ("Risk-free rate", f"{config.RISK_FREE_RATE:.2%} (91-day Treasury bill)"), ("VaR confidence", "95% and 99% (ES also at 97.5%)"),
+            ("Monte Carlo", f"{config.MC_DRAWS:,} random Student-t draws, seed {config.SEED}"),
+            ("Bootstrap", f"{config.BOOTSTRAP_RESAMPLES} reshuffles of the data, in {config.BLOCK_DAYS}-day blocks"),
         ], columns=["Assumption", "Value"]).astype(str), hide_index=True, width="stretch")

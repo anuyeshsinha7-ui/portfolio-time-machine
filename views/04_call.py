@@ -39,48 +39,49 @@ with left:
 
 if right is not None:
     with right:
-        st.caption(f"Trailing three years: {ev['window']['start']} → {ev['window']['end']} (the same window as the labels).")
+        st.caption(f"The last three years, {ev['window']['start']} to {ev['window']['end']} (the same period we use for the labels).")
         st.markdown(f"<div class='ptm-verdict'>{NR.call_finding(ev, ctx.amount_a, ctx.amount_b)}</div>", unsafe_allow_html=True)
-        rows = [("Weighted beta Σwβ", f"{a['weighted_beta']:.2f}", f"{b['weighted_beta']:.2f}"),
-                ("Regression beta of the portfolio", f"{a['portfolio_beta']:.2f}", f"{b['portfolio_beta']:.2f}"),
+        rows = [("Beta: weighted average of the stocks (Σwβ)", f"{a['weighted_beta']:.2f}", f"{b['weighted_beta']:.2f}"),
+                ("Beta: measured on the portfolio itself", f"{a['portfolio_beta']:.2f}", f"{b['portfolio_beta']:.2f}"),
                 ("Volatility √(wᵀΣw)", ui.pct(a["portfolio_vol"]), ui.pct(b["portfolio_vol"])),
-                ("Maximum drawdown", ui.pct(a["max_drawdown"]), ui.pct(b["max_drawdown"])),
-                ("Average pairwise correlation", f"{a['avg_pairwise_corr']:.2f}", f"{b['avg_pairwise_corr']:.2f}"),
-                ("Annualised return / Sharpe", f"{ui.pct(a['ann_return'])} / {a['sharpe']:.2f}", f"{ui.pct(b['ann_return'])} / {b['sharpe']:.2f}"),
+                ("Biggest fall", ui.pct(a["max_drawdown"]), ui.pct(b["max_drawdown"])),
+                ("Average correlation between pairs of stocks", f"{a['avg_pairwise_corr']:.2f}", f"{b['avg_pairwise_corr']:.2f}"),
+                ("Yearly return / Sharpe", f"{ui.pct(a['ann_return'])} / {a['sharpe']:.2f}", f"{ui.pct(b['ann_return'])} / {b['sharpe']:.2f}"),
                 ("Large-cap share", ui.pct(a["cap_mix"].get("Large cap", 0), 0), ui.pct(b["cap_mix"].get("Large cap", 0), 0)),
-                ("Stocks with matching label", f"{sum(v == 'High risk' for v in a['stock_labels'].values())}/{len(a['stock_labels'])}",
+                ("Stocks with the right label", f"{sum(v == 'High risk' for v in a['stock_labels'].values())}/{len(a['stock_labels'])}",
                  f"{sum(v == 'Low risk' for v in b['stock_labels'].values())}/{len(b['stock_labels'])}"),
-                ("σA/σB with 95% bootstrap CI", f"{vr['ratio']:.2f} ({vr['lo']:.2f}–{vr['hi']:.2f})", "")]
+                ("A's volatility ÷ B's, with 95% bootstrap range", f"{vr['ratio']:.2f} ({vr['lo']:.2f} to {vr['hi']:.2f})", "")]
         st.dataframe(pd.DataFrame(rows, columns=["Evidence", "A", "B"]), hide_index=True, width="stretch")
-        st.markdown("#### Portfolio beta, worked")
+        st.markdown("#### Working out the portfolio's beta")
         st.latex(r"\beta_p = \sum_i w_i\,\beta_i")
         for k, e in (("A", a), ("B", b)):
             w = pd.Series(ctx.P[k]["weights"])
             bt = pd.Series(e["stock_betas"])
             terms = " + ".join(f"{w[s]:.2f}\\times{bt[s]:.2f}" for s in w.index[:4])
             st.latex(rf"\beta_{k} = {terms} + \dots = {e['weighted_beta']:.2f}")
-        st.markdown("#### Portfolio volatility, worked")
+        st.markdown("#### Working out the portfolio's volatility")
         st.latex(r"\sigma_p = \sqrt{w^\top \Sigma\, w}\,, \quad \Sigma = \text{annualised covariance of daily returns}")
         for k, e in (("A", a), ("B", b)):
             st.latex(rf"\sigma_{k} = \sqrt{{w_{k}^\top \Sigma_{k}\, w_{k}}} = {e['portfolio_vol']:.4f} = {e['portfolio_vol'] * 100:.1f}\%")
-        st.caption("Diversification shows up as σ_p being well below the weighted average of the stocks' own volatilities: "
+        st.caption("Spreading money across stocks makes the portfolio's volatility well below the weighted average of the "
+                   "stocks' own volatilities: "
                    f"A {ui.pct(sum(ctx.P['A']['weights'][s] * a['stock_vols'][s] for s in a['stock_vols']))} → {ui.pct(a['portfolio_vol'])}, "
                    f"B {ui.pct(sum(ctx.P['B']['weights'][s] * b['stock_vols'][s] for s in b['stock_vols']))} → {ui.pct(b['portfolio_vol'])}.")
-        tabs = st.tabs(["Correlations A", "Correlations B", "Bootstrap σA/σB"])
+        tabs = st.tabs(["How A's stocks move together", "How B's stocks move together", "A's volatility ÷ B's"])
         with tabs[0]:
-            ui.show(CH.corr_heatmap(a["corr"], ctx.P["A"]["symbols"], f"Portfolio A — average {a['avg_pairwise_corr']:.2f}", CH.A))
+            ui.show(CH.corr_heatmap(a["corr"], ctx.P["A"]["symbols"], f"Portfolio A: average correlation {a['avg_pairwise_corr']:.2f}", CH.A))
         with tabs[1]:
-            ui.show(CH.corr_heatmap(b["corr"], ctx.P["B"]["symbols"], f"Portfolio B — average {b['avg_pairwise_corr']:.2f}", CH.B))
+            ui.show(CH.corr_heatmap(b["corr"], ctx.P["B"]["symbols"], f"Portfolio B: average correlation {b['avg_pairwise_corr']:.2f}", CH.B))
         with tabs[2]:
             if vr.get("draws"):
                 ui.show(CH.ratio_hist(vr["draws"], vr["lo"], vr["hi"], vr["ratio"]))
-            st.caption("Moving-block bootstrap: 5-day blocks of the same dates are resampled for both portfolios, so the two stay "
-                       "matched day by day and short-run clustering of volatility is kept.")
+            st.caption("We reshuffle the data in 5-day blocks, using the same dates for both portfolios, so they stay matched "
+                       "day by day and calm or stormy stretches stay together.")
         ui.concept_box("Diversification",
-                       "Owning ten stocks that don't all fall on the same day gives a smoother ride than any one of them — "
-                       "like not putting all your eggs in one basket.",
-                       "Portfolio variance is wᵀΣw. The off-diagonal covariances (correlations below 1) make σ_p smaller than the "
-                       "weighted average of individual volatilities.",
-                       "It is the only 'free lunch' in finance: less risk for the same expected return. It weakens in a crisis, when "
-                       "correlations jump.",
-                       "The correlation heatmaps, the σ_p calculation above, and 'Correlations in a crisis' on Test #1.")
+                       "Owning many stocks that don't all fall on the same day gives a smoother ride than owning any one of "
+                       "them. Don't put all your eggs in one basket.",
+                       "Portfolio variance is wᵀΣw. Because the stocks are not perfectly correlated (correlation below 1), σ_p is "
+                       "smaller than the weighted average of the stocks' own volatilities.",
+                       "You get less risk for the same expected return. It works less well in a crisis, when stocks start moving "
+                       "together.",
+                       "The correlation charts, the σ_p sum above, and 'Correlations in a crisis' on the Backtest screen.")

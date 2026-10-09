@@ -35,5 +35,6 @@ def classify(table: pd.DataFrame) -> pd.DataFrame:
 
 
 def rule_text(vol_median: float) -> str:
-    return (f"High risk = beta ≥ {BETA_CUT:.1f} and volatility ≥ {vol_median:.1%} (universe median); "
-            f"Low risk = beta < {BETA_CUT:.1f} and volatility < {vol_median:.1%}; otherwise Moderate.")
+    return (f"**High risk** means beta of {BETA_CUT:.1f} or more and volatility of {vol_median:.1%} or more (the middle value "
+            f"across all stocks). **Low risk** means beta below {BETA_CUT:.1f} and volatility below {vol_median:.1%}. Anything "
+            "else is **Moderate**.")

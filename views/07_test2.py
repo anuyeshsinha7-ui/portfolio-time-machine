@@ -12,9 +12,9 @@ left, right = ui.split()
 ctx = ui.context()
 k = ctx.ck()
 boot = ctx.bootstrap()
-CASE = {"reachable": "Reachable — the portfolio that hits today's target return with the least risk",
-        "below_minvar": "Target below that period's minimum-variance return — the optimiser picks minimum variance (beats the target with less risk)",
-        "unreachable": "Unreachable in that period — the closest it gets is the highest return the constraints allow"}
+CASE = {"reachable": "Reachable — the least risky mix that still earns today's target return",
+        "below_minvar": "Target already beaten — even the least risky mix earned more than the target, so the optimiser picks that mix",
+        "unreachable": "Out of reach — no mix within the limits earned the target, so the optimiser picks the highest return it can"}
 PLAIN = {"reachable": "could still hit today's target return", "below_minvar": "beats today's target with less risk",
          "unreachable": "can't reach today's target return"}
 u = ui.universe_table()
@@ -86,25 +86,29 @@ with left:
 
 if right is not None and results:
     with right:
-        st.markdown(f"#### Portfolio {which}: optimum weights in every ticked period")
+        st.markdown(f"#### Portfolio {which}: the best weights in each period you ticked")
+        st.markdown("For each period, the optimiser uses only that period's prices and looks for the least risky mix that still "
+                    "earns today's target return. The 'Today' column is what you hold now.")
         full = pd.DataFrame({"Today": pd.Series(p["weights"])})
         for eid, reg_, ev in results:
             full[ev["name"]] = pd.Series(reg_[which]["test2"]["weights"])
         full.index = [f"{x} · {u.loc[x, 'company']}" for x in full.index]
+        full.index.name = "Company"
         st.dataframe(full, width="stretch", column_config={c: st.column_config.NumberColumn(format="percent") for c in full.columns})
         rows = []
         for eid, reg_, ev in results:
             t2 = reg_[which]["test2"]
-            rows.append({"Period": ev["name"], "Case": t2["case"], "Target": t2["target"], "R_max": t2["r_max"],
-                         "Min-var return": t2["r_minvar"], "Optimal return": t2["ret"], "Optimal vol": t2["vol"],
-                         "Turnover": t2["turnover"], "₹ to move": ui.inr(t2["turnover"] * amt),
-                         "Noise p95": boot[which]["turnover_p95"] if boot else np.nan, "Efficiency gap": t2["efficiency_gap"],
+            rows.append({"Period": ev["name"], "Case": CASE[t2["case"]].split(" — ")[0], "Target": t2["target"], "Highest possible return": t2["r_max"],
+                         "Return of least risky mix": t2["r_minvar"], "Best mix return": t2["ret"], "Best mix volatility": t2["vol"],
+                         "Share to move": t2["turnover"], "₹ to move": ui.inr(t2["turnover"] * amt),
+                         "Noise limit (95%)": boot[which]["turnover_p95"] if boot else np.nan, "Extra risk carried": t2["efficiency_gap"],
                          "VaR before": ctx.h(reg_[which]["risk"]["Historical"][k]["var"]),
                          "VaR after": ctx.h(t2["var_after"]["Historical"][k]["var"])})
         df = pd.DataFrame(rows)
         st.dataframe(df, hide_index=True, width="stretch", column_config={
             c: st.column_config.NumberColumn(format="percent") for c in df.columns if c not in ("Period", "Case", "₹ to move")})
-        st.caption(" ".join(f"**{v.split(' — ')[0]}**: {v.split(' — ')[1]}." for v in CASE.values()))
+        st.caption(" ".join(f"**{v.split(' — ')[0]}**: {v.split(' — ')[1]}." for v in CASE.values()) +
+                   " Share to move = half the sum of all weight changes, so 20% means a fifth of the money changes hands.")
         PAL = [CH.CRISIS, CH.CALM, "#B45AC9", "#E0A33A", "#4BB5C1", "#8A8F98", "#6C7AE0"]
         if boot:
             for eid, reg_, ev in results:
@@ -115,14 +119,14 @@ if right is not None and results:
         ui.show(CH.weights_bars(wt, f"Portfolio {which}: weights the optimiser picks in each period"))
         ind = {"Today": p["industry_weights"]}
         ind.update({ui.short(ev)[:16]: reg_[which]["test2"]["industry_weights"] for eid, reg_, ev in results})
-        ui.show(CH.industry_bars(ind, "Industry weights shift"))
-        st.markdown("#### The problem solved in each period")
+        ui.show(CH.industry_bars(ind, "How the sector weights change"))
+        st.markdown("#### The sum the optimiser solves in each period")
         st.latex(r"\min_w\; w^\top \Sigma_{\text{period}}\, w \quad \text{s.t.}\quad \mu_{\text{period}}^\top w \ge "
                  r"\min(\text{target},\, R_{\max,\text{period}}),\ \ \text{same bounds and industry caps}")
         st.latex(r"\text{target} = \mu_{\text{current}}^\top w_{\text{today}} = " + f"{p['target_return'] * 100:.1f}" + r"\%")
-        st.caption("Efficiency gap = the extra volatility today's weights carried in that period compared with the efficient "
-                   "portfolio that earned the same period return.")
-        st.markdown("#### Frontiers: today vs each period")
+        st.caption("Extra risk carried = how much more volatility today's weights had in that period than the best mix that "
+                   "earned the same return.")
+        st.markdown("#### The best-mix line: today vs each period")
         regimes = []
         for i, (eid, reg_, ev) in enumerate(results):
             t2 = reg_[which]["test2"]
@@ -132,26 +136,29 @@ if right is not None and results:
                           title=f"Portfolio {which}: frontier per period, target {ui.pct(p['target_return'])}")
         fig.add_hline(y=p["target_return"], line=dict(color="#E6E9EF", dash="dot"), annotation_text="target return")
         ui.show(fig)
-        st.markdown("#### Real shift or estimation noise?")
+        st.markdown("#### A real change, or just noise in the data?")
+        st.markdown("Twelve months of prices is a small sample. To see how much the weights move by chance, we reshuffle "
+                    "today's data many times and solve again each time. A period's change only counts as real if it is "
+                    "bigger than almost all of those chance changes.")
         if boot:
             b = boot[which]
             ui.show(CH.bootstrap_bands(p["symbols"], b["base"], b["band_lo"], b["band_hi"],
                                        [(f"{ui.short(ev)[:16]}-optimal", reg_[which]["test2"]["weights"], PAL[i % len(PAL)])
                                         for i, (eid, reg_, ev) in enumerate(results)],
-                                       f"90% bands from {b['resamples']} bootstrap resamples of today's window"))
+                                       f"Grey bands: where 90% of the weights landed across {b['resamples']} reshuffles of today's data"))
             outside = sorted({x for x in p["symbols"] for eid, reg_, ev in results
                               if not (b["band_lo"][x] - 1e-9 <= reg_[which]["test2"]["weights"][x] <= b["band_hi"][x] + 1e-9)})
-            st.caption(f"Stocks whose period weight falls outside its noise band: {', '.join(outside) or 'none'}.")
+            st.caption(f"Stocks whose weight in a period falls outside its grey band: {', '.join(outside) or 'none'}.")
             ui.show(CH.turnover_hist(b["turnover_noise"], b["turnover_p95"],
                                      [(ui.short(ev)[:12], reg_[which]["test2"]["turnover"], PAL[i % len(PAL)])
                                       for i, (eid, reg_, ev) in enumerate(results)]))
-            st.caption("A shift is significant if its turnover is above the 95th percentile of turnover produced by noise alone "
-                       f"(moving-block bootstrap of the latest 252 days, 5-day blocks, {b['resamples']} resamples).")
+            st.caption("A change counts as real if the share of money moved is above the 95th percentile of what noise alone "
+                       f"moves. We reshuffle the latest 252 days in 5-day blocks, {b['resamples']} times.")
         ui.concept_box("Estimation error",
-                       "Twelve months of prices are a small sample. Re-draw them slightly differently and the 'optimal' weights move — "
-                       "sometimes a lot — even though nothing about the companies changed.",
-                       "Markowitz weights are very sensitive to errors in μ (expected returns). The bootstrap re-solves the same "
-                       "problem on resampled histories to measure that sensitivity.",
-                       "If a crisis changes the weights by less than noise does, there is no evidence the allocation is wrong for that "
-                       "regime; if by more, the weights are regime-dependent.",
-                       "The grey bands, the turnover histogram and the 'beyond / within noise' labels on this page.")
+                       "Twelve months of prices is a small sample. Draw it a little differently and the 'best' weights move, "
+                       "sometimes a lot, even though nothing about the companies has changed.",
+                       "Markowitz weights react strongly to small errors in μ (expected returns). The bootstrap solves the same "
+                       "problem again on reshuffled data to measure how much.",
+                       "If a crisis changes the weights less than noise does, there's no sign the weights are wrong for times like "
+                       "that. If it changes them more, the best weights really do depend on the market mood.",
+                       "The grey bands, the chart of money moved, and the 'beyond / within noise' labels on this screen.")

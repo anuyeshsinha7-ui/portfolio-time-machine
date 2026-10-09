@@ -73,22 +73,25 @@ with left:
 
 if right is not None:
     with right:
-        st.markdown("#### The universe: Nifty 500, by sector and size")
-        st.markdown("Sizes follow NSE's own index families: **Large** = Nifty 100, **Mid** = Nifty Midcap 150, **Small** = Nifty "
-                    "Smallcap 250. Tick any combination; all three together is **Flexi cap**.")
+        st.markdown("#### The stocks we choose from: Nifty 500, by sector and size")
+        st.markdown("We use the NSE's own lists for company size: **Large** is the Nifty 100, **Mid** is the Nifty Midcap 150 and "
+                    "**Small** is the Nifty Smallcap 250. You can tick any mix. All three together is called **Flexi cap**.")
         tab = pd.crosstab(t["industry"], t["cap_bucket"]).reindex(columns=U.CAPS, fill_value=0)
         tab["Total"] = tab.sum(axis=1)
         st.dataframe(tab.sort_values("Total", ascending=False), width="stretch")
-        st.markdown("#### Risk labels inside your current choice")
+        st.markdown("#### How risky the stocks in your choice are")
         if chosen:
             lab = pd.crosstab(pool["industry"], pool["label"]).reindex(columns=["High risk", "Moderate", "Low risk"], fill_value=0)
             st.dataframe(lab, width="stretch")
             ui.show(CH.beta_vol_scatter(pool, float(t["vol_median"].iloc[0]), [], []))
         st.markdown("#### How the recommendation works")
-        st.markdown("1. Keep only your sectors and company sizes.\n"
-                    f"2. **Bold** = the top {N} *High risk* stocks (beta ≥ 1 and volatility ≥ the universe median) by composite "
-                    f"score; **Steady** = the {N} *Low risk* stocks with the lowest score. Score = average of the beta and volatility "
-                    f"percentiles.\n3. At most {P} per sector; stocks with price history back to 2007 first, so every crisis can be tested.\n"
-                    f"4. If your choice is too narrow, relax step by step — more than {P} per sector → closest *Moderate* stocks → other "
-                    "sizes in your sectors → other sectors — and say so on screen.")
+        st.markdown("1. We keep only the sectors and company sizes you ticked.\n"
+                    f"2. Each stock gets a risk score: the average of where its beta and its volatility rank among all stocks. "
+                    f"**Bold** takes the {N} *High risk* stocks (beta of 1 or more, volatility at or above the middle value) with "
+                    f"the highest scores. **Steady** takes the {N} *Low risk* stocks with the lowest scores.\n"
+                    f"3. No more than {P} stocks from one sector. Stocks with prices going back to 2007 come first, so we can test "
+                    "them in every crisis.\n"
+                    f"4. If your choice doesn't have enough stocks, we loosen the rules one at a time and tell you on screen: first "
+                    f"we allow more than {P} per sector, then we add the nearest *Moderate* stocks, then other sizes in your "
+                    "sectors, and last of all other sectors.")
         ui.flowchart("pick")
