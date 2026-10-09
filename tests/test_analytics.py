@@ -267,3 +267,33 @@ def test_custom_range_minimum_length():
         EV.custom_event("2020-01-01", "2020-02-01", close, "crisis")
     ev = EV.custom_event("2019-01-01", "2019-12-31", close, "calm")
     assert ev["available"]
+
+
+# ---------------------------------------------------------------- sector / market-cap picker
+def test_pick_by_filters_respects_choice_and_relaxes_with_notes():
+    t = U.classification()
+    sectors = sorted(t["industry"].unique())
+    res = U.pick_by_filters(t, sectors, "Large cap")
+    assert len(res["A"]) == 10 and len(res["B"]) == 10 and not set(res["A"]) & set(res["B"])
+    if not res["notes_A"]:
+        assert (t.loc[res["A"], "cap_bucket"] == "Large cap").all()
+        assert (t.loc[res["A"], "label"] == "High risk").all()
+    narrow = U.pick_by_filters(t, ["Healthcare"], "Large cap")
+    assert len(narrow["A"]) == 10 and len(narrow["B"]) == 10
+    assert narrow["notes_A"] or narrow["notes_B"]  # one sector can't fill 10 + 10 without relaxing
+
+
+def test_default_picks_are_all_sectors_flexi():
+    t = U.classification()
+    d = U.default_portfolios(t)
+    f = U.pick_by_filters(t)
+    assert d["A"] == f["A"] and d["B"] == f["B"]
+
+
+def test_pick_by_cap_combination():
+    t = U.classification()
+    res = U.pick_by_filters(t, None, ["Large cap", "Small cap"])
+    assert res["cap"] == "Large + Small cap"
+    if not res["notes_A"]:
+        assert set(t.loc[res["A"], "cap_bucket"]) <= {"Large cap", "Small cap"}
+    assert U.cap_label(["Small cap", "Mid cap", "Large cap"]) == "Flexi cap"

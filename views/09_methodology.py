@@ -18,7 +18,7 @@ corp = pd.read_csv(config.DATA_DIR / "corporate_actions.csv")
 
 with left:
     ui.hero("About the data", "Checked against the exchange", f"Prices as of {meta['as_of']} · history since {meta['history_start'][:4]}", "calm")
-    ui.tiles([("Companies checked", f"{meta['n_constituents']}", "today's Nifty 200", ""),
+    ui.tiles([("Companies checked", f"{meta['n_constituents']}", "today's Nifty 500", ""),
               ("Price errors fixed", f"{len(anchor)}", f"in {anchor['ticker'].nunique()} companies", ""),
               ("Splits, bonuses & more", f"{int(corp['applied'].sum())}", "rebuilt from NSE records", ""),
               ("Spot checks passed", f"{int(spots['within_1pct'].sum())}/{len(spots)}", "vs NSE's official prices", "")])

@@ -319,3 +319,9 @@ def test_spike_confirmed_by_exchange_is_kept():
     out, issues = C.spike_and_revert(s, "T", confirm=lambda d: True)
     assert out.loc["2024-01-15"] == 266.5
     assert any("confirmed genuine" in i.issue for i in issues)
+
+
+def test_best_part_factor_for_combined_actions():
+    # split ₹10 → ₹2 (0.2) and 1:1 bonus (0.5) on the same NSE date, but only the split shows in the price
+    assert C.best_part_factor([0.2, 0.5], 0.205) == pytest.approx(0.2)
+    assert C.best_part_factor([0.2, 0.5], 0.101) == pytest.approx(0.1)

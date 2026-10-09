@@ -14,23 +14,24 @@ ui.inject_css()
 
 _confirmed = st.session_state["amount_confirmed"]
 PAGES = {
-    "start": st.Page("views/00_start.py", title="Start — your amount", icon="💰", url_path="start", default=not _confirmed),
-    "home": st.Page("views/01_home.py", title="Home — the 30-second verdict", icon="⏳", url_path="home", default=_confirmed),
+    "start": st.Page("views/00_start.py", title="Your amount", icon="💰", url_path="start", default=not _confirmed),
+    "prefs": st.Page("views/01_prefs.py", title="Your preferences", icon="🎛️", url_path="prefs"),
+    "suggest": st.Page("views/01_suggest.py", title="Suggested portfolios", icon="✨", url_path="suggest"),
+    "weights": st.Page("views/05_weights.py", title="Today — weights and risk", icon="🎯", url_path="weights"),
+    "test1": st.Page("views/06_test1.py", title="Backtest — uncertain times", icon="🌪️", url_path="test1"),
+    "test2": st.Page("views/07_test2.py", title="Rebalance — new weights", icon="🔁", url_path="test2"),
+    "verdict": st.Page("views/08_verdict.py", title="Verdict", icon="✅", url_path="verdict"),
+    "home": st.Page("views/01_home.py", title="Summary", icon="⏳", url_path="home", default=_confirmed),
     "how": st.Page("views/02_how.py", title="How this app works", icon="🧭", url_path="how"),
-    "pick": st.Page("views/03_pick.py", title="Pick stocks", icon="🧺", url_path="pick"),
+    "pick": st.Page("views/03_pick.py", title="Edit stocks", icon="✏️", url_path="pick"),
     "call": st.Page("views/04_call.py", title="The risk call", icon="⚖️", url_path="call"),
-    "weights": st.Page("views/05_weights.py", title="Optimum weights today", icon="🎯", url_path="weights"),
-    "test1": st.Page("views/06_test1.py", title="Test #1 — the risk label", icon="🌪️", url_path="test1"),
-    "test2": st.Page("views/07_test2.py", title="Test #2 — the allocation", icon="🔁", url_path="test2"),
-    "verdict": st.Page("views/08_verdict.py", title="Verdict & recommendation", icon="✅", url_path="verdict"),
-    "method": st.Page("views/09_methodology.py", title="Methodology & data", icon="📚", url_path="methodology"),
+    "method": st.Page("views/09_methodology.py", title="About the data", icon="📚", url_path="methodology"),
 }
+PAGES["today"] = PAGES["weights"]
 st.session_state["_pages"] = PAGES
 
-nav = st.navigation({"Start": [PAGES["start"], PAGES["home"], PAGES["how"]],
-                     "Build": [PAGES["pick"], PAGES["call"], PAGES["weights"]],
-                     "Time-travel tests": [PAGES["test1"], PAGES["test2"]],
-                     "Decide": [PAGES["verdict"], PAGES["method"]]}, position="hidden")
+nav = st.navigation([PAGES[k] for k in ("start", "prefs", "suggest", "weights", "test1", "test2", "verdict", "home", "how", "pick",
+                                        "call", "method")], position="hidden")
 
 
 # ---------------------------------------------------------------- sidebar
@@ -52,10 +53,9 @@ def _amount_changed(key: str, target: str) -> None:
 def controls(where: str) -> None:
     """Every setting. Rendered in the sidebar on wide screens and in the ⚙️ settings sheet on phones."""
     s = st.session_state
-    for kind in ("crisis", "calm"):  # an event the picks can't cover falls back to the official pick (before the widget exists)
+    for kind in ("crisis", "calm"):  # an event the picks can't cover falls back to one they can
         prob = ui.coverage_problem(s[f"{kind}_id"], s["pick_A"] + s["pick_B"], s["window_mode"])
         if prob:
-            s[f"{kind}_unavailable"] = prob
             s[f"{kind}_id"] = ui.fallback_event(kind, s["pick_A"] + s["pick_B"], s["window_mode"])
     if s["amount_confirmed"]:
         mode = s["amount_mode"]
@@ -72,23 +72,6 @@ def controls(where: str) -> None:
         if s.get("amount_error"):
             st.error(s["amount_error"])
         st.selectbox("Amount mode", list(config.AMOUNT_MODES), format_func=config.AMOUNT_MODES.get, key="amount_mode")
-    labels = {e: ui.event_label_for(e, s["pick_A"] + s["pick_B"], s["window_mode"])
-              for e in ui.event_options("crisis") + ui.event_options("calm")}
-    st.selectbox("Which past **crisis** should we test against?", ui.event_options("crisis"), format_func=labels.get, key="crisis_id")
-    if s["crisis_id"] == "custom":
-        c = st.date_input("Crisis date range (at least 126 trading days)", value=s.get("custom_crisis", ()),
-                          min_value=D.calendar()[0].date(), max_value=D.calendar()[-1].date(), key=f"cc_{where}")
-        if isinstance(c, (list, tuple)) and len(c) == 2:
-            s["custom_crisis"] = (str(c[0]), str(c[1]))
-    st.selectbox("Which past **calm** period?", ui.event_options("calm"), format_func=labels.get, key="calm_id")
-    if s["calm_id"] == "custom":
-        m = st.date_input("Calm date range (at least 126 trading days)", value=s.get("custom_calm", ()),
-                          min_value=D.calendar()[0].date(), max_value=D.calendar()[-1].date(), key=f"cm_{where}")
-        if isinstance(m, (list, tuple)) and len(m) == 2:
-            s["custom_calm"] = (str(m[0]), str(m[1]))
-    for kind in ("crisis", "calm"):
-        if s.get(f"{kind}_unavailable"):
-            st.warning(f"That {kind} event can't be tested with your picks ({s.pop(f'{kind}_unavailable')}); switched to the nearest event they all cover.")
     st.segmented_control("Window", ["standard", "event_only"], key="window_mode",
                          format_func={"standard": "Standard (252 days)", "event_only": "Event only"}.get, required=True)
     st.segmented_control("Confidence level", [0.95, 0.99], key="conf", format_func=lambda c: f"{c:.0%}", required=True)

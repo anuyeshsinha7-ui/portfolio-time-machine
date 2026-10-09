@@ -17,9 +17,10 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGES = [("home", "Your money in two portfolios"), ("how", "5 simple steps"), ("pick", "Build your portfolios"),
-         ("call", "Why A is the bold one"), ("weights", "Your shopping list"), ("test1", "Travel back to a crash"),
-         ("test2", "Would we change your portfolio?"), ("verdict", "Does 'safe' stay safe?"), ("methodology", "Checked against the exchange")]
+PAGES = [("prefs", "Where would you like to invest?"), ("suggest", "Suggested for you"), ("weights", "Your portfolios right now"),
+         ("test1", "What if a crisis hit?"), ("test2", "How should the weights change?"), ("verdict", "Does 'safe' stay safe?"),
+         ("home", "Your money in two portfolios"), ("how", "5 simple steps"), ("pick", "Build your portfolios"),
+         ("call", "Why A is the bold one"), ("methodology", "Checked against the exchange")]
 
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -52,8 +53,9 @@ def click_nav(page, label: str, phone: bool) -> None:
 NAV_DESKTOP = {"home": "Home — the 30-second verdict", "how": "How this app works", "pick": "Pick stocks", "call": "The risk call",
                "weights": "Optimum weights today", "test1": "Test #1 — the risk label", "test2": "Test #2 — the allocation",
                "verdict": "Verdict & recommendation", "methodology": "Methodology & data"}
-NAV_PHONE = {"home": "Home", "how": "How it works", "pick": "Pick", "call": "The risk call", "weights": "Optimum weights",
-             "test1": "Test 1", "test2": "Test 2", "verdict": "Verdict", "methodology": "Methodology & data"}
+NAV_PHONE = {"prefs": "Choose", "suggest": "Suggested portfolios", "weights": "Today", "test1": "Backtest", "test2": "Rebalance",
+             "verdict": "Verdict", "home": "Summary", "how": "How it works", "pick": "Edit stocks", "call": "The risk call",
+             "methodology": "About the data"}
 
 
 def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int = 2500000, url: str | None = None) -> list[str]:
@@ -87,9 +89,9 @@ def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int =
                 if screens:
                     page.screenshot(path=str(screens / f"{label}_00_start.png"), full_page=not phone)
                 page.get_by_role("button", name="Continue →").click()
-                page.get_by_text("Your money in two portfolios").first.wait_for(timeout=120_000)
+                page.get_by_text("Where would you like to invest?").first.wait_for(timeout=120_000)
                 for key, heading in PAGES:
-                    if key != "home":
+                    if key != "prefs":
                         click_nav(page, NAV_PHONE[key], phone)
                         page.get_by_text(heading).first.wait_for(timeout=120_000)
                     time.sleep(2.5)

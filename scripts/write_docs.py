@@ -31,8 +31,8 @@ Every number on the site comes from the code in `src/` applied to the committed 
 
 ## 1. Data
 
-* **Universe:** today's Nifty 200 (NSE constituent list) with NSE's Industry field; market-cap bucket = Large cap if in the Nifty 100,
-  otherwise Mid cap. **Core** universe ({meta['n_core']} stocks) = continuous clean history from {meta['history_start']}; **extended**
+* **Universe:** today's Nifty 500 (NSE constituent list) with NSE's Industry field; market-cap bucket = Large cap (Nifty 100), Mid cap (Midcap 150), Small cap (Smallcap 250),
+  "Flexi" = all three. **Core** universe ({meta['n_core']} stocks) = continuous clean history from {meta['history_start']}; **extended**
   ({meta['n_extended']}) = at least 3 years, usable for custom picks; {meta['n_excluded']} excluded.
 * **Prices:** Yahoo Finance daily closes (`auto_adjust=False`) with dividend and split history, anchored to NSE bhavcopy closes and
   rebuilt into total-return prices — see [DATA_QUALITY.md](DATA_QUALITY.md).
@@ -168,7 +168,7 @@ All numbers below are for **{inr(AMT)} in each portfolio** and the official peri
    show normal, Student-t Monte Carlo and Cornish–Fisher beside it — the normal method visibly understates crisis risk.
 3. **Isn't Markowitz unstable?** Yes — that is Test #2's point. We measure the instability with a block bootstrap and only call a regime
    shift real if turnover beats the 95th percentile of noise. The 2%/25% bounds and the 40% industry cap also stop corner solutions.
-4. **Survivorship bias?** Today's Nifty 200 looked back to 2007 excludes companies that failed or dropped out, so history flatters both
+4. **Survivorship bias?** Today's Nifty 500 looked back to 2007 excludes companies that failed or dropped out, so history flatters both
    portfolios, most in 2008. We state it on the Methodology page.
 5. **Why 2% and 25% bounds?** 2% keeps all 10+ stocks genuinely held (otherwise the optimiser concentrates in 3–4 names); 25% stops
    one stock dominating. Feasibility is checked and relaxed with a warning.

@@ -6,128 +6,128 @@ Official periods (auto picks from the regime finder): **crisis = 2008 crash (dee
 
 ## 1. The two portfolios
 
-**Portfolio A** — objective `max_sharpe`; expected return 50.7%, volatility 25.6%, Sharpe 1.76 (current window, risk-free 5.57%).
+**Portfolio A** — objective `max_sharpe`; expected return 41.0%, volatility 31.1%, Sharpe 1.14 (current window, risk-free 5.57%).
 
 | Symbol | Company | Industry | Cap | Beta (3y) | Vol (3y) | Label | Weight | ₹ on 15 lakh |
 |---|---|---|---|---|---|---|---|---|
-| IDEA | Vodafone Idea Ltd. | Telecommunication | Large cap | 1.66 | 55.0% | High risk | 17.9% | ₹2,67,939 |
+| IDEA | Vodafone Idea Ltd. | Telecommunication | Large cap | 1.66 | 55.0% | High risk | 25.0% | ₹3,75,000 |
+| IFCI | IFCI Ltd. | Financial Services | Small cap | 1.60 | 62.2% | High risk | 13.0% | ₹1,95,000 |
+| GMDCLTD | Gujarat Mineral Development Corporation Ltd. | Metals & Mining | Small cap | 1.61 | 51.6% | High risk | 2.0% | ₹30,000 |
+| SCI | Shipping Corporation of India Ltd. | Services | Small cap | 1.60 | 50.0% | High risk | 25.0% | ₹3,75,000 |
 | MOTILALOFS | Motilal Oswal Financial Services Ltd. | Financial Services | Mid cap | 1.77 | 47.8% | High risk | 2.0% | ₹30,000 |
-| ADANIENT | Adani Enterprises Ltd. | Metals & Mining | Large cap | 1.75 | 39.6% | High risk | 2.0% | ₹30,000 |
-| BHEL | Bharat Heavy Electricals Ltd. | Capital Goods | Mid cap | 1.60 | 40.7% | High risk | 25.0% | ₹3,75,000 |
-| NATIONALUM | National Aluminium Co. Ltd. | Metals & Mining | Mid cap | 1.50 | 43.5% | High risk | 25.0% | ₹3,75,000 |
-| SAIL | Steel Authority of India Ltd. | Metals & Mining | Mid cap | 1.61 | 40.5% | High risk | 2.0% | ₹30,000 |
-| PFC | Power Finance Corporation Ltd. | Financial Services | Large cap | 1.72 | 39.0% | High risk | 2.0% | ₹30,000 |
-| HINDPETRO | Hindustan Petroleum Corporation Ltd. | Oil Gas & Consumable Fuels | Mid cap | 1.48 | 37.8% | High risk | 2.0% | ₹30,000 |
-| SHRIRAMFIN | Shriram Finance Ltd. | Financial Services | Large cap | 1.73 | 35.1% | High risk | 20.1% | ₹3,02,061 |
-| NLCINDIA | NLC India Ltd. | Power | Mid cap | 1.26 | 44.7% | High risk | 2.0% | ₹30,000 |
+| ANANTRAJ | Anant Raj Ltd. | Realty | Small cap | 1.66 | 49.0% | High risk | 2.0% | ₹30,000 |
+| ENGINERSIN | Engineers India Ltd. | Construction | Small cap | 1.68 | 47.9% | High risk | 25.0% | ₹3,75,000 |
+| BEML | BEML Ltd. | Capital Goods | Small cap | 1.61 | 48.7% | High risk | 2.0% | ₹30,000 |
+| HBLENGINE | HBL Engineering Ltd. | Capital Goods | Small cap | 1.52 | 49.0% | High risk | 2.0% | ₹30,000 |
+| FACT | Fertilisers and Chemicals Travancore Ltd. | Chemicals | Mid cap | 1.43 | 50.8% | High risk | 2.0% | ₹30,000 |
 
-Industry weights: Metals & Mining 29.0%, Capital Goods 25.0%, Financial Services 24.1%, Telecommunication 17.9%, Oil Gas & Consumable Fuels 2.0%, Power 2.0%
+Industry weights: Construction 25.0%, Services 25.0%, Telecommunication 25.0%, Financial Services 15.0%, Capital Goods 4.0%, Chemicals 2.0%, Metals & Mining 2.0%, Realty 2.0%
 
-**Portfolio B** — objective `min_variance`; expected return −4.0%, volatility 11.7%, Sharpe -0.82 (current window, risk-free 5.57%).
+**Portfolio B** — objective `min_variance`; expected return 1.8%, volatility 11.6%, Sharpe -0.33 (current window, risk-free 5.57%).
 
 | Symbol | Company | Industry | Cap | Beta (3y) | Vol (3y) | Label | Weight | ₹ on 15 lakh |
 |---|---|---|---|---|---|---|---|---|
-| BRITANNIA | Britannia Industries Ltd. | Fast Moving Consumer Goods | Large cap | 0.49 | 20.0% | Low risk | 17.6% | ₹2,63,610 |
-| HINDUNILVR | Hindustan Unilever Ltd. | Fast Moving Consumer Goods | Large cap | 0.50 | 20.1% | Low risk | 7.9% | ₹1,18,977 |
-| SUNPHARMA | Sun Pharmaceutical Industries Ltd. | Healthcare | Large cap | 0.53 | 19.7% | Low risk | 14.6% | ₹2,19,522 |
-| ITC | ITC Ltd. | Fast Moving Consumer Goods | Large cap | 0.62 | 18.9% | Low risk | 9.2% | ₹1,38,074 |
-| DRREDDY | Dr. Reddy's Laboratories Ltd. | Healthcare | Large cap | 0.53 | 21.8% | Low risk | 9.5% | ₹1,42,300 |
-| TORNTPHARM | Torrent Pharmaceuticals Ltd. | Healthcare | Large cap | 0.42 | 22.4% | Low risk | 15.0% | ₹2,25,134 |
+| BRITANNIA | Britannia Industries Ltd. | Fast Moving Consumer Goods | Large cap | 0.49 | 20.0% | Low risk | 11.9% | ₹1,78,332 |
+| MARICO | Marico Ltd. | Fast Moving Consumer Goods | Mid cap | 0.44 | 21.8% | Low risk | 17.3% | ₹2,59,509 |
+| HINDUNILVR | Hindustan Unilever Ltd. | Fast Moving Consumer Goods | Large cap | 0.50 | 20.1% | Low risk | 7.3% | ₹1,09,488 |
+| TORNTPHARM | Torrent Pharmaceuticals Ltd. | Healthcare | Large cap | 0.42 | 22.4% | Low risk | 13.4% | ₹2,01,609 |
+| SUNPHARMA | Sun Pharmaceutical Industries Ltd. | Healthcare | Large cap | 0.53 | 19.7% | Low risk | 15.2% | ₹2,27,259 |
+| DRREDDY | Dr. Reddy's Laboratories Ltd. | Healthcare | Large cap | 0.53 | 21.8% | Low risk | 11.0% | ₹1,65,170 |
 | PIDILITIND | Pidilite Industries Ltd. | Chemicals | Large cap | 0.68 | 21.1% | Low risk | 2.0% | ₹30,000 |
 | ASIANPAINT | Asian Paints Ltd. | Consumer Durables | Large cap | 0.75 | 21.4% | Low risk | 2.0% | ₹30,000 |
-| MRF | MRF Ltd. | Automobile and Auto Components | Mid cap | 0.74 | 22.0% | Low risk | 6.8% | ₹1,02,231 |
-| BHARTIARTL | Bharti Airtel Ltd. | Telecommunication | Large cap | 0.82 | 21.4% | Low risk | 15.3% | ₹2,30,154 |
+| MRF | MRF Ltd. | Automobile and Auto Components | Mid cap | 0.74 | 22.0% | Low risk | 10.2% | ₹1,52,391 |
+| PAGEIND | Page Industries Ltd. | Textiles | Mid cap | 0.67 | 24.0% | Low risk | 9.7% | ₹1,46,244 |
 
-Industry weights: Healthcare 39.1%, Fast Moving Consumer Goods 34.7%, Telecommunication 15.3%, Automobile and Auto Components 6.8%, Chemicals 2.0%, Consumer Durables 2.0%
+Industry weights: Healthcare 39.6%, Fast Moving Consumer Goods 36.5%, Automobile and Auto Components 10.2%, Textiles 9.7%, Chemicals 2.0%, Consumer Durables 2.0%
 
 ## 2. The call — why A is high risk and B is low risk (trailing 3 years)
 
 | Measure | A | B |
 |---|---|---|
-| Weighted beta | 1.61 | 0.58 |
-| Portfolio volatility √(wᵀΣw) | 30.8% | 11.6% |
-| Maximum drawdown | 25.7% | 19.4% |
-| Average pairwise correlation | 0.41 | 0.23 |
-| Large-cap share | 42.0% | 93.2% |
+| Weighted beta | 1.63 | 0.54 |
+| Portfolio volatility √(wᵀΣw) | 36.5% | 11.8% |
+| Maximum drawdown | 48.2% | 18.4% |
+| Average pairwise correlation | 0.36 | 0.23 |
+| Large-cap share | 25.0% | 62.8% |
 
-Volatility ratio σA/σB = **2.65**, block-bootstrap 95% CI **2.39 – 3.01** (500 resamples, 5-day blocks) → the call is statistically backed (whole interval above 1).
+Volatility ratio σA/σB = **3.09**, block-bootstrap 95% CI **2.86 – 3.35** (500 resamples, 5-day blocks) → the call is statistically backed (whole interval above 1).
 
 ## 3. Optimum weights today — VaR before and after optimising (1-day, historical)
 
 | Portfolio | Confidence | VaR equal-weight | VaR optimised | ES equal-weight | ES optimised |
 |---|---|---|---|---|---|
-| A | 0.95 | 2.55% | 2.74% | 3.29% | 3.52% |
-| A | 0.99 | 3.99% | 4.38% | 4.63% | 4.84% |
-| B | 0.95 | 1.36% | 1.18% | 1.79% | 1.73% |
-| B | 0.99 | 2.29% | 2.16% | 2.47% | 2.23% |
+| A | 0.95 | 3.31% | 3.13% | 3.90% | 4.02% |
+| A | 0.99 | 4.49% | 4.68% | 4.88% | 5.33% |
+| B | 0.95 | 1.39% | 1.24% | 1.78% | 1.70% |
+| B | 0.99 | 2.16% | 2.06% | 2.40% | 2.15% |
 
 ## 4. Test #1 — does the label hold? (official periods, standard 252-day windows)
 
 | Regime | P | VaR95 | VaR99 | ES99 | ES97.5 | Vol | Beta | Max DD | Worst day | Avg corr | ES99 on ₹15L |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Current | A | 2.74% | 4.38% | 4.84% | 4.11% | 25.6% | 1.26 | 12.7% | −5.3% | 0.33 | ₹72,536 |
-| Current | B | 1.18% | 2.16% | 2.23% | 2.03% | 11.7% | 0.61 | 9.8% | −2.3% | 0.23 | ₹33,521 |
-| Crisis | A | 5.24% | 8.15% | 9.36% | 7.56% | 44.6% | 0.88 | 62.5% | −10.6% | 0.42 | ₹1.4 lakh |
-| Crisis | B | 2.71% | 6.64% | 6.72% | 5.70% | 26.9% | 0.53 | 29.9% | −6.8% | 0.27 | ₹1.01 lakh |
-| Calm | A | 2.08% | 4.41% | 4.45% | 3.70% | 21.7% | 1.31 | 14.9% | −4.5% | 0.18 | ₹66,675 |
-| Calm | B | 1.28% | 1.77% | 1.82% | 1.66% | 12.5% | 0.90 | 7.6% | −1.9% | 0.11 | ₹27,362 |
+| Current | A | 3.13% | 4.68% | 5.33% | 4.50% | 31.1% | 1.41 | 20.0% | −6.0% | 0.33 | ₹79,930 |
+| Current | B | 1.24% | 2.06% | 2.15% | 1.95% | 11.6% | 0.59 | 9.6% | −2.3% | 0.24 | ₹32,312 |
+| Crisis | A | 5.20% | 9.52% | 11.80% | 9.13% | 50.0% | 0.94 | 70.1% | −14.1% | 0.41 | ₹1.77 lakh |
+| Crisis | B | 2.48% | 7.42% | 7.86% | 5.72% | 25.6% | 0.45 | 31.5% | −8.3% | 0.22 | ₹1.18 lakh |
+| Calm | A | 2.56% | 4.37% | 4.77% | 3.78% | 24.4% | 1.10 | 15.4% | −5.2% | 0.21 | ₹71,589 |
+| Calm | B | 1.27% | 1.83% | 1.86% | 1.70% | 12.6% | 0.81 | 9.0% | −1.9% | 0.14 | ₹27,874 |
 
 VaR/ES (99%, 1-day) by method in the official crisis:
 
 | Method | A VaR99 | A ES99 | B VaR99 | B ES99 |
 |---|---|---|---|---|
-| Historical | 8.15% | 9.36% | 6.64% | 6.72% |
-| Parametric normal | 6.75% | 7.71% | 4.00% | 4.58% |
-| Monte Carlo (Student-t) | 7.57% | 9.46% | 4.66% | 6.21% |
-| Cornish–Fisher | 7.57% | 9.29% | 5.54% | 7.24% |
+| Historical | 9.52% | 11.80% | 7.42% | 7.86% |
+| Parametric normal | 7.60% | 8.66% | 3.84% | 4.39% |
+| Monte Carlo (Student-t) | 8.61% | 10.94% | 4.23% | 5.83% |
+| Cornish–Fisher | 9.24% | 11.78% | 6.20% | 8.60% |
 
-* High-risk label held: crisis **True**, calm **True**, all events **12/13** → verdict **Yes**.
+* High-risk label held: crisis **True**, calm **True**, all events **13/13** → verdict **Yes**.
 * B held up (ES and drawdown below the Nifty 50's) in the official crisis: **True**; across crises 6/10 → **Partly**.
-* Label stability in the crisis: 3 of 10 of A's stocks keep their label (High risk) when the rule is re-run on crisis data.
+* Label stability in the crisis: 2 of 10 of A's stocks keep their label (High risk) when the rule is re-run on crisis data.
 * Label stability in the crisis: 10 of 10 of B's stocks keep their label (Low risk) when the rule is re-run on crisis data.
-* Breach test A, VaR calibrated on calm: 99% → expected about 2.5, got **16** (Kupiec p = 9.56e-09); 95% → expected 12.6, got **57** (p = 8.39e-22).
-* Breach test A, VaR calibrated on current: 99% → expected about 2.5, got **16** (Kupiec p = 9.56e-09); 95% → expected 12.6, got **40** (p = 1.62e-10).
-* Breach test B, VaR calibrated on calm: 99% → expected about 2.5, got **35** (Kupiec p = 1.01e-28); 95% → expected 12.6, got **50** (p = 8.87e-17).
-* Breach test B, VaR calibrated on current: 99% → expected about 2.5, got **26** (Kupiec p = 2.01e-18); 95% → expected 12.6, got **52** (p = 3.66e-18).
-* Crisis replay on ₹15,00,000: A lowest ₹6,08,197 (fall ₹8,91,803), B lowest ₹11,15,846 (fall ₹3,84,154), Nifty 50 fall 57.6%.
+* Breach test A, VaR calibrated on calm: 99% → expected about 2.5, got **21** (Kupiec p = 2.59e-13); 95% → expected 12.6, got **50** (p = 8.87e-17).
+* Breach test A, VaR calibrated on current: 99% → expected about 2.5, got **17** (Kupiec p = 1.31e-09); 95% → expected 12.6, got **36** (p = 2.38e-08).
+* Breach test B, VaR calibrated on calm: 99% → expected about 2.5, got **27** (Kupiec p = 1.67e-19); 95% → expected 12.6, got **45** (p = 1.67e-13).
+* Breach test B, VaR calibrated on current: 99% → expected about 2.5, got **24** (Kupiec p = 2.55e-16); 95% → expected 12.6, got **46** (p = 3.88e-14).
+* Crisis replay on ₹15,00,000: A lowest ₹4,94,809 (fall ₹10,05,191), B lowest ₹11,10,863 (fall ₹3,89,137), Nifty 50 fall 57.6%.
 
 ## 5. Test #2 — would the optimiser still pick our weights?
 
 | P | Regime | Target | Case | Regime-opt return | Regime-opt vol | Turnover | ₹ traded | Noise p95 | Significant | Efficiency gap |
 |---|---|---|---|---|---|---|---|---|---|---|
-| A | Crisis | 50.7% | unreachable | −38.3% | 42.2% | 38.9% | ₹5.83 lakh | 54.6% | no | 4.13% |
-| A | Calm | 50.7% | reachable | 50.7% | 20.0% | 63.5% | ₹9.53 lakh | 54.6% | yes | 4.12% |
-| A | Current | 50.7% | reachable | 50.7% | 25.6% | 0.0% | ₹0 | 54.6% | no | 0.00% |
-| B | Crisis | −4.0% | reachable | −4.0% | 23.4% | 43.0% | ₹6.46 lakh | 46.2% | no | 4.81% |
-| B | Calm | −4.0% | below_minvar | 25.3% | 10.2% | 35.5% | ₹5.32 lakh | 46.2% | no | 2.29% |
-| B | Current | −4.0% | reachable | −4.0% | 11.7% | 0.0% | ₹2 | 46.2% | no | 0.00% |
+| A | Crisis | 41.0% | unreachable | −61.1% | 47.5% | 23.0% | ₹3.45 lakh | 57.0% | no | 4.56% |
+| A | Calm | 41.0% | reachable | 41.0% | 20.9% | 44.6% | ₹6.69 lakh | 57.0% | no | 3.87% |
+| A | Current | 41.0% | reachable | 41.0% | 31.1% | 0.0% | ₹0 | 57.0% | no | 0.00% |
+| B | Crisis | 1.8% | reachable | 1.8% | 25.4% | 51.0% | ₹7.64 lakh | 42.3% | yes | 4.56% |
+| B | Calm | 1.8% | below_minvar | 25.0% | 10.4% | 36.9% | ₹5.54 lakh | 42.3% | no | 2.26% |
+| B | Current | 1.8% | reachable | 1.8% | 11.6% | 0.0% | ₹2 | 42.3% | no | 0.00% |
 
-* A in the crisis — VaR99 before (today's weights) 8.15% → after (crisis-optimal) 8.88%; ES99 9.36% → 8.96%.
-* B in the crisis — VaR99 before (today's weights) 6.64% → after (crisis-optimal) 5.04%; ES99 6.72% → 5.86%.
+* A in the crisis — VaR99 before (today's weights) 9.52% → after (crisis-optimal) 8.10%; ES99 11.80% → 9.99%.
+* B in the crisis — VaR99 before (today's weights) 7.42% → after (crisis-optimal) 5.04%; ES99 7.86% → 5.78%.
 
 ## 6. All-events scoreboard (standard windows)
 
 | Event | Type | Window | ES99 A | ES99 B | Vol A | Vol B | MDD A | MDD B | Worst ₹ fall A | Worst ₹ fall B | Label held | B beat Nifty |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Global Financial Crisis (2008–09) | crisis | 2007-12-06 → 2008-12-17 | 9.36% | 6.72% | 44.6% | 26.9% | 62.5% | 29.9% | ₹8.92 lakh | ₹3.84 lakh | ✓ | ✓ |
-| European debt crisis and US credit downgrade (2011) | crisis | 2010-10-08 → 2011-10-14 | 4.03% | 2.57% | 19.8% | 14.1% | 26.5% | 12.8% | ₹3.7 lakh | ₹1.56 lakh | ✓ | ✓ |
-| Taper tantrum and rupee crash (2013) | crisis | 2013-04-15 → 2014-04-23 | 5.44% | 2.97% | 24.7% | 15.6% | 25.8% | 11.7% | ₹1.98 lakh | ₹0 | ✓ | ✓ |
-| China devaluation and global sell-off (2015–16) | crisis | 2015-01-30 → 2016-02-08 | 4.88% | 4.99% | 21.3% | 17.0% | 34.7% | 17.0% | ₹5.08 lakh | ₹25,339 | ✗ | ✗ |
-| Demonetisation (2016) | crisis | 2016-09-28 → 2017-10-04 | 4.62% | 2.17% | 23.9% | 13.2% | 14.9% | 14.0% | ₹1.49 lakh | ₹2.1 lakh | ✓ | ✗ |
-| IL&FS default and NBFC crisis (2018) | crisis | 2018-07-26 → 2019-08-07 | 5.15% | 2.54% | 28.0% | 14.9% | 42.1% | 15.1% | ₹4.99 lakh | ₹90,850 | ✓ | ✗ |
-| COVID-19 crash (2020) | crisis | 2019-12-13 → 2020-12-15 | 12.64% | 8.55% | 45.7% | 25.4% | 46.4% | 22.7% | ₹7.19 lakh | ₹2.36 lakh | ✓ | ✓ |
-| Russia–Ukraine war and rate hikes (2022) | crisis | 2021-09-16 → 2022-09-20 | 7.45% | 3.05% | 32.9% | 15.0% | 30.5% | 12.8% | ₹3.33 lakh | ₹1.79 lakh | ✓ | ✓ |
-| Adani–Hindenburg sell-off (2023) | crisis | 2022-12-05 → 2023-12-11 | 5.62% | 1.44% | 23.5% | 9.5% | 14.2% | 5.1% | ₹1.91 lakh | ₹73,444 | ✓ | ✓ |
-| Foreign-investor sell-off correction (2024–25) | crisis | 2024-08-28 → 2025-09-01 | 5.47% | 2.24% | 29.9% | 12.1% | 24.6% | 19.4% | ₹3.68 lakh | ₹2.21 lakh | ✓ | ✗ |
-| Low-volatility rally (2017) | calm | 2017-01-30 → 2018-02-01 | 4.45% | 1.82% | 21.7% | 12.5% | 14.9% | 7.6% | ₹94,124 | ₹4,472 | ✓ | — |
-| Post-election steady market (2014) | calm | 2013-12-02 → 2014-12-15 | 5.89% | 2.03% | 27.1% | 11.5% | 16.4% | 5.2% | ₹1.82 lakh | ₹36,480 | ✓ | — |
-| Low-VIX stretch (2023–24) | calm | 2022-11-25 → 2023-12-01 | 5.62% | 1.44% | 23.6% | 9.5% | 14.2% | 5.4% | ₹1.36 lakh | ₹51,325 | ✓ | — |
+| Global Financial Crisis (2008–09) | crisis | 2007-12-06 → 2008-12-17 | 11.80% | 7.86% | 50.0% | 25.6% | 70.1% | 31.5% | ₹10.05 lakh | ₹3.89 lakh | ✓ | ✓ |
+| European debt crisis and US credit downgrade (2011) | crisis | 2010-10-08 → 2011-10-14 | 3.50% | 2.98% | 20.9% | 15.0% | 34.7% | 14.9% | ₹4.23 lakh | ₹1.5 lakh | ✓ | ✓ |
+| Taper tantrum and rupee crash (2013) | crisis | 2013-04-15 → 2014-04-23 | 4.10% | 2.29% | 25.5% | 13.0% | 22.7% | 9.4% | ₹1.57 lakh | ₹0 | ✓ | ✓ |
+| China devaluation and global sell-off (2015–16) | crisis | 2015-01-30 → 2016-02-08 | 9.16% | 5.40% | 29.7% | 18.6% | 23.3% | 15.0% | ₹1.63 lakh | ₹29,550 | ✓ | ✗ |
+| Demonetisation (2016) | crisis | 2016-09-28 → 2017-10-04 | 5.56% | 2.95% | 24.6% | 14.3% | 13.9% | 15.7% | ₹1.75 lakh | ₹2.25 lakh | ✓ | ✗ |
+| IL&FS default and NBFC crisis (2018) | crisis | 2018-07-26 → 2019-08-07 | 6.91% | 2.93% | 29.7% | 15.2% | 56.8% | 16.9% | ₹7.82 lakh | ₹1.32 lakh | ✓ | ✗ |
+| COVID-19 crash (2020) | crisis | 2019-12-13 → 2020-12-15 | 10.91% | 7.36% | 46.8% | 23.6% | 44.7% | 23.1% | ₹7.34 lakh | ₹2.67 lakh | ✓ | ✓ |
+| Russia–Ukraine war and rate hikes (2022) | crisis | 2021-09-16 → 2022-09-20 | 7.50% | 2.89% | 31.7% | 16.3% | 35.6% | 13.6% | ₹3.08 lakh | ₹1.6 lakh | ✓ | ✓ |
+| Adani–Hindenburg sell-off (2023) | crisis | 2022-12-05 → 2023-12-11 | 7.95% | 1.39% | 29.5% | 9.0% | 21.8% | 7.7% | ₹2.71 lakh | ₹1.12 lakh | ✓ | ✓ |
+| Foreign-investor sell-off correction (2024–25) | crisis | 2024-08-28 → 2025-09-01 | 6.10% | 2.24% | 36.7% | 12.5% | 42.5% | 18.4% | ₹6.52 lakh | ₹2.3 lakh | ✓ | ✗ |
+| Low-volatility rally (2017) | calm | 2017-01-30 → 2018-02-01 | 4.77% | 1.86% | 24.4% | 12.6% | 15.4% | 9.0% | ₹41,399 | ₹19,767 | ✓ | — |
+| Post-election steady market (2014) | calm | 2013-12-02 → 2014-12-15 | 5.39% | 1.81% | 28.2% | 11.2% | 16.7% | 4.3% | ₹1.67 lakh | ₹22,197 | ✓ | — |
+| Low-VIX stretch (2023–24) | calm | 2022-11-25 → 2023-12-01 | 7.95% | 1.39% | 29.2% | 9.1% | 21.8% | 8.0% | ₹2.55 lakh | ₹81,039 | ✓ | — |
 
 ## 7. Verdict
 
 * Label: **Yes** for A; B held up: **Partly**.
-* Weight robustness: A **Partly robust**, B **Robust**.
-* Worst case on ₹15,00,000 (official crisis): A replay fall ₹8,91,803, ES99 ₹1,40,377/day; B replay fall ₹3,84,154, ES99 ₹1,00,839/day.
+* Weight robustness: A **Robust**, B **Partly robust**.
+* Worst case on ₹15,00,000 (official crisis): A replay fall ₹10,05,191, ES99 ₹1,76,980/day; B replay fall ₹3,89,137, ES99 ₹1,17,862/day.
 * Review trigger: revisit when the Nifty 50's 3-month volatility exceeds 24.9%.
 
 ## 8. Regime finder — top candidates
@@ -137,13 +137,13 @@ VaR/ES (99%, 1-day) by method in the official crisis:
 | Start | End | Return | Vol | Max DD | Worst day | VaR99 |
 |---|---|---|---|---|---|---|
 | 2007-10-31 | 2008-11-07 | −49.6% | 41.8% | 59.9% | −12.2% | 8.70% |
-| 2019-12-06 | 2020-12-08 | 12.3% | 31.0% | 38.4% | −13.0% | 8.30% |
+| 2019-03-13 | 2020-03-24 | −31.2% | 25.2% | 38.4% | −13.0% | 8.30% |
 | 2010-12-15 | 2011-12-28 | −20.1% | 20.9% | 26.2% | −4.1% | 3.21% |
 
 **Calm candidates**
 
 | Start | End | Return | Vol | Max DD | Worst day | VaR99 |
 |---|---|---|---|---|---|---|
-| 2017-01-16 | 2018-01-18 | 28.6% | 9.0% | 4.1% | −1.6% | 1.38% |
-| 2022-11-22 | 2023-11-28 | 9.0% | 9.7% | 9.9% | −1.8% | 1.61% |
-| 2018-04-11 | 2019-04-18 | 12.8% | 12.3% | 14.6% | −2.7% | 2.39% |
+| 2017-01-27 | 2018-01-31 | 27.6% | 8.9% | 4.1% | −1.6% | 1.38% |
+| 2022-11-25 | 2023-12-01 | 9.5% | 9.7% | 9.9% | −1.8% | 1.61% |
+| 2018-04-09 | 2019-04-15 | 12.6% | 12.2% | 14.6% | −2.7% | 2.39% |

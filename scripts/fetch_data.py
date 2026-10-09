@@ -1,7 +1,8 @@
 """Download everything the project needs, once, into data/raw/ (gitignored).
 
 Sources
-* NSE archives: Nifty 200 and Nifty 100 constituent lists (with NSE's Industry field),
+* NSE archives: Nifty 500 constituent list (with NSE's Industry field) and the Nifty 100 / Midcap 150 /
+  Smallcap 250 lists that define the large / mid / small-cap buckets,
   and the NSE symbol-change list.
 * Yahoo Finance via yfinance: raw daily prices (auto_adjust=False → Close and Adj Close)
   with the dividend and split history, for every constituent, ^NSEI and ^INDIAVIX.
@@ -35,8 +36,11 @@ UA = (
 )
 NSE_ARCHIVE = "https://archives.nseindia.com/content"
 URLS = {
+    "nifty500": f"{NSE_ARCHIVE}/indices/ind_nifty500list.csv",
     "nifty200": f"{NSE_ARCHIVE}/indices/ind_nifty200list.csv",
     "nifty100": f"{NSE_ARCHIVE}/indices/ind_nifty100list.csv",
+    "midcap150": f"{NSE_ARCHIVE}/indices/ind_niftymidcap150list.csv",
+    "smallcap250": f"{NSE_ARCHIVE}/indices/ind_niftysmallcap250list.csv",
     "symbolchange": f"{NSE_ARCHIVE}/equities/symbolchange.csv",
 }
 NSE_CA_API = (
@@ -88,7 +92,7 @@ def fetch_nse_lists(refresh: bool) -> None:
         out.write_bytes(r.content)
         print(f"  saved {out.relative_to(config.ROOT)} ({len(r.content):,} bytes)")
     # keep dated copies of the constituent lists in the repo for traceability
-    for name in ("nifty200", "nifty100"):
+    for name in ("nifty500", "nifty100", "midcap150", "smallcap250"):
         df = pd.read_csv(NSE_DIR / f"{name}.csv")
         df.to_csv(config.DATA_DIR / f"nse_{name}_list.csv", index=False)
 
@@ -185,9 +189,9 @@ def main() -> None:
 
     print("1/5 NSE constituent and symbol-change lists")
     fetch_nse_lists(args.refresh)
-    n200 = pd.read_csv(NSE_DIR / "nifty200.csv")
-    symbols = n200["Symbol"].astype(str).str.strip().tolist()
-    print(f"  Nifty 200: {len(symbols)} symbols")
+    n500 = pd.read_csv(NSE_DIR / "nifty500.csv")
+    symbols = n500["Symbol"].astype(str).str.strip().tolist()
+    print(f"  Nifty 500: {len(symbols)} symbols")
 
     print("2/5 Yahoo Finance: benchmark and India VIX")
     fails = fetch_yahoo([config.BENCHMARK, config.VIX], args.refresh, end)

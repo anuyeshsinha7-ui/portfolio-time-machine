@@ -421,8 +421,23 @@ def combined_factors(nse: pd.DataFrame) -> pd.DataFrame:
     if nse is None or nse.empty:
         return pd.DataFrame(columns=["ex_date", "factor", "subject"])
     s = nse[nse["kind"].isin(["bonus", "split"])].dropna(subset=["factor"])
-    g = s.groupby("ex_date").agg(factor=("factor", "prod"), subject=("subject", " + ".join))
+    s = s.drop_duplicates(subset=["ex_date", "subject"])
+    g = s.groupby("ex_date").agg(factor=("factor", "prod"), subject=("subject", " + ".join), parts=("factor", list))
     return g.reset_index()
+
+
+def best_part_factor(parts: list[float], observed: float) -> float:
+    """When several actions share an ex-date, the combination (product of a non-empty subset) closest, in log terms,
+    to the observed price ratio — so an action that actually took effect on another day is not applied twice."""
+    from itertools import combinations
+    best, gap = float(np.prod(parts)), float("inf")
+    for n in range(1, len(parts) + 1):
+        for c in combinations(parts, n):
+            f = float(np.prod(c))
+            g_ = abs(np.log(observed / f))
+            if g_ < gap - 1e-12:
+                best, gap = f, g_
+    return best
 
 
 # ------------------------------------------------------------------ anchoring Yahoo to NSE official prices
@@ -657,4 +672,6 @@ def diff_snapshots(old: pd.DataFrame, new: pd.DataFrame, tol: float = 1e-4) -> p
     rel = (b / a - 1).abs()
     hits = rel.stack()
     hits = hits[hits > tol]
-    return hits.rename("relative_change").reset_index().rename(columns={"level_0": "date", "level_1": "ticker"})
+    out = hits.rename("relative_change").reset_index()
+    out.columns = ["date", "ticker", "relative_change"]
+    return out

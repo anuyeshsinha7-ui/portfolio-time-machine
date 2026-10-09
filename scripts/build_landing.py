@@ -75,7 +75,7 @@ def main(site: Path) -> None:
         <svg viewBox="0 0 300 70" class="spark" aria-label="Value path in the crisis">{sparkline(r['replay']['value'], col)}</svg>
         <div class="cap">₹ path through the crisis window (buy and hold)</div>
       </div>""")
-    steps = ["Your amount", "Nifty 200 data, cleaned & verified", "Risk label: beta + volatility", "Optimum weights",
+    steps = ["Your amount", "Nifty 500 data, cleaned & verified", "Risk label: beta + volatility", "Optimum weights",
              "Test #1: VaR & ES in crisis / calm", "Test #2: re-optimise in each period", "Verdict"]
     flow = "".join(f"<div class='step'><span>{i}</span>{html.escape(s)}</div>" + ("<div class='arr'>→</div>" if i < len(steps) - 1 else "")
                    for i, s in enumerate(steps))
@@ -83,7 +83,7 @@ def main(site: Path) -> None:
     page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{config.APP_NAME} — does 'safe' stay safe when the market crashes?</title>
-<meta name="description" content="A Financial Risk Analytics project: two Nifty 200 portfolios (high risk, low risk) sent back to real Indian market crises. VaR, Expected Shortfall and Markowitz re-optimisation.">
+<meta name="description" content="A Financial Risk Analytics project: two Nifty 500 portfolios (high risk, low risk) sent back to real Indian market crises. VaR, Expected Shortfall and Markowitz re-optimisation.">
 <meta name="theme-color" content="#161D2C">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏳</text></svg>">
 <style>
@@ -124,7 +124,7 @@ a {{ color: #8FB8F2; }}
   <div class="eyebrow">Financial Risk Analytics · group project · data as of {res['as_of']}</div>
   <h1>{config.APP_NAME}: does 'safe' stay safe when the market crashes?</h1>
   <p class="lede">We built a <b style="color:var(--a)">high-risk</b> and a <b style="color:var(--b)">low-risk</b> portfolio from today's
-  Nifty 200, then sent both back in time to real Indian market crises and calm spells — 2008, COVID-19, the taper tantrum and more —
+  Nifty 500, then sent both back in time to real Indian market crises and calm spells — 2008, COVID-19, the taper tantrum and more —
   to test whether the labels, and the weights, survive.</p>
   <div class="verdict">30-second verdict: the high-risk label <b class="v">{'held' if lv['verdict'] != 'No' else 'did not hold'}</b>
   ({lv['events_held']} of {lv['events_total']} historical events); 'safe' stayed <b class="v">{ {'Yes': 'safe', 'Partly': 'mostly safe', 'No': 'not so safe'}[bv['verdict']] }</b>

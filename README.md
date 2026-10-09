@@ -6,15 +6,15 @@
 
 *Does 'safe' stay safe when the market crashes?*
 
-* Two portfolios from today's Nifty 200: **A — high risk** (beta ≥ 1, volatility above the median) and **B — low risk**; 10 stocks each, no overlap.
+* Two portfolios from today's Nifty 500, built from the sectors and company sizes you choose: **A — high risk** (beta ≥ 1, volatility above the median) and **B — low risk**; 10 stocks each, no overlap.
 * **Time-travel test #1:** Value at Risk and Expected Shortfall (four methods) for both, in a historical crisis, a calm spell and today — did the labels hold?
 * **Time-travel test #2:** re-run Markowitz with each period's data for today's target return — would the optimiser still pick our weights, or is the difference just estimation noise?
 
 **How it looks.** On a computer, the left half is a **virtual phone running the customer app** — onboarding, portfolio cards, a shopping list of shares, a crash replay, a "which portfolio fits me?" slider — in plain words and rupees. The right half is **"The working"**: the formulas, tables, charts and evidence behind whichever screen the phone is on. On a real phone the same app fills the screen, with the working one tap away. Dark theme throughout.
 
-| Desktop: virtual phone + the working | Test #1 on desktop | On a real phone |
+| Choose sectors and sizes | Backtest in several crises | Suggested portfolios on a phone |
 |---|---|---|
-| ![Home](docs/screenshots/desktop_01_home.png) | ![Test 1](docs/screenshots/desktop_06_test1.png) | ![Phone](docs/screenshots/phone_01_home.png) |
+| ![Preferences](docs/screenshots/desktop_01_prefs.png) | ![Backtest](docs/screenshots/desktop_04_test1.png) | ![Phone](docs/screenshots/phone_02_suggest.png) |
 
 ## Headline results (snapshot 8 Oct 2026, ₹15 lakh in each)
 

@@ -39,7 +39,7 @@ AMOUNT_PRESETS = [1_00_000, 5_00_000, 15_00_000, 50_00_000, 1_00_00_000]
 
 # ---------------------------------------------------------------- data
 HISTORY_START = "2007-09-17"
-UNIVERSE = "NIFTY 200"
+UNIVERSE = "NIFTY 500"
 BENCHMARK = "^NSEI"
 VIX = "^INDIAVIX"
 TRADING_DAYS = 252

@@ -64,7 +64,7 @@ with left:
             s["amount_b"] = val_b if mode == "separate" else val_a
             s["amount_total"] = s["amount_a"] + s["amount_b"]
         s["amount_confirmed"] = True
-        st.switch_page(s["_pages"]["home"])
+        st.switch_page(s["_pages"]["prefs"])
     st.caption("Educational project — not investment advice.")
 
 if right is not None:
