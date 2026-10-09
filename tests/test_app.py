@@ -108,7 +108,7 @@ def test_custom_picks_recompute_in_app():
 
 
 def test_phone_layout_every_page():
-    at = app(phone=True)
+    at = app(is_phone=True)
     visit_all(at)
 
 
@@ -180,3 +180,15 @@ def test_recommendation_is_the_main_path_and_can_be_restored():
     assert not at.exception
     assert at.session_state["pick_A"] == at.session_state["rec_A"]
     assert "recommended portfolios" in text(at)
+
+
+def test_back_button_returns_to_previous_screen():
+    at = app(is_phone=True)
+    at.switch_page("views/01_suggest.py").run()
+    at.switch_page("views/05_weights.py").run()
+    back = [b for b in at.button if b.key and b.key.startswith("ptm_back_")]
+    assert back, "no back button"
+    back[0].click().run()
+    assert not at.exception
+    assert "Top 15 Bold" in text(at)
+    assert at.session_state["is_phone"]  # the phone layout survives page switches
