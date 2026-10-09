@@ -1,4 +1,4 @@
-"""Page 3 — Pick stocks: Industry → Stock → Risk label (brief §8.3, §6.2, §6.3)."""
+"""Optional — Choose my own stocks: Industry → Stock → Risk label (brief §8.3, §6.2, §6.3). The recommendation is the main path."""
 import pandas as pd
 import streamlit as st
 
@@ -38,8 +38,13 @@ def add(sym: str, to: str) -> None:
 
 
 with left:
-    ui.hero("Build your portfolios", f"A: {len(s['pick_A'])} · B: {len(s['pick_B'])} stocks",
-            "Pick an industry, tap a company, add it to A or B", "")
+    ui.hero("Choose my own stocks", f"A: {len(s['pick_A'])} · B: {len(s['pick_B'])} stocks",
+            "Optional — start from the recommendation and swap companies in or out", "")
+    if ui.is_recommended():
+        ui.note("These are your <b>recommended portfolios</b>. Any change you make here is used on every screen until you "
+                "go back to the recommendation.", "✨")
+    else:
+        ui.note("You're using <b>your own picks</b> on every screen.", "✏️", "warn")
     inds = sorted(t["industry"].unique())
     ind = st.selectbox("Industry", inds, index=inds.index("Fast Moving Consumer Goods") if "Fast Moving Consumer Goods" in inds else 0)
     sub = t[t["industry"] == ind].sort_values("risk_score", ascending=False)
@@ -72,10 +77,12 @@ with left:
     for m in msgs:
         ui.note(m["text"], "⛔" if m["level"] == "error" else "⚠️", "bad" if m["level"] == "error" else "warn")
     if not msgs:
-        ui.note("Both portfolios are ready: 10–20 stocks each, no overlap, labels match.", "✅", "good")
-    if st.button("↺ Reset to the team's picks", key="reset_page", width="stretch"):
-        ui.reset_team_picks()
+        ui.note(f"Both portfolios are ready: {config.MIN_STOCKS}–{config.MAX_STOCKS} stocks each, no overlap, labels match.", "✅", "good")
+    if not ui.is_recommended() and st.button("↺ Back to the recommendation", key="reset_page", width="stretch"):
+        ui.use_recommendation()
         st.rerun()
+    if not any(m["level"] == "error" for m in msgs):
+        ui.next_button("See today's weights and risk", "today")
 
 if right is not None:
     with right:

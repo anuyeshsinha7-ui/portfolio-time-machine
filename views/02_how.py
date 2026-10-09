@@ -10,9 +10,11 @@ left, right = ui.split()
 meta = D.metadata()
 
 with left:
-    ui.hero("How it works", "5 simple steps", "From your amount to a clear answer", "")
+    ui.hero("How it works", "6 simple steps", "From your amount to a clear answer", "")
     steps = [("Tell us your amount", "Every result is shown in rupees on it."),
-             ("Choose sectors & size", "Tick the sectors and company sizes you like; we suggest 10 bold and 10 steady companies."),
+             ("Choose sectors & size", "Tick the sectors and company sizes you like."),
+             ("Get your recommendation", f"We pick the top {config.PICK_N} bold and top {config.PICK_N} steady companies for you "
+              "(you can still choose your own)."),
              ("See what to buy", "Exact rupees and number of shares for each company."),
              ("Travel back in time", "Replay the 2008 crash, COVID-19 and more on today's portfolios."),
              ("Get your answer", "Does 'safe' stay safe? Which portfolio fits the loss you can live with?")]

@@ -32,6 +32,7 @@ now_vol = float(mret.iloc[-63:].std() * np.sqrt(252))
 with left:
     ui.hero("Your answer", "Does 'safe' stay safe?",
             f"Judged on the {len(board) if board else 0} period{'s' if board and len(board) != 1 else ''} you ticked on the Backtest screen", "")
+    ui.portfolio_badge()
     rows = [("🚀", "Is A really the bold one?",
              f"Riskier in the chosen crash: {'yes' if lv['crisis'] else 'no'} · calm year: {'yes' if lv['calm'] else 'no'}"
              + (f" · ticked periods: {lv['events_held']}/{lv['events_total']}" if board else ""), ui.chip(lv["verdict"], TONE[lv["verdict"]]), ""),

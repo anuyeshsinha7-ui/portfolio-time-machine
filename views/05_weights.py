@@ -21,6 +21,7 @@ checks = RC.as_is_checks(ctx.evidence, ctx.P, ctx.current)
 odds = round(1 / (1 - ctx.conf))
 with left:
     ui.hero("Today", "Your portfolios right now", f"Weights and risk from the latest 12 months ({ctx.current['start']} → {ctx.current['end']})", "")
+    ui.portfolio_badge()
     ui.section("Risk today", f"{ctx.horizon}-day · 1 in {odds} days")
     tl = []
     for kk in ("A", "B"):

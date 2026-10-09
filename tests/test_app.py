@@ -6,6 +6,8 @@ from pathlib import Path
 import pytest
 from streamlit.testing.v1 import AppTest
 
+from src import config
+
 ROOT = Path(__file__).resolve().parent.parent
 PAGES = ["views/01_prefs.py", "views/01_suggest.py", "views/05_weights.py", "views/06_test1.py", "views/07_test2.py",
          "views/08_verdict.py", "views/01_home.py", "views/02_how.py", "views/03_pick.py", "views/04_call.py",
@@ -126,10 +128,12 @@ def test_preferences_suggest_narrow_choice_and_relaxation_notes():
         if cb.key and cb.key.startswith("cap_"):
             cb.set_value(cb.key == "cap_Large cap")
     at.run()
-    next(b for b in at.button if b.label.startswith("Suggest my portfolios")).click().run()
+    next(b for b in at.button if b.label.startswith("Recommend my top")).click().run()
     assert not at.exception
     s = at.session_state
-    assert len(s["pick_A"]) == 10 and len(s["pick_B"]) == 10 and not set(s["pick_A"]) & set(s["pick_B"])
+    N = config.PICK_N
+    assert len(s["pick_A"]) == N and len(s["pick_B"]) == N and not set(s["pick_A"]) & set(s["pick_B"])
+    assert s["rec_A"] == s["pick_A"] and s["rec_B"] == s["pick_B"]
     assert s["pick_notes"]["A"] or s["pick_notes"]["B"]
     visit_all(at, ["views/01_suggest.py", "views/05_weights.py", "views/06_test1.py", "views/07_test2.py", "views/08_verdict.py"])
 
@@ -156,7 +160,23 @@ def test_cap_combinations():
         if cb.key and cb.key.startswith("cap_"):
             cb.set_value(cb.key in ("cap_Large cap", "cap_Small cap"))
     at.run()
-    next(b for b in at.button if b.label.startswith("Suggest my portfolios")).click().run()
+    next(b for b in at.button if b.label.startswith("Recommend my top")).click().run()
     assert not at.exception
     assert at.session_state["pref_cap"] == "Large + Small cap"
     assert sorted(at.session_state["pref_caps"]) == ["Large cap", "Small cap"]
+
+
+def test_recommendation_is_the_main_path_and_can_be_restored():
+    at = app()
+    at.switch_page("views/01_suggest.py").run()
+    assert not at.exception and "Top 15 Bold" in text(at)
+    next(b for b in at.button if b.key == "use_rec").click().run()
+    assert not at.exception
+    own = RES["picks"]["A"][:9] + [x for x in ("TATASTEEL", "HINDALCO", "JSWSTEEL") if x not in RES["picks"]["A"]][:1]
+    at.session_state["pick_A"] = own
+    at.switch_page("views/05_weights.py").run()
+    assert not at.exception and "your own picks" in text(at)
+    next(b for b in at.button if b.key == "badge_use_rec").click().run()
+    assert not at.exception
+    assert at.session_state["pick_A"] == at.session_state["rec_A"]
+    assert "recommended portfolios" in text(at)

@@ -17,9 +17,9 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGES = [("prefs", "Where would you like to invest?"), ("suggest", "Suggested for you"), ("weights", "Your portfolios right now"),
+PAGES = [("prefs", "Where would you like to invest?"), ("suggest", "Recommended for you"), ("weights", "Your portfolios right now"),
          ("test1", "What if a crisis hit?"), ("test2", "How should the weights change?"), ("verdict", "Does 'safe' stay safe?"),
-         ("home", "Your money in two portfolios"), ("how", "5 simple steps"), ("pick", "Build your portfolios"),
+         ("home", "Your money in two portfolios"), ("how", "6 simple steps"), ("pick", "Choose my own stocks"),
          ("call", "Why A is the bold one"), ("methodology", "Checked against the exchange")]
 
 
@@ -53,8 +53,8 @@ def click_nav(page, label: str, phone: bool) -> None:
 NAV_DESKTOP = {"home": "Home — the 30-second verdict", "how": "How this app works", "pick": "Pick stocks", "call": "The risk call",
                "weights": "Optimum weights today", "test1": "Test #1 — the risk label", "test2": "Test #2 — the allocation",
                "verdict": "Verdict & recommendation", "methodology": "Methodology & data"}
-NAV_PHONE = {"prefs": "Choose", "suggest": "Suggested portfolios", "weights": "Today", "test1": "Backtest", "test2": "Rebalance",
-             "verdict": "Verdict", "home": "Summary", "how": "How it works", "pick": "Edit stocks", "call": "The risk call",
+NAV_PHONE = {"prefs": "Choose", "suggest": "For you", "weights": "Today", "test1": "Backtest", "test2": "Rebalance",
+             "verdict": "Verdict", "home": "Summary", "how": "How it works", "pick": "Choose my own stocks", "call": "The risk call",
              "methodology": "About the data"}
 
 

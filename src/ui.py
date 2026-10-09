@@ -199,6 +199,8 @@ def init_state() -> None:
     st.session_state.setdefault("pref_cap", "Flexi cap")
     st.session_state.setdefault("pref_caps", ["Large cap", "Mid cap", "Small cap"])
     st.session_state.setdefault("pick_notes", {"A": [], "B": []})
+    st.session_state.setdefault("rec_A", list(res["picks"]["A"]))  # the latest recommendation, kept so it can be restored
+    st.session_state.setdefault("rec_B", list(res["picks"]["B"]))
     if "qp_done" not in st.session_state:
         st.session_state["qp_done"] = True
         try:
@@ -229,10 +231,38 @@ def reset_team_picks() -> None:
     res = default_results()
     st.session_state["pick_A"] = list(res["picks"]["A"])
     st.session_state["pick_B"] = list(res["picks"]["B"])
+    st.session_state["rec_A"], st.session_state["rec_B"] = list(res["picks"]["A"]), list(res["picks"]["B"])
     st.session_state["crisis_id"] = res["official"]["crisis"]
     st.session_state["calm_id"] = res["official"]["calm"]
     for k in ("custom_crisis", "custom_calm", "board_custom", "boot_custom"):
         st.session_state.pop(k, None)
+
+
+def is_recommended() -> bool:
+    """True while the portfolios are the app's recommendation (not hand-picked)."""
+    s = st.session_state
+    return sorted(s["pick_A"]) == sorted(s["rec_A"]) and sorted(s["pick_B"]) == sorted(s["rec_B"])
+
+
+def use_recommendation() -> None:
+    s = st.session_state
+    s["pick_A"], s["pick_B"] = list(s["rec_A"]), list(s["rec_B"])
+    for k in ("board_custom", "boot_custom"):
+        s.pop(k, None)
+
+
+def portfolio_badge() -> None:
+    """One line at the top of every analysis screen saying which portfolios it is working on."""
+    s = st.session_state
+    na, nb = len(s["pick_A"]), len(s["pick_B"])
+    if is_recommended():
+        note(f"Working on your <b>recommended portfolios</b>: top {na} Bold · top {nb} Steady "
+             f"({esc(s.get('pref_cap', 'Flexi cap')).lower()}).", "✨", "good")
+    else:
+        note(f"Working on <b>your own picks</b>: {na} Bold · {nb} Steady.", "✏️", "warn")
+        if st.button("↺ Use the recommendation instead", key="badge_use_rec", width="stretch"):
+            use_recommendation()
+            st.rerun()
 
 
 def is_default_picks() -> bool:
@@ -492,9 +522,9 @@ def story_cards(ctx: "Ctx") -> None:
 
 
 # ---------------------------------------------------------------- frames: virtual phone (desktop) or full-screen app (phones)
-TABS = [("prefs", "🎛️", "Choose"), ("weights", "🎯", "Today"), ("test1", "🌪️", "Backtest"), ("test2", "🔁", "Rebalance"),
-        ("verdict", "✅", "Verdict")]
-MORE = [("start", "💰", "Your amount"), ("suggest", "✨", "Suggested portfolios"), ("pick", "✏️", "Edit stocks"),
+TABS = [("prefs", "🎛️", "Choose"), ("suggest", "✨", "For you"), ("weights", "🎯", "Today"), ("test1", "🌪️", "Backtest"),
+        ("test2", "🔁", "Rebalance"), ("verdict", "✅", "Verdict")]
+MORE = [("start", "💰", "Your amount"), ("pick", "✏️", "Choose my own stocks"),
         ("home", "⏳", "Summary"), ("call", "⚖️", "The risk call"), ("how", "🧭", "How it works"), ("method", "📚", "About the data")]
 _CTX = {"in_client": False}
 

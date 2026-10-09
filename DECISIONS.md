@@ -62,3 +62,7 @@ Every default chosen without asking the team. ⚠️ marks an item the team shou
 41. **"Recommended as it is?"** = four transparent checks: A riskier than B with the bootstrap interval above 1; A's Sharpe > 0; B's volatility below the Nifty 50's; no weight rule relaxed.
 42. **Backtest = tick several periods** (team's choice). Defaults ticked: the 2008 crash (auto), COVID-19, Russia–Ukraine and the calmest year. The verdict is judged on the ticked periods; the full 13-event scoreboard stays in the working panel.
 43. **Widget state vs app state:** Streamlit deletes a widget's value when its page is not shown, so stock picks, the replay focus and the ticked periods are stored in plain session state and widgets only sync into them.
+
+## Recommendation first (team request, 9 Oct 2026)
+
+44. **Top 15 + 15, recommended automatically.** After the amount, sectors and sizes, the app recommends the top 15 *High risk* stocks for A and the top 15 *Low risk* stocks for B (same composite-score rule as item 40; at most 5 per sector, so each portfolio spans at least 3 sectors). Every later screen (Today, Backtest, Rebalance, Verdict) works on that recommendation and says so at the top. Choosing stocks by hand is a separate, optional screen ("Choose my own stocks", 10–20 stocks each); when it is used, every screen shows "your own picks" with a one-tap way back to the recommendation. The default results and presentation numbers now use the 15 + 15 recommendation for every sector and all sizes.

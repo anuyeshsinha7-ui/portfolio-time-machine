@@ -25,6 +25,7 @@ results = [(eid, reg, ev) for eid, reg, ev, prob in results if reg is not None]
 with left:
     ui.hero("Rebalance", "How should the weights change?",
             "In each period, the optimiser looks for the least risky mix that still earns today's expected return", "")
+    ui.portfolio_badge()
     if not results:
         ui.note("Tick some periods on the Backtest screen first.", "☝️", "warn")
     which = st.segmented_control("Portfolio", ["A", "B"], format_func=lambda x: "A · Bold" if x == "A" else "B · Steady",

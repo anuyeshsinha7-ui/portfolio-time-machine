@@ -10,10 +10,10 @@ All numbers below are for **₹15,00,000 in each portfolio** and the official pe
 | Time | Speaker | Page | What to do and say |
 |---|---|---|---|
 | 0:00–1:00 | [Name 1] | Landing → Start | Hook: "Does 'safe' stay safe when the market crashes?" Type an amount on the landing page (try 15 lakh), open the dashboard, show it arrives on Start. |
-| 1:00–3:00 | [Name 1] | Pick stocks → The risk call | The rule (beta ≥ 1 and volatility ≥ median). A: weighted beta **1.63**, volatility **36.5%**; B: **0.54**, **11.8%**. σA/σB = **3.09**, 95% CI **2.86–3.35** → statistically backed. |
-| 3:00–4:30 | [Name 2] | Optimum weights | A = max Sharpe (expected return 41.0%, Sharpe 1.14); B = min variance (volatility 11.6%). Show the frontier and whole-share allocation. VaR before/after: B's 99% VaR 2.16% → 2.06%. |
-| 4:30–8:30 | [Name 3] | Test #1 | Crisis replay: ₹15,00,000 in A falls to **₹4,94,809**, B to **₹11,10,863**, Nifty −57.6%. ES99: A **11.8%** vs B **7.9%** → label held. Breach test: VaR fitted in calm → A **21**, B **27** breaches vs ≈2.5 expected. **Switch the event live to COVID-19** (ES99 A 10.9% vs B 7.4%). Scoreboard: label held in **13/13** events; B beat the Nifty in **6/10** crises. |
-| 8:30–12:00 | [Name 4] | Test #2 | Target = 41.0% for A, 1.8% for B. In the crisis A's target is **unreachable**; turnover **23%** (₹3.45 lakh) vs noise p95 57%. B: **reachable**, turnover 51% vs 42%. Show bootstrap bands. |
+| 1:00–3:00 | [Name 1] | Pick stocks → The risk call | The rule (beta ≥ 1 and volatility ≥ median). A: weighted beta **1.59**, volatility **33.7%**; B: **0.58**, **11.3%**. σA/σB = **2.97**, 95% CI **2.75–3.24** → statistically backed. |
+| 3:00–4:30 | [Name 2] | Optimum weights | A = max Sharpe (expected return 39.1%, Sharpe 1.17); B = min variance (volatility 11.1%). Show the frontier and whole-share allocation. VaR before/after: B's 99% VaR 2.42% → 2.29%. |
+| 4:30–8:30 | [Name 3] | Test #1 | Crisis replay: ₹15,00,000 in A falls to **₹4,75,428**, B to **₹11,16,596**, Nifty −57.6%. ES99: A **10.0%** vs B **7.1%** → label held. Breach test: VaR fitted in calm → A **18**, B **35** breaches vs ≈2.5 expected. **Switch the event live to COVID-19** (ES99 A 11.9% vs B 8.2%). Scoreboard: label held in **13/13** events; B beat the Nifty in **6/10** crises. |
+| 8:30–12:00 | [Name 4] | Test #2 | Target = 39.1% for A, −0.7% for B. In the crisis A's target is **unreachable**; turnover **41%** (₹6.21 lakh) vs noise p95 51%. B: **reachable**, turnover 44% vs 41%. Show bootstrap bands. |
 | 12:00–13:30 | [Name 4] | Verdict | Label: **Yes**; 'safe stayed safe': **Partly**. Enter a loss limit (e.g. ₹4 lakh) and show which portfolio fits. Review trigger. |
 | 13:30–15:00 | all | — | Buffer / questions. |
 
@@ -37,10 +37,10 @@ All numbers below are for **₹15,00,000 in each portfolio** and the official pe
    special pre-open price-discovery ratio (e.g. Reliance 20 Jul 2023: ₹2,580 vs ₹2,841.85); older ones drop that single day's return.
 8. **Why is the label decided on the last three years?** So the time-travel tests are out of sample — the label is set today and tested on
    the past. Full-history values are shown as a robustness check.
-9. **Is the volatility difference significant?** Yes: the 95% bootstrap interval for σA/σB (2.86–3.35) lies entirely above 1.
-10. **Why is A's beta only 0.94 in the crisis window?** Labels are set on today's data. Re-running the rule on crisis-window
-    data, only 2 of 10 of A's stocks were High risk then, while 10
-    of 10 of B's stayed Low risk. A was still the riskier portfolio on outcomes (higher ES, volatility and
+9. **Is the volatility difference significant?** Yes: the 95% bootstrap interval for σA/σB (2.75–3.24) lies entirely above 1.
+10. **Why is A's beta only 0.85 in the crisis window?** Labels are set on today's data. Re-running the rule on crisis-window
+    data, only 3 of 15 of A's stocks were High risk then, while 15
+    of 15 of B's stayed Low risk. A was still the riskier portfolio on outcomes (higher ES, volatility and
     drawdown), so the label held — but "high beta" is not a permanent property of a stock.
 
 ## If the venue Wi-Fi fails

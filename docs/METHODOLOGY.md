@@ -28,8 +28,9 @@ Labels are set on **today's data — the trailing 3 years** — so both time-tra
 * **High risk** = beta ≥ 1.0 **and** volatility ≥ universe median (35.1% in this snapshot).
 * **Low risk** = beta < 1.0 **and** volatility < universe median. Everything else = Moderate.
 * Composite risk score = average of the beta percentile and the volatility percentile.
-* **Default picker:** A = the 10 highest-scoring High-risk core stocks, B = the 10 lowest-scoring Low-risk core stocks, at most
-  3 per industry (so at least 4 industries each), no overlap.
+* **Recommendation (default picker):** A = the top 15 High-risk stocks by composite score, B = the 15 Low-risk stocks
+  with the lowest score, inside the client's sectors and sizes (default: all), full-history stocks first, at most
+  5 per industry (so at least 3 industries each), no overlap. Hand-picking (10–20 stocks) is optional.
 * **Portfolio evidence:** weighted beta Σwᵢβᵢ, portfolio volatility √(wᵀΣw), maximum drawdown, average pairwise correlation,
   market-cap mix, industry weights and a **moving-block bootstrap** 95% confidence interval for σA/σB (500
   resamples of the same dates for both portfolios, 5-day blocks). The call is statistically backed if the whole interval

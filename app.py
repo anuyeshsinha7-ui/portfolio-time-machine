@@ -16,14 +16,14 @@ _confirmed = st.session_state["amount_confirmed"]
 PAGES = {
     "start": st.Page("views/00_start.py", title="Your amount", icon="💰", url_path="start", default=not _confirmed),
     "prefs": st.Page("views/01_prefs.py", title="Your preferences", icon="🎛️", url_path="prefs"),
-    "suggest": st.Page("views/01_suggest.py", title="Suggested portfolios", icon="✨", url_path="suggest"),
+    "suggest": st.Page("views/01_suggest.py", title="Recommended for you", icon="✨", url_path="suggest"),
     "weights": st.Page("views/05_weights.py", title="Today — weights and risk", icon="🎯", url_path="weights"),
     "test1": st.Page("views/06_test1.py", title="Backtest — uncertain times", icon="🌪️", url_path="test1"),
     "test2": st.Page("views/07_test2.py", title="Rebalance — new weights", icon="🔁", url_path="test2"),
     "verdict": st.Page("views/08_verdict.py", title="Verdict", icon="✅", url_path="verdict"),
     "home": st.Page("views/01_home.py", title="Summary", icon="⏳", url_path="home", default=_confirmed),
     "how": st.Page("views/02_how.py", title="How this app works", icon="🧭", url_path="how"),
-    "pick": st.Page("views/03_pick.py", title="Edit stocks", icon="✏️", url_path="pick"),
+    "pick": st.Page("views/03_pick.py", title="Choose my own stocks", icon="✏️", url_path="pick"),
     "call": st.Page("views/04_call.py", title="The risk call", icon="⚖️", url_path="call"),
     "method": st.Page("views/09_methodology.py", title="About the data", icon="📚", url_path="methodology"),
 }
@@ -78,7 +78,7 @@ def controls(where: str) -> None:
     st.segmented_control("Horizon", [1, 10], key="horizon", format_func=lambda h: f"{h} day" + ("s" if h > 1 else ""), required=True)
     st.toggle("Show the Backing", key="show_backing", help="Off = the client view only")
     st.toggle("📱 Full-screen app", key="phone", help="On: the app fills the screen, as on a real phone. Off: virtual phone + the working.")
-    if st.button("Reset to team picks", width="stretch", key=f"reset_{where}"):
+    if st.button("Reset to the default recommendation", width="stretch", key=f"reset_{where}"):
         ui.reset_team_picks()
         st.rerun()
     st.caption(f"Data as of **{D.as_of()}** · {ui.health_badge()}")

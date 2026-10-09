@@ -51,12 +51,12 @@ def test_ledoit_wolf_matches_sklearn():
 
 
 def test_no_overlap_and_size(picks):
-    assert len(picks["A"]) >= 10 and len(picks["B"]) >= 10
+    assert len(picks["A"]) == config.PICK_N and len(picks["B"]) == config.PICK_N
     assert not set(picks["A"]) & set(picks["B"])
     t = U.classification()
     assert (t.loc[picks["A"], "label"] == "High risk").all()
     assert (t.loc[picks["B"], "label"] == "Low risk").all()
-    assert t.loc[picks["A"], "industry"].value_counts().max() <= 3
+    assert t.loc[picks["A"], "industry"].value_counts().max() <= config.MAX_PER_INDUSTRY_PICK
     assert t.loc[picks["A"], "industry"].nunique() >= 4 and t.loc[picks["B"], "industry"].nunique() >= 4
 
 
@@ -274,13 +274,14 @@ def test_pick_by_filters_respects_choice_and_relaxes_with_notes():
     t = U.classification()
     sectors = sorted(t["industry"].unique())
     res = U.pick_by_filters(t, sectors, "Large cap")
-    assert len(res["A"]) == 10 and len(res["B"]) == 10 and not set(res["A"]) & set(res["B"])
+    N = config.PICK_N
+    assert len(res["A"]) == N and len(res["B"]) == N and not set(res["A"]) & set(res["B"])
     if not res["notes_A"]:
         assert (t.loc[res["A"], "cap_bucket"] == "Large cap").all()
         assert (t.loc[res["A"], "label"] == "High risk").all()
     narrow = U.pick_by_filters(t, ["Healthcare"], "Large cap")
-    assert len(narrow["A"]) == 10 and len(narrow["B"]) == 10
-    assert narrow["notes_A"] or narrow["notes_B"]  # one sector can't fill 10 + 10 without relaxing
+    assert len(narrow["A"]) == N and len(narrow["B"]) == N
+    assert narrow["notes_A"] or narrow["notes_B"]  # one sector can't fill 15 + 15 without relaxing
 
 
 def test_default_picks_are_all_sectors_flexi():
