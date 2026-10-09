@@ -35,30 +35,34 @@
     const files = {{FILES}};
     // Phones get the app-style layout: tell the Python side through the query string before Streamlit starts.
     const u = new URL(window.location.href);
-    if (window.innerWidth < 768 && !u.searchParams.has("phone")) { u.searchParams.set("phone", "1"); history.replaceState(null, "", u); }
-    const t0 = performance.now();
-    window.__ptmBoot = { start: t0 };
-    mount({
-      requirements: {{REQUIREMENTS}},
-      entrypoint: "app.py",
-      files,
-      streamlitConfig: {{CONFIG}},
-    }, document.getElementById("root"));
-    const steps = ["Downloading Python…", "Installing pandas, NumPy, SciPy and Plotly…", "Loading the data snapshot…", "Almost there…"];
-    let i = 0;
-    const ticker = setInterval(() => { i = Math.min(i + 1, steps.length - 1); document.getElementById("ptm-step").textContent = steps[i]; }, 6000);
-    setTimeout(() => { document.getElementById("ptm-err").style.display = "block"; }, 90000);
-    const ready = () => document.querySelector('[data-testid="stMarkdownContainer"], [data-testid="stHeading"], [data-testid="stException"], [data-testid="stAlert"]');
-    const obs = new MutationObserver(() => {
-      if (ready()) {
-        document.getElementById("ptm-loading").remove();
-        window.__ptmBoot.ready = performance.now() - t0;
-        console.log("PTM ready in", Math.round(window.__ptmBoot.ready), "ms");
-        clearInterval(ticker);
-        obs.disconnect();
-      }
-    });
-    obs.observe(document.body, { childList: true, subtree: true });
+    if (window.innerWidth < 768 && !u.searchParams.has("phone")) {
+      u.searchParams.set("phone", "1");
+      window.location.replace(u.toString());  // reload once, before Python starts, so the app knows it is on a phone
+    } else {
+      const t0 = performance.now();
+      window.__ptmBoot = { start: t0 };
+      mount({
+        requirements: {{REQUIREMENTS}},
+        entrypoint: "app.py",
+        files,
+        streamlitConfig: {{CONFIG}},
+      }, document.getElementById("root"));
+      const steps = ["Downloading Python…", "Installing pandas, NumPy, SciPy and Plotly…", "Loading the data snapshot…", "Almost there…"];
+      let i = 0;
+      const ticker = setInterval(() => { i = Math.min(i + 1, steps.length - 1); document.getElementById("ptm-step").textContent = steps[i]; }, 6000);
+      setTimeout(() => { document.getElementById("ptm-err").style.display = "block"; }, 90000);
+      const ready = () => document.querySelector('[data-testid="stMarkdownContainer"], [data-testid="stHeading"], [data-testid="stException"], [data-testid="stAlert"]');
+      const obs = new MutationObserver(() => {
+        if (ready()) {
+          document.getElementById("ptm-loading").remove();
+          window.__ptmBoot.ready = performance.now() - t0;
+          console.log("PTM ready in", Math.round(window.__ptmBoot.ready), "ms");
+          clearInterval(ticker);
+          obs.disconnect();
+        }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+    }
   </script>
 </body>
 </html>

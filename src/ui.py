@@ -529,6 +529,11 @@ DEVICE_CSS = """
 @media (max-width: 900px) {
   .st-key-ptm_stage > div > [data-testid="stColumn"]:first-child { position: static; }
 }
+@media (max-width: 520px) {  /* a real phone that slipped through detection: drop the device frame */
+  .st-key-ptm_phone { width: 100%; border: 0; border-radius: 0; box-shadow: none; }
+  .ptm-status, .ptm-homebar, .ptm-caption-phone { display: none; }
+  .block-container { padding-left: .5rem !important; padding-right: .5rem !important; }
+}
 </style>
 """
 
@@ -583,15 +588,17 @@ def _app_bar(page_title: str, controls) -> None:
         right_txt = f"A {inr_short(a)} · B {inr_short(b)}" if st.session_state["amount_confirmed"] else "Portfolio Time Machine"
         st.markdown(f"**⏳ {page_title.split(' — ')[0]}**  \n<span style='color:#9AA3B5'>{right_txt}</span>",
                     unsafe_allow_html=True)
-        with st.popover("⚙️", width="content", help="Settings: amount, events, confidence, horizon"):
+        with st.popover("⚙️", width="content", help="Settings: amount, events, confidence, horizon",
+                        key=f"ptm_settings_{page_title}"):
             controls()
 
 
-def _tab_bar(pages: dict) -> None:
+def _tab_bar(pages: dict, page_title: str = "") -> None:
     with st.container(key="ptm_tabs", horizontal=True):
         for key, icon, label in TABS:
             st.page_link(pages[key], label=label, icon=icon)
-        with st.popover("☰", width="stretch", help="More pages"):
+        # a fresh key on every page, so the menu is closed after you navigate
+        with st.popover("☰", width="stretch", help="More pages", key=f"ptm_more_{page_title}"):
             for key, icon, label in MORE:
                 st.page_link(pages[key], label=label, icon=icon)
 
@@ -610,7 +617,7 @@ def setup_frames(pages: dict, page_title: str, controls) -> None:
         client = st.container()
         working = st.expander("📐 The working — logic, maths and evidence") if s.get("show_backing", True) else None
         if confirmed:
-            _tab_bar(pages)
+            _tab_bar(pages, page_title)
         s["_frames"] = {"client": client, "working": working}
         return
     st.html(DEVICE_CSS)
@@ -624,7 +631,7 @@ def setup_frames(pages: dict, page_title: str, controls) -> None:
                 _app_bar(page_title, controls)
                 screen = st.container(key="ptm_screen", height=640, border=False)
                 if confirmed:
-                    _tab_bar(pages)
+                    _tab_bar(pages, page_title)
                 st.html("<div class='ptm-homebar'><span></span></div>")
             st.html("<div class='ptm-caption-phone'>The customer app, as a client sees it on their phone — tap through it.</div>")
         working = None
