@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 
 from src import charts as CH
+from src import config
 from src import ui
 from src import universe as U
 
@@ -15,6 +16,7 @@ ICON = {"Financial Services": "🏦", "Information Technology": "💻", "Healthc
         "Power": "⚡", "Consumer Services": "🛍️", "Consumer Durables": "📺", "Chemicals": "🧪", "Realty": "🏠", "Telecommunication": "📡",
         "Construction Materials": "🧱", "Construction": "🚧", "Services": "🧰", "Textiles": "🧵", "Media Entertainment & Publication": "🎬",
         "Diversified": "🧩", "Forest Materials": "🌲"}
+N, P = config.PICK_N, config.MAX_PER_INDUSTRY_PICK
 CAP_HELP = {"Large cap": "top 100, most established", "Mid cap": "next 150, growing businesses",
             "Small cap": "next 250, smaller and faster-moving"}
 
@@ -55,14 +57,15 @@ with left:
         ui.note("Tick at least one sector and one company size.", "☝️", "warn")
     else:
         ui.tiles([("Companies in your choice", f"{len(pool)}", f"{len(chosen)} sectors · {cap.lower()}", ""),
-                  ("Bold · Steady candidates", f"{hi} · {lo}", "need 10 of each", "")])
-        if hi < 10 or lo < 10:
-            ui.note("Your choice is narrow, so we'll widen it a little to reach 10 stocks in each portfolio — "
+                  ("Bold · Steady candidates", f"{hi} · {lo}", f"we recommend the top {N} of each", "")])
+        if hi < N or lo < N:
+            ui.note(f"Your choice is narrow, so we'll widen it a little to reach {N} stocks in each portfolio — "
                     "you'll see exactly how on the next screen.", "ℹ️", "warn")
-    if st.button("Suggest my portfolios →", type="primary", width="stretch", disabled=not (chosen and caps)):
-        res = U.pick_by_filters(t, chosen, caps)
+    if st.button(f"Recommend my top {N} + {N} →", type="primary", width="stretch", disabled=not (chosen and caps)):
+        res = U.pick_by_filters(t, chosen, caps, N)
         s["pref_sectors"], s["pref_caps"], s["pref_cap"] = chosen, caps, cap
-        s["pick_A"], s["pick_B"] = res["A"], res["B"]
+        s["rec_A"], s["rec_B"] = res["A"], res["B"]
+        s["pick_A"], s["pick_B"] = list(res["A"]), list(res["B"])
         s["pick_notes"] = {"A": res["notes_A"], "B": res["notes_B"]}
         for k in ("board_custom", "boot_custom"):
             s.pop(k, None)
@@ -81,11 +84,11 @@ if right is not None:
             lab = pd.crosstab(pool["industry"], pool["label"]).reindex(columns=["High risk", "Moderate", "Low risk"], fill_value=0)
             st.dataframe(lab, width="stretch")
             ui.show(CH.beta_vol_scatter(pool, float(t["vol_median"].iloc[0]), [], []))
-        st.markdown("#### How the suggestion works")
+        st.markdown("#### How the recommendation works")
         st.markdown("1. Keep only your sectors and company sizes.\n"
-                    "2. **Bold** = the 10 *High risk* stocks (beta ≥ 1 and volatility ≥ the universe median) with the highest composite "
-                    "score; **Steady** = the 10 *Low risk* stocks with the lowest score. Score = average of the beta and volatility "
-                    "percentiles.\n3. At most 3 per sector; stocks with price history back to 2007 first, so every crisis can be tested.\n"
-                    "4. If your choice is too narrow, relax step by step — more than 3 per sector → closest *Moderate* stocks → other "
+                    f"2. **Bold** = the top {N} *High risk* stocks (beta ≥ 1 and volatility ≥ the universe median) by composite "
+                    f"score; **Steady** = the {N} *Low risk* stocks with the lowest score. Score = average of the beta and volatility "
+                    f"percentiles.\n3. At most {P} per sector; stocks with price history back to 2007 first, so every crisis can be tested.\n"
+                    f"4. If your choice is too narrow, relax step by step — more than {P} per sector → closest *Moderate* stocks → other "
                     "sizes in your sectors → other sectors — and say so on screen.")
         ui.flowchart("pick")

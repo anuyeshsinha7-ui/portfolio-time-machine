@@ -17,6 +17,7 @@ opts = ui.backtest_options()
 evs_all = ui.default_results()["events"]
 with left:
     ui.hero("Backtest", "What if a crisis hit?", "Tick the periods to test — same portfolios, same amount", "crisis")
+    ui.portfolio_badge()
     ui.section("Uncertain times", "tick one or more")
     ticked = []
     for kind in ("crisis", "calm"):

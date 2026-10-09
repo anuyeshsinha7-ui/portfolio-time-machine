@@ -6,7 +6,7 @@
 
 *Does 'safe' stay safe when the market crashes?*
 
-* Two portfolios from today's Nifty 500, built from the sectors and company sizes you choose: **A — high risk** (beta ≥ 1, volatility above the median) and **B — low risk**; 10 stocks each, no overlap.
+* Two portfolios from today's Nifty 500, built from the sectors and company sizes you choose: **A — high risk** (beta ≥ 1, volatility above the median) and **B — low risk**; the app recommends the top 15 of each automatically (choosing your own is optional), no overlap.
 * **Time-travel test #1:** Value at Risk and Expected Shortfall (four methods) for both, in a historical crisis, a calm spell and today — did the labels hold?
 * **Time-travel test #2:** re-run Markowitz with each period's data for today's target return — would the optimiser still pick our weights, or is the difference just estimation noise?
 

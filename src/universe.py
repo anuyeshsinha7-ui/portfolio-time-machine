@@ -92,14 +92,14 @@ def _take(pool: pd.DataFrame, n: int, per_industry: int | None, chosen: list[str
         count[row["industry"]] = count.get(row["industry"], 0) + 1
 
 
-def pick_side(table: pd.DataFrame, label: str, sectors: list[str], caps: list[str], n: int = config.MIN_STOCKS,
+def pick_side(table: pd.DataFrame, label: str, sectors: list[str], caps: list[str], n: int = config.PICK_N,
               exclude: set | None = None) -> tuple[list[str], list[str]]:
     """Up to n stocks for one portfolio from the chosen sectors and market caps, ranked by the composite
     beta + standard-deviation score (highest for the bold portfolio, lowest for the steady one).
 
     Stocks with history back to 2007 come first so every crisis can be tested. When the choice is too narrow
     the rules are relaxed step by step, and each relaxation is returned as a plain-language note:
-    1. more than 3 per sector;  2. the closest 'Moderate' stocks;  3. other market caps in the same sectors;
+    1. more than MAX_PER_INDUSTRY_PICK per sector;  2. the closest 'Moderate' stocks;  3. other market caps in the same sectors;
     4. other sectors."""
     highest = label == CL.HIGH
     exclude = exclude or set()
@@ -139,8 +139,8 @@ def cap_label(caps: list[str]) -> str:
 
 
 def pick_by_filters(table: pd.DataFrame, sectors: list[str] | None = None, cap=FLEXI,
-                    n: int = config.MIN_STOCKS) -> dict:
-    """Bold (A) and Steady (B) portfolios suggested from the chosen sectors and market caps.
+                    n: int = config.PICK_N) -> dict:
+    """The recommended Bold (A) and Steady (B) portfolios: the top-n of each from the chosen sectors and market caps.
     `cap` is a list of sizes (any combination of Large / Mid / Small cap) or a single size; 'Flexi cap' = all three."""
     sectors = sectors or sorted(table["industry"].unique())
     if isinstance(cap, str):
