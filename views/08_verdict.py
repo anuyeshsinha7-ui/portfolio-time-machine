@@ -74,30 +74,31 @@ with left:
 
 if right is not None:
     with right:
-        st.markdown("#### The rules behind every verdict")
+        st.markdown("#### The rules behind each answer")
         for name, rule in RC.RULES.items():
             st.markdown(f"* **{name.replace('_', ' ').capitalize()}.** {rule}")
         st.markdown("#### The numbers the rules used")
+        st.markdown("ES 99% is the average loss on the worst 1% of days. Biggest fall is the largest drop from a high point.")
         rows = []
         for nm, reg, ev in ctx.regimes():
-            rows.append({"Period": nm, "ES99 A": reg["A"]["risk"]["Historical"]["0.99"]["es"],
-                         "ES99 B": reg["B"]["risk"]["Historical"]["0.99"]["es"], "Vol A": reg["A"]["volatility"],
-                         "Vol B": reg["B"]["volatility"], "ES99 Nifty": reg["B"]["nifty"]["es99"],
-                         "MDD B": reg["B"]["max_drawdown"], "MDD Nifty": reg["B"]["nifty"]["max_drawdown"],
+            rows.append({"Period": nm, "ES 99% A": reg["A"]["risk"]["Historical"]["0.99"]["es"],
+                         "ES 99% B": reg["B"]["risk"]["Historical"]["0.99"]["es"], "Volatility A": reg["A"]["volatility"],
+                         "Volatility B": reg["B"]["volatility"], "ES 99% Nifty": reg["B"]["nifty"]["es99"],
+                         "Biggest fall B": reg["B"]["max_drawdown"], "Biggest fall Nifty": reg["B"]["nifty"]["max_drawdown"],
                          "Label held": RC.label_holds(reg["A"], reg["B"]), "B beat Nifty": RC.b_held_up(reg["B"])})
         df = pd.DataFrame(rows)
         st.dataframe(df, hide_index=True, width="stretch",
                      column_config={c: st.column_config.NumberColumn(format="percent") for c in df.columns[1:8]})
-        st.markdown("#### Recommendation logic")
-        st.markdown("#### Limitations")
+        st.markdown("#### What this analysis can't tell you")
         for t_, d_ in RC.LIMITATIONS:
             st.markdown(f"* **{t_}.** {d_}")
         if board:
             ui.show(CH.scoreboard_heatmap(board, ctx.amount_a, ctx.amount_b))
+        st.markdown("#### How we pick a portfolio for you")
         st.graphviz_chart(f"""
 digraph R {{ rankdir=TB; bgcolor="transparent"; node [shape=box, style="rounded,filled", fillcolor="#161D2C", color="#3A4560",
  fontname="Helvetica", fontsize=10]; edge [color="#6B7690", fontsize=9, fontname="Helvetica"];
  t [label="Your loss limit\\n{ui.inr(s.get('tolerance') or 0)}"]; a [label="A's worst crisis fall\\n≤ limit?"];
- b [label="B's worst crisis fall\\n≤ limit?"]; ra [label="Suggest A\\n(higher expected return)", fillcolor="#3A2420", color="#E8735A"];
+ b [label="B's worst crisis fall\\n≤ limit?"]; ra [label="Suggest A\\n(expected to earn more)", fillcolor="#3A2420", color="#E8735A"];
  rb [label="Suggest B", fillcolor="#1C2C47", color="#3B7DD8"]; rn [label="Neither: cut the amount\\nto fit B"];
  t -> a; a -> ra [label="yes"]; a -> b [label="no"]; b -> rb [label="yes"]; b -> rn [label="no"]; }}""", width="stretch")

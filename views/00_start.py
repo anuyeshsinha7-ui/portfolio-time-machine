@@ -72,24 +72,26 @@ if right is not None:
         res = ui.default_results()
         prices = D.latest_prices()
         st.markdown("#### Why the amount comes first")
-        st.markdown("Every risk number starts life as a **percentage** of what you invest; rupees are that percentage × your amount:")
+        st.markdown("Every risk number is first worked out as a **percentage** of what you invest. To get rupees, we multiply that "
+                    "percentage by your amount:")
         st.latex(r"\text{₹ at risk} = \text{loss (\%)} \times \text{amount}")
-        st.markdown("Doubling the money doubles the rupee risk; the percentages do not change, so changing the amount never re-runs "
-                    "the analysis. The **only non-linear step** is buying whole shares, so small amounts drift from the target "
-                    "weights and leave some cash.")
-        st.markdown("#### Smallest sensible amount for the current picks")
+        st.markdown("If you double the money, the rupee risk doubles too. The percentages stay the same, so changing the amount "
+                    "does not change the analysis. The one exception is that you can only buy whole shares. With a small amount, "
+                    "the real weights end up a little off target and some cash is left over.")
+        st.markdown("#### The smallest amount that works for these stocks")
         rows = []
         for k in ("A", "B"):
             w = pd.Series(res["portfolios"][k]["weights"] if ui.is_default_picks() else ui.context().P[k]["weights"])
             m = AL.min_sensible_amount(w, prices)
             worst = (prices.reindex(w.index) / w).idxmax()
             rows.append((f"Portfolio {k}", ui.inr(m), worst, ui.inr(prices[worst], 2), ui.pct(w[worst])))
-        st.dataframe(pd.DataFrame(rows, columns=["Portfolio", "Minimum sensible amount", "Set by", "Share price", "Target weight"]),
+        st.dataframe(pd.DataFrame(rows, columns=["Portfolio", "Smallest amount", "Because of", "Share price", "Target weight"]),
                      hide_index=True, width="stretch")
-        st.caption("Minimum sensible amount = max over stocks of (latest price ÷ target weight), rounded up to the next ₹1,000. "
-                   "Below it at least one stock can't be bought; the app warns but carries on.")
-        st.markdown("#### Amount modes")
-        st.markdown("* **Same in both** (default, matches the assignment: ₹15 lakh in each)\n"
-                    "* **Split one total** — half in A, half in B\n* **Different amounts** — set each separately")
-        st.markdown("#### The pipeline")
+        st.caption("For each stock we divide its latest price by its target weight. The largest result, rounded up to the next "
+                   "₹1,000, is the smallest amount that works. Below it, you can't afford even one share of at least one stock. "
+                   "The app warns you but still runs.")
+        st.markdown("#### Three ways to enter the amount")
+        st.markdown("* **Same in both** (the default, as in the assignment: ₹15 lakh in each)\n"
+                    "* **Split one total**: half goes to A, half to B\n* **Different amounts**: you set each one yourself")
+        st.markdown("#### Every step, from data to answer")
         ui.flowchart("start")

@@ -50,10 +50,11 @@ with left:
 
 if right is not None:
     with right:
-        st.markdown("#### The rule, in numbers")
+        st.markdown("#### How a stock is labelled")
         st.latex(r"\beta_i = \frac{\operatorname{Cov}(r_i, r_m)}{\operatorname{Var}(r_m)} \qquad "
                  r"\sigma_i = \operatorname{sd}(r_i)\times\sqrt{252}")
-        st.markdown(CL.rule_text(med) + f" Measured on the last {config.CLASSIFICATION_YEARS} years of daily returns against the Nifty 50.")
+        st.markdown(CL.rule_text(med) + f" We measure both on the last {config.CLASSIFICATION_YEARS} years of daily returns, "
+                    "compared with the Nifty 50.")
         rows = []
         for k in ("A", "B"):
             for rank, x in enumerate(s[f"rec_{k}"], 1):
@@ -65,10 +66,10 @@ if right is not None:
         df = pd.DataFrame(rows)
         st.dataframe(df, hide_index=True, width="stretch", column_config={"Volatility": st.column_config.NumberColumn(format="percent")})
         ui.show(CH.beta_vol_scatter(t, med, s["rec_A"], s["rec_B"]))
-        st.caption("Dashed lines: beta = 1 and the universe median volatility. Bold picks sit top-right, Steady picks bottom-left. "
-                   "Rank = order of the composite score (average of the beta and volatility percentiles) within your choice; stocks "
-                   "with history back to 2007 are ranked first so every crisis can be tested.")
-        sym = st.selectbox("Worked example for", s["rec_A"] + s["rec_B"], key="sugg_example")
+        st.caption("The dashed lines mark beta = 1 and the middle volatility of all stocks. Bold picks sit at the top right, Steady "
+                   "picks at the bottom left. Rank is the order of the risk score (the average of where the stock's beta and "
+                   "volatility rank) within your choice. Stocks with prices back to 2007 are ranked first, so every crisis can be tested.")
+        sym = st.selectbox("Show the working for", s["rec_A"] + s["rec_B"], key="sugg_example")
         cal = D.calendar()
         R = D.window(D.returns(), cal[-config.CLASSIFICATION_YEARS * 252], cal[-1])
         m = D.window(D.market_returns(), cal[-config.CLASSIFICATION_YEARS * 252], cal[-1])
@@ -77,7 +78,8 @@ if right is not None:
         st.latex(rf"\beta = \frac{{{cov:.3e}}}{{{var_m:.3e}}} = {cov / var_m:.2f} \qquad "
                  rf"\sigma = {sd:.4f}\times\sqrt{{252}} = {sd * 252 ** 0.5 * 100:.1f}\%")
         ui.concept_box("Beta and standard deviation",
-                       "Beta says how much a stock rides the market's waves; standard deviation says how bumpy its own ride is.",
+                       "Beta tells you how much a stock moves when the whole market moves. Standard deviation tells you how much "
+                       "its price jumps around on its own.",
                        "β = Cov(r, r_Nifty) ÷ Var(r_Nifty); σ = daily standard deviation × √252.",
-                       "High on both means bigger gains in good times and bigger losses in bad ones.",
-                       "The scatter above and every stock row on the phone.")
+                       "A stock that is high on both tends to gain more in good times and lose more in bad times.",
+                       "The chart above and every stock row on the phone.")

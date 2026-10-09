@@ -9,12 +9,12 @@ import numpy as np
 from . import config
 
 RULES = {
-    "label_holds": "The high-risk label holds in a period if Portfolio A's historical Expected Shortfall (99%) AND its volatility are both higher than Portfolio B's.",
-    "b_held_up": "Portfolio B 'held up' in a crisis if both its historical Expected Shortfall (99%) and its maximum drawdown were smaller than the Nifty 50's in the same window.",
-    "yes_partly_no": "Label verdict: Yes = held in the chosen crisis, the chosen calm period and at least 80% of all catalogue events; Partly = held in at least one chosen period or at least half of all events; otherwise No.",
-    "robust": "Weights are robust in a period if the turnover needed to reach that period's optimal portfolio is within the 95th percentile of turnover produced by pure estimation noise (bootstrap of today's window).",
-    "fit": "A portfolio fits you if its worst crisis-replay fall in rupees (on your amount) is no bigger than the fall you said you could live with. If both fit, A (the higher expected return) is suggested; if only B fits, B; if neither, the largest amount that keeps B's worst fall within your limit is shown.",
-    "trigger": "Review trigger: revisit the weights when the Nifty 50's 3-month volatility rises above the lowest 3-month volatility seen during the chosen crisis window.",
+    "label_holds": "The high-risk label holds in a period if Portfolio A's Expected Shortfall (99%, historical) and its volatility are both higher than Portfolio B's.",
+    "b_held_up": "Portfolio B 'held up' in a crisis if its Expected Shortfall (99%, historical) and its biggest fall were both smaller than the Nifty 50's in the same period.",
+    "yes_partly_no": "Label verdict. Yes: the label held in the chosen crisis, the chosen calm period and at least 80% of all periods in the list. Partly: it held in at least one chosen period or at least half of all periods. Otherwise No.",
+    "robust": "The weights are robust in a period if the share of money you would need to move to reach that period's best weights is no more than the 95th percentile of what random noise in the data alone would make you move (measured by reshuffling today's data).",
+    "fit": "A portfolio fits you if its worst fall in rupees in a crisis replay (on your amount) is no bigger than the fall you said you could live with. If both fit, we suggest A because it is expected to earn more. If only B fits, we suggest B. If neither fits, we show the largest amount that keeps B's worst fall within your limit.",
+    "trigger": "When to look again: review the weights when the Nifty 50's 3-month volatility goes above the lowest 3-month volatility seen during the chosen crisis.",
 }
 
 
@@ -88,22 +88,23 @@ def review_trigger(crisis_nifty_returns: list[float]) -> float:
 
 
 LIMITATIONS = [
-    ("Survivorship bias", "Today's Nifty 500 members are looked at back to 2007, so companies that fell out of the index (or failed) are missing. "
-     "The bias is stronger the further back the event — the 2008–09 results flatter both portfolios most."),
-    ("Estimation error", "Expected returns and covariances from 252 days are noisy; the bootstrap bands on the Test #2 page show how much the "
-     "weights move from noise alone."),
-    ("Distribution assumptions", "Historical VaR assumes the past window is representative; the normal method ignores fat tails; Student-t and "
-     "Cornish–Fisher are approximations. √10 scaling assumes independent days."),
-    ("Costs and taxes", "No brokerage, impact costs, securities transaction tax or capital-gains tax are included."),
-    ("Benchmark mismatch", "Stock prices include reinvested dividends but the Nifty 50 is a price index, so 'versus Nifty' comparisons slightly favour the stocks."),
-    ("Data", "Residual data issues are listed in the data-quality report (Methodology and data page)."),
+    ("Survivorship bias", "We look at today's Nifty 500 companies back to 2007, so companies that left the index or failed are missing. "
+     "This matters more the further back the period goes, so the 2008 results make both portfolios look best."),
+    ("Estimation error", "Expected returns and how stocks move together are worked out from only 252 days, so they are rough. The noise bands "
+     "on the Rebalance screen show how much the weights move from noise alone."),
+    ("Assumptions about returns", "Historical VaR assumes the past period is a fair guide. The normal method ignores extreme days. Student-t and "
+     "Cornish–Fisher are approximations. Multiplying by √10 for 10 days assumes each day is independent of the last."),
+    ("Costs and taxes", "We leave out brokerage, market impact, securities transaction tax and capital-gains tax."),
+    ("Benchmark mismatch", "Our stock prices include reinvested dividends, but the Nifty 50 index does not, so comparisons with the Nifty slightly favour the stocks."),
+    ("Data", "Any data problems we could not fix are listed in the data-quality report (on the About the data screen)."),
 ]
 
 
-RULES["as_is"] = ("Recommended as it is when all four checks pass: (1) A is riskier than B with statistical backing — the "
-                  "95% bootstrap interval for σA/σB lies above 1; (2) A's expected return beats the risk-free rate (Sharpe > 0); "
-                  "(3) B swings less than the Nifty 50 over the latest 12 months; (4) both portfolios meet every weight rule "
-                  "without relaxation. Otherwise it is recommended with caution and the failed checks are named.")
+RULES["as_is"] = ("We call it recommended as it is when all four checks pass. (1) A is clearly riskier than B: the 95% "
+                  "bootstrap range for A's volatility divided by B's stays above 1. (2) A is expected to earn more than a safe "
+                  "Treasury bill (Sharpe above 0). (3) B moved less than the Nifty 50 over the latest 12 months. (4) Both "
+                  "portfolios meet every weight limit without loosening any. If a check fails, we say 'recommended with "
+                  "caution' and name the check.")
 
 
 def as_is_checks(evidence: dict, P: dict, current: dict) -> list[dict]:
@@ -113,14 +114,14 @@ def as_is_checks(evidence: dict, P: dict, current: dict) -> list[dict]:
     nifty_vol = current["B"]["nifty"]["volatility"]
     return [
         {"name": "Bold really is riskier", "ok": bool(vr["lo"] > 1),
-         "detail": f"A swings {vr['ratio']:.1f}× as much as B (95% range {vr['lo']:.1f}–{vr['hi']:.1f}×)"},
+         "detail": f"A swings {vr['ratio']:.1f}× as much as B (95% range {vr['lo']:.1f}× to {vr['hi']:.1f}×)"},
         {"name": "Bold is paid for its risk", "ok": bool(a["sharpe"] > 0),
          "detail": f"expected {a['expected_return']:.1%} a year vs {config.RISK_FREE_RATE:.1%} from a Treasury bill"},
         {"name": "Steady is calmer than the market", "ok": bool(current["B"]["volatility"] < nifty_vol),
          "detail": f"B {current['B']['volatility']:.1%} vs Nifty 50 {nifty_vol:.1%} yearly swings"},
         {"name": "All weight rules met", "ok": not (a["constraints"]["warnings"] or b["constraints"]["warnings"]),
-         "detail": "2%–25% per stock, ≤ 40% per sector" + ("" if not (a["constraints"]["warnings"] or b["constraints"]["warnings"])
-                                                           else " — some rules had to be relaxed")},
+         "detail": "2% to 25% per stock, at most 40% per sector" + ("" if not (a["constraints"]["warnings"] or b["constraints"]["warnings"])
+                                                           else "; some limits had to be loosened")},
     ]
 
 

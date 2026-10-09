@@ -42,21 +42,23 @@ with left:
 
 if right is not None:
     with right:
-        st.markdown("#### What the app is testing")
-        st.markdown(f"Two portfolios of Nifty 500 stocks built **today** — A high risk (beta ≥ 1 and volatility ≥ median), B low risk — "
-                    f"sent back to real crises and calm spells. Data: {ctx.res['as_of']} snapshot.")
-        st.markdown("#### The three headline findings (generated from the numbers)")
+        st.markdown("#### What the app tests")
+        st.markdown(f"We build two portfolios of Nifty 500 stocks **today**. A is high risk (beta of 1 or more and volatility at or "
+                    f"above the middle value). B is low risk. Then we send both back to real crises and calm periods. Prices are "
+                    f"up to {ctx.res['as_of']}.")
+        st.markdown("#### The three main findings (written from the numbers)")
         st.markdown(f"1. {NR.es_finding(ctx.crisis_ev['name'], cr['A'], cr['B'], ctx.amount_a, ctx.amount_b, held)}")
         st.markdown(f"2. {NR.replay_finding(ctx.crisis_ev['name'], cr['A'], cr['B'], cr['nifty'], ctx.amount_a, ctx.amount_b)}")
         boot = ctx.bootstrap()
         if boot:
             st.markdown(f"3. {NR.test2_finding(ctx.crisis_ev['name'], A, cr['A'], boot['A']['turnover_p95'], ctx.amount_a)}")
-        st.markdown("#### How the customer numbers are computed")
-        st.markdown(f"* **Bad day today** = 1-day historical Value at Risk at {ctx.conf:.0%} on the latest 252 days × amount"
-                    f"{' (scaled by √10 for 10 days)' if ctx.horizon == 10 else ''}.\n"
-                    "* **Worst fall** = largest drop of a buy-and-hold ₹ value path from the first day of the crisis window.\n"
-                    "* **Expected return** = mean daily return × 252 with today's weights.\n"
-                    "* **'Stayed riskier'** = A's Expected Shortfall (99%) and volatility both above B's.")
-        st.markdown("#### The whole pipeline")
+        st.markdown("#### How the numbers on the phone are worked out")
+        st.markdown(f"* **Bad day today**: the 1-day historical Value at Risk at {ctx.conf:.0%}, using the latest 252 days, times your "
+                    f"amount{' (multiplied by √10 for 10 days)' if ctx.horizon == 10 else ''}.\n"
+                    "* **Worst fall**: the biggest drop in your rupee value if you bought on the first day of the crisis period and "
+                    "held on.\n"
+                    "* **Expected return**: the average daily return × 252, with today's weights.\n"
+                    "* **'Stayed riskier'**: A's Expected Shortfall (99%) and volatility were both higher than B's.")
+        st.markdown("#### Every step, from data to answer")
         ui.flowchart("home")
         st.markdown(f"Team: {', '.join(config.TEAM)} · {config.CREDIT_LINE} · [GitHub]({config.REPO_URL})")

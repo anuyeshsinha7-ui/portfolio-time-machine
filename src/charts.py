@@ -53,7 +53,7 @@ def frontier(p: dict, regimes: list[tuple] | None = None, title=None, show_cloud
         fig.add_trace(go.Scattergl(x=c["vol"], y=c["ret"], mode="markers", name="5,000 random portfolios" if len(c["vol"]) > 2500 else "Random portfolios",
                                    marker=dict(size=3, color="#3A4560", opacity=.55), hoverinfo="skip"))
     fr = p["frontier"]
-    fig.add_trace(go.Scatter(x=fr["vols"], y=fr["rets"], mode="lines", name="Efficient frontier (today)",
+    fig.add_trace(go.Scatter(x=fr["vols"], y=fr["rets"], mode="lines", name="Best mixes today (frontier)",
                              line=dict(color=col, width=3)))
     if show_stocks:
         syms = p["symbols"]
@@ -61,7 +61,7 @@ def frontier(p: dict, regimes: list[tuple] | None = None, title=None, show_cloud
                                  textposition="top center", textfont=dict(size=9, color="#9AA3B5"), name="Individual stocks",
                                  marker=dict(size=7, color="#161D2C", line=dict(color="#9AA3B5", width=1.2))))
     mv = fr["minvar"]
-    fig.add_trace(go.Scatter(x=[mv["vol"]], y=[mv["ret"]], mode="markers", name="Minimum variance",
+    fig.add_trace(go.Scatter(x=[mv["vol"]], y=[mv["ret"]], mode="markers", name="Least risky mix",
                              marker=dict(symbol="diamond", size=12, color="#E6E9EF")))
     fig.add_trace(go.Scatter(x=[p["expected_vol"]], y=[p["expected_return"]], mode="markers",
                              name=f"Chosen: {'maximum Sharpe' if p['objective'] == 'max_sharpe' else 'minimum variance'}",
@@ -162,11 +162,11 @@ def corr_heatmap(corr, labels, title, colour) -> go.Figure:
 
 
 def ratio_hist(draws, lo, hi, point) -> go.Figure:
-    fig = go.Figure(go.Histogram(x=draws, nbinsx=40, marker=dict(color="#8792A8", opacity=.8), name="Bootstrap σA/σB"))
+    fig = go.Figure(go.Histogram(x=draws, nbinsx=40, marker=dict(color="#8792A8", opacity=.8), name="Reshuffled data"))
     for x, txt, c in ((lo, f"2.5%: {lo:.2f}", "#E6E9EF"), (hi, f"97.5%: {hi:.2f}", "#E6E9EF"), (1.0, "1 = equal risk", CRISIS)):
         fig.add_vline(x=x, line=dict(color=c, dash="dash" if x != 1 else "solid"), annotation_text=txt, annotation_font_size=11)
-    fig.add_vline(x=point, line=dict(color=A, width=3), annotation_text=f"observed {point:.2f}", annotation_position="top left")
-    fig.update_xaxes(title="Volatility ratio σA / σB")
+    fig.add_vline(x=point, line=dict(color=A, width=3), annotation_text=f"actual {point:.2f}", annotation_position="top left")
+    fig.update_xaxes(title="A's volatility ÷ B's (σA / σB)")
     return _base(fig, 280, None)
 
 
@@ -184,7 +184,7 @@ def nifty_history(close: pd.Series, events: list[dict], vix: pd.Series | None = 
     fig.add_trace(go.Scatter(x=rv.index, y=rv, line=dict(color="#8792A8", width=1.2), name="12-month volatility",
                              hovertemplate="%{x|%b %Y}: %{y:.0%}<extra></extra>"), row=2, col=1)
     dd = close / close.cummax() - 1
-    fig.add_trace(go.Scatter(x=dd.index, y=dd, fill="tozeroy", line=dict(color=CRISIS, width=1), name="Drawdown",
+    fig.add_trace(go.Scatter(x=dd.index, y=dd, fill="tozeroy", line=dict(color=CRISIS, width=1), name="Fall from last high",
                              fillcolor="rgba(214,69,69,.18)", hovertemplate="%{x|%b %Y}: %{y:.0%}<extra></extra>"), row=3, col=1)
     if vix is not None:
         fig.add_trace(go.Scatter(x=vix.index, y=vix, line=dict(color="#B45AC9", width=1), name="India VIX",
@@ -233,7 +233,7 @@ def scoreboard_heatmap(board: list[dict], amount_a: float, amount_b: float) -> g
 def bootstrap_bands(symbols, base, lo, hi, regime_w: dict, title=None) -> go.Figure:
     fig = go.Figure()
     fig.add_trace(go.Bar(y=symbols, x=[hi[s] - lo[s] for s in symbols], base=[lo[s] for s in symbols], orientation="h",
-                         marker=dict(color="rgba(122,131,148,.35)"), name="90% noise band (bootstrap)",
+                         marker=dict(color="rgba(122,131,148,.35)"), name="90% noise band",
                          hovertemplate="%{y}: %{base:.1%} – %{x:.1%}<extra></extra>"))
     fig.add_trace(go.Scatter(y=symbols, x=[base[s] for s in symbols], mode="markers", name="Today",
                              marker=dict(symbol="line-ns", size=16, line=dict(width=3, color="#E6E9EF"))))
@@ -246,12 +246,12 @@ def bootstrap_bands(symbols, base, lo, hi, regime_w: dict, title=None) -> go.Fig
 
 
 def turnover_hist(noise, p95, marks: list[tuple]) -> go.Figure:
-    fig = go.Figure(go.Histogram(x=noise, nbinsx=30, marker=dict(color="#3A4560"), name="Turnover from noise alone"))
-    fig.add_vline(x=p95, line=dict(color="#E6E9EF", dash="dash"), annotation_text=f"95th pct {p95:.0%}", annotation_font_size=11)
+    fig = go.Figure(go.Histogram(x=noise, nbinsx=30, marker=dict(color="#3A4560"), name="Money moved by noise alone"))
+    fig.add_vline(x=p95, line=dict(color="#E6E9EF", dash="dash"), annotation_text=f"95% limit {p95:.0%}", annotation_font_size=11)
     for name, v, col in marks:
         fig.add_vline(x=v, line=dict(color=col, width=3), annotation_text=f"{name} {v:.0%}", annotation_position="top left",
                       annotation_font_size=11)
-    fig.update_xaxes(title="Turnover = ½ Σ |Δw|")
+    fig.update_xaxes(title="Share of money moved (½ Σ |Δw|)")
     return _base(fig, 260, None, xfmt=".0%")
 
 
