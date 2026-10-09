@@ -43,7 +43,7 @@ with left:
 if right is not None:
     with right:
         st.markdown("#### What the app is testing")
-        st.markdown(f"Two portfolios of Nifty 200 stocks built **today** — A high risk (beta ≥ 1 and volatility ≥ median), B low risk — "
+        st.markdown(f"Two portfolios of Nifty 500 stocks built **today** — A high risk (beta ≥ 1 and volatility ≥ median), B low risk — "
                     f"sent back to real crises and calm spells. Data: {ctx.res['as_of']} snapshot.")
         st.markdown("#### The three headline findings (generated from the numbers)")
         st.markdown(f"1. {NR.es_finding(ctx.crisis_ev['name'], cr['A'], cr['B'], ctx.amount_a, ctx.amount_b, held)}")

@@ -194,6 +194,11 @@ def init_state() -> None:
     st.session_state.setdefault("pick_B", list(res["picks"]["B"]))
     st.session_state.setdefault("crisis_id", res["official"]["crisis"])
     st.session_state.setdefault("calm_id", res["official"]["calm"])
+    st.session_state.setdefault("bt_events", default_backtest())
+    st.session_state.setdefault("pref_sectors", sector_list())
+    st.session_state.setdefault("pref_cap", "Flexi cap")
+    st.session_state.setdefault("pref_caps", ["Large cap", "Mid cap", "Small cap"])
+    st.session_state.setdefault("pick_notes", {"A": [], "B": []})
     if "qp_done" not in st.session_state:
         st.session_state["qp_done"] = True
         try:
@@ -487,10 +492,10 @@ def story_cards(ctx: "Ctx") -> None:
 
 
 # ---------------------------------------------------------------- frames: virtual phone (desktop) or full-screen app (phones)
-TABS = [("home", "🏠", "Home"), ("pick", "🧺", "Pick"), ("test1", "🌪️", "Test 1"), ("test2", "🔁", "Test 2"),
+TABS = [("prefs", "🎛️", "Choose"), ("weights", "🎯", "Today"), ("test1", "🌪️", "Backtest"), ("test2", "🔁", "Rebalance"),
         ("verdict", "✅", "Verdict")]
-MORE = [("start", "💰", "Your amount"), ("how", "🧭", "How it works"), ("call", "⚖️", "The risk call"),
-        ("weights", "🎯", "Optimum weights"), ("method", "📚", "Methodology & data")]
+MORE = [("start", "💰", "Your amount"), ("suggest", "✨", "Suggested portfolios"), ("pick", "✏️", "Edit stocks"),
+        ("home", "⏳", "Summary"), ("call", "⚖️", "The risk call"), ("how", "🧭", "How it works"), ("method", "📚", "About the data")]
 _CTX = {"in_client": False}
 
 DEVICE_CSS = """
@@ -812,3 +817,45 @@ def compact_label(eid: str, symbols: list[str], mode: str) -> str:
     tail = ev["label"].split(" · ")[2] if ev["label"].count(" · ") >= 2 else ""
     base = f"{'⭐ ' if eid.startswith('auto_') else ''}{short(ev)}{' · ' + tail if tail else ''}"
     return f"⛔ {base} (needs older data)" if prob and "not supported" not in prob else base
+
+
+# ---------------------------------------------------------------- guided flow: preferences, ticked events
+def sector_list() -> list[str]:
+    return sorted(universe_table()["industry"].unique())
+
+
+def backtest_options() -> dict:
+    """{'crisis': [ids], 'calm': [ids]} — every data-supported event, automatic picks first."""
+    evs = default_results()["events"]
+    out = {}
+    for kind in ("crisis", "calm"):
+        auto = "auto_crisis" if kind == "crisis" else "auto_calm"
+        out[kind] = [auto] + [k for k, v in evs.items() if v["type"] == kind and v["available"] and not k.startswith("auto_")]
+    return out
+
+
+def default_backtest() -> list[str]:
+    off = default_results()["official"]
+    picks = [off["crisis"], "covid_2020", "ukraine_2022", off["calm"]]
+    return [p for p in picks if p in default_results()["events"]]
+
+
+def regime_for(ctx: "Ctx", eid: str) -> tuple[dict | None, dict, str | None]:
+    """(regime results, event, problem) for one ticked event, with the client's picks and window mode."""
+    res = default_results()
+    ev = res["events"][eid]
+    prob = coverage_problem(eid, list(ctx.P["A"]["symbols"]) + list(ctx.P["B"]["symbols"]), ctx.mode)
+    if prob:
+        return None, ev, prob
+    w = ev["windows"].get(ctx.mode) or ev["windows"]["standard"]
+    key = f"{eid}|{ctx.mode}"
+    if ctx.default and key in res["regimes"] and res["regimes"][key]["start"] == w[0]:
+        return res["regimes"][key], ev, None
+    with st.spinner(f"Testing your portfolios in {short(ev)}…"):
+        a, b = tuple(ctx.P["A"]["symbols"]), tuple(ctx.P["B"]["symbols"])
+        return _regime(a, b, w[0], w[1]), ev, None
+
+
+def next_button(label: str, page_key: str) -> None:
+    if st.button(f"{label} →", type="primary", width="stretch", key=f"next_{page_key}"):
+        st.switch_page(st.session_state["_pages"][page_key])

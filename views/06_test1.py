@@ -1,4 +1,4 @@
-"""Page 6 — Time-travel test #1: does the risk label hold? (brief §8.6, §6.4, §6.7, §6.8)."""
+"""Step 5 — Backtest: tick uncertain (and calm) periods; see how VaR and ES change versus today."""
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -11,57 +11,109 @@ from src import stats_tests as ST
 from src import ui
 from src import var_es as V
 
+s = st.session_state
 left, right = ui.split()
+opts = ui.backtest_options()
+evs_all = ui.default_results()["events"]
 with left:
-    ui.hero("Time machine", "Travel back to a crash", "Same portfolios, same amount — see what would have happened", "crisis")
-ui.event_selectors("t1")
+    ui.hero("Backtest", "What if a crisis hit?", "Tick the periods to test — same portfolios, same amount", "crisis")
+    ui.section("Uncertain times", "tick one or more")
+    ticked = []
+    for kind in ("crisis", "calm"):
+        if kind == "calm":
+            ui.section("Calm times", "for comparison")
+        for eid in opts[kind]:
+            key = f"bt_{eid}"
+            if key not in s:
+                s[key] = eid in s["bt_events"]
+            ev = evs_all[eid]
+            if st.checkbox(ui.compact_label(eid, s["pick_A"] + s["pick_B"], s["window_mode"]), key=key):
+                ticked.append(eid)
+    s["bt_events"] = ticked
+    crises = [e for e in ticked if evs_all[e]["type"] == "crisis"]
+    calms = [e for e in ticked if evs_all[e]["type"] == "calm"]
+    if crises and s["crisis_id"] not in crises:
+        s["crisis_id"] = crises[0]
+    if calms and s["calm_id"] not in calms:
+        s["calm_id"] = calms[0]
 ctx = ui.context()
 k = ctx.ck()
-regs = ctx.regimes()
 odds = round(1 / (1 - ctx.conf))
+results = []
+for eid in ticked:
+    reg, ev, prob = ui.regime_for(ctx, eid)
+    results.append((eid, reg, ev, prob))
+regs = ctx.regimes()
 
 with left:
-    cr = ctx.crisis
-    ev = ctx.crisis_ev
-    w = ev["windows"].get(ctx.mode) or ev["windows"]["standard"]
-    ui.note(f"<b>{ui.short(ev)}</b> · {w[0]} → {w[1]}<br>{ev['story']}", "🌪️", "bad")
-    ui.section("Your money through the crash", "bought on day one")
-    ui.show(CH.replay(cr["nifty"]["dates"], cr["A"]["replay"]["value"], cr["B"]["replay"]["value"], cr["nifty"]["value"],
-                      ctx.amount_a, ctx.amount_b))
-    ui.tiles([("A fell as low as", ui.inr_short(cr["A"]["replay"]["low"] * ctx.amount_a),
-               f"−{ui.inr_short(cr['A']['replay']['largest_fall'] * ctx.amount_a)} at worst", "a"),
-              ("B fell as low as", ui.inr_short(cr["B"]["replay"]["low"] * ctx.amount_b),
-               f"−{ui.inr_short(cr['B']['replay']['largest_fall'] * ctx.amount_b)} at worst", "b")])
-    ui.section("Did the labels hold?", f"worst {100 // odds if odds < 100 else 1}% of days")
-    rows = []
-    for name, reg, e_ in regs:
+    if not ticked:
+        ui.note("Tick at least one period above.", "☝️", "warn")
+    ui.section("How your risk changes", f"bad day = 1 in {odds} · {ctx.horizon}-day")
+    for eid, reg, ev, prob in results:
+        if reg is None:
+            ui.note(f"<b>{ui.short(ev)}</b> can't be tested: {prob}.", "⛔", "warn")
+            continue
+        rows = []
+        for kk in ("A", "B"):
+            d = RC.deviation(ctx.current[kk], reg[kk], k)
+            am = ctx.amount(kk)
+            rows.append((ui.PLAN[kk][2], f"Portfolio {kk} · {ui.PLAN[kk][1].split(' · ')[0]}",
+                         f"Bad day {ui.inr_short(ctx.h(d['var_now']) * am)} → <b>{ui.inr_short(ctx.h(d['var_then']) * am)}</b> · "
+                         f"worst days {ui.inr_short(ctx.h(d['es_now']) * am)} → <b>{ui.inr_short(ctx.h(d['es_then']) * am)}</b>",
+                         f"{d['es_mult']:.1f}×", "ES vs today"))
         held = RC.label_holds(reg["A"], reg["B"])
-        ea, eb = ctx.h(reg["A"]["risk"]["Historical"][k]["es"]), ctx.h(reg["B"]["risk"]["Historical"][k]["es"])
-        icon = {"Current": "📅", "Crisis": "🌪️", "Calm": "🌤️"}[name]
-        rows.append((icon, f"{name}{' · ' + ui.short(e_) if e_ else ' · last 12 months'}",
-                     f"Average loss on the worst days: A {ui.inr_short(ea * ctx.amount_a)} · B {ui.inr_short(eb * ctx.amount_b)}",
-                     ui.chip("held ✓", "ok") if held else ui.chip("did not hold", "bad"), ""))
-    ui.list_rows(rows)
-    bh = RC.b_held_up(cr["B"])
-    ui.note(f"In this crash, Portfolio B {'<b>beat the market</b> — smaller worst-day losses and a smaller fall than the Nifty 50.' if bh else '<b>did not beat the market</b> on both worst-day losses and the biggest fall.'}",
-            "🛡️", "good" if bh else "warn")
-    board = ctx.scoreboard()
-    ui.section("Every crash and calm year we tested")
-    if board is None:
-        if st.button("Test my picks in every event", width="stretch"):
-            board = ui.compute_scoreboard(ctx)
-    if board:
-        ui.list_rows([("🌪️" if r["type"] == "crisis" else "🌤️", ui.esc(r["event"]),
-                       f"Worst fall: A −{ui.inr_short(r['fall_A'] * ctx.amount_a)} · B −{ui.inr_short(r['fall_B'] * ctx.amount_b)}",
-                       ui.chip("✓ held", "ok") if r["label_held"] else ui.chip("✗", "bad"),
-                       ("B beat market" if r["b_held_up"] else "B lagged market") if r["type"] == "crisis" else "") for r in board])
-        n = sum(r["label_held"] for r in board)
-        ui.verdict("🏁", f"Labels held in {n} of {len(board)} events",
-                   f"Steady beat the market in {sum(r['b_held_up'] for r in board if r['type'] == 'crisis')} of "
-                   f"{sum(r['type'] == 'crisis' for r in board)} crashes.")
+        icon = "🌪️" if ev["type"] == "crisis" else "🌤️"
+        st.html(f"<div class='app-sec'><span class='t'>{icon} {ui.esc(ui.short(ev))}</span><span class='x'>"
+                f"{ui.chip('A stayed riskier ✓', 'ok') if held else ui.chip('labels flipped', 'bad')}</span></div>")
+        ui.list_rows(rows)
+        if ev["type"] == "crisis":
+            ui.note(f"Buy-and-hold low: A {ui.inr_short(reg['A']['replay']['low'] * ctx.amount_a)} · B "
+                    f"{ui.inr_short(reg['B']['replay']['low'] * ctx.amount_b)} (Nifty fell {reg['nifty']['largest_fall']:.0%})", "📉")
+    ok = [(eid, reg, ev) for eid, reg, ev, prob in results if reg is not None]
+    if ok:
+        lbl = ["Today"] + [ui.short(ev)[:18] for _, _, ev in ok]
+        a_vals = [ctx.h(ctx.current["A"]["risk"]["Historical"][k]["es"]) * ctx.amount_a] + \
+                 [ctx.h(r["A"]["risk"]["Historical"][k]["es"]) * ctx.amount_a for _, r, _ in ok]
+        b_vals = [ctx.h(ctx.current["B"]["risk"]["Historical"][k]["es"]) * ctx.amount_b] + \
+                 [ctx.h(r["B"]["risk"]["Historical"][k]["es"]) * ctx.amount_b for _, r, _ in ok]
+        ui.section("Worst-days loss, side by side")
+        ui.show(CH.risk_compare(lbl, a_vals, b_vals, None, rupees=True))
+        if crises:
+            cr = ctx.crisis
+            ui.section(f"Your money through {ui.short(ctx.crisis_ev)}", "bought on day one")
+            if len(crises) > 1:
+                s["bt_focus"] = s["crisis_id"]
+                st.selectbox("Show the replay for", crises, key="bt_focus", format_func=lambda e: ui.short(evs_all[e]),
+                             on_change=lambda: s.update(crisis_id=s["bt_focus"]))
+            ui.show(CH.replay(cr["nifty"]["dates"], cr["A"]["replay"]["value"], cr["B"]["replay"]["value"], cr["nifty"]["value"],
+                              ctx.amount_a, ctx.amount_b))
+    ui.next_button("How should the weights change?", "test2")
 
 if right is not None:
     with right:
+        st.markdown(f"#### VaR and ES: today vs each ticked period (historical, {ctx.conf:.0%}, {ctx.horizon}-day)")
+        rows = []
+        for eid, reg, ev, prob in results:
+            if reg is None:
+                continue
+            for kk in ("A", "B"):
+                d = RC.deviation(ctx.current[kk], reg[kk], k)
+                rows.append({"Period": ev["name"], "Window": f"{reg['start']} → {reg['end']}", "P": kk,
+                             "VaR today": ctx.h(d["var_now"]), "VaR then": ctx.h(d["var_then"]), "Δ VaR": ctx.h(d["var_change"]),
+                             "ES today": ctx.h(d["es_now"]), "ES then": ctx.h(d["es_then"]), "Δ ES": ctx.h(d["es_change"]),
+                             "ES ×": round(d["es_mult"], 2), "Vol then": reg[kk]["volatility"], "Max DD then": reg[kk]["max_drawdown"]})
+        if rows:
+            df = pd.DataFrame(rows)
+            st.dataframe(df, hide_index=True, width="stretch", column_config={
+                c: st.column_config.NumberColumn(format="percent") for c in df.columns if c not in ("Period", "Window", "P", "ES ×")})
+            st.latex(r"\Delta\text{VaR} = \text{VaR}_{\text{period}} - \text{VaR}_{\text{today}}, \quad "
+                     r"\text{same weights } w_{\text{today}}, \ \text{returns of that period}")
+            ui.show(CH.risk_compare(["Today"] + [ev["name"].split(" (")[0][:18] for _, r, ev, p_ in results if r is not None],
+                                    [ctx.h(ctx.current["A"]["risk"]["Historical"][k]["var"])] +
+                                    [ctx.h(r["A"]["risk"]["Historical"][k]["var"]) for _, r, ev, p_ in results if r is not None],
+                                    [ctx.h(ctx.current["B"]["risk"]["Historical"][k]["var"])] +
+                                    [ctx.h(r["B"]["risk"]["Historical"][k]["var"]) for _, r, ev, p_ in results if r is not None],
+                                    f"VaR {ctx.conf:.0%} (% of the portfolio)"))
         st.markdown("#### Verdict rules and the numbers behind them")
         st.markdown(f"* {RC.RULES['label_holds']}\n* {RC.RULES['b_held_up']}")
         rows = []

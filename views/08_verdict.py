@@ -1,4 +1,4 @@
-"""Page 8 — Verdict and recommendation (brief §8.8, §6.11)."""
+"""Step 7 — Verdict: does the label hold in the periods you tested, are the weights robust, which portfolio fits you."""
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -10,7 +10,17 @@ from src import ui
 ctx = ui.context()
 s = st.session_state
 left, right = ui.split()
-board = ctx.scoreboard()
+# the verdict is judged on the periods the client ticked on the Backtest screen
+ticked = []
+for eid in s["bt_events"]:
+    reg, ev, prob = ui.regime_for(ctx, eid)
+    if reg is not None:
+        ticked.append((eid, reg, ev))
+board = [{"event": ev["name"], "type": ev["type"], "label_held": RC.label_holds(r["A"], r["B"]), "b_held_up": RC.b_held_up(r["B"]),
+          "es99_A": r["A"]["risk"]["Historical"]["0.99"]["es"], "es99_B": r["B"]["risk"]["Historical"]["0.99"]["es"],
+          "vol_A": r["A"]["volatility"], "vol_B": r["B"]["volatility"], "mdd_A": r["A"]["max_drawdown"], "mdd_B": r["B"]["max_drawdown"],
+          "fall_A": r["A"]["replay"]["largest_fall"], "fall_B": r["B"]["replay"]["largest_fall"],
+          "nifty_fall": r["nifty"]["largest_fall"], "start": r["start"], "end": r["end"]} for eid, r, ev in ticked] or None
 boot = ctx.bootstrap()
 lv = RC.label_verdict(ctx.crisis, ctx.calm, board or [])
 bv = RC.b_verdict(ctx.crisis, board or [])
@@ -21,10 +31,10 @@ now_vol = float(mret.iloc[-63:].std() * np.sqrt(252))
 
 with left:
     ui.hero("Your answer", "Does 'safe' stay safe?",
-            f"Tested on {len(board) if board else 'the chosen'} real market events since 2007", "")
+            f"Judged on the {len(board) if board else 0} period{'s' if board and len(board) != 1 else ''} you ticked on the Backtest screen", "")
     rows = [("🚀", "Is A really the bold one?",
              f"Riskier in the chosen crash: {'yes' if lv['crisis'] else 'no'} · calm year: {'yes' if lv['calm'] else 'no'}"
-             + (f" · all events: {lv['events_held']}/{lv['events_total']}" if board else ""), ui.chip(lv["verdict"], TONE[lv["verdict"]]), ""),
+             + (f" · ticked periods: {lv['events_held']}/{lv['events_total']}" if board else ""), ui.chip(lv["verdict"], TONE[lv["verdict"]]), ""),
             ("🛡️", "Did steady stay safe?",
              f"Beat the market in the chosen crash: {'yes' if bv['crisis'] else 'no'}"
              + (f" · in {bv['crises_held']} of {bv['crises_total']} crashes" if board else ""), ui.chip(bv["verdict"], TONE[bv["verdict"]]), "")]

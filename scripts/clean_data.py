@@ -373,6 +373,57 @@ def trim_before_nse_listing(sym: str, raw: pd.Series, chain, checkpoints) -> pd.
     return out
 
 
+NSE_RETURN_TOL = 0.03  # log difference between our raw day move and NSE's that counts as a disagreement
+
+
+def nse_return_check(sym: str, adj: pd.Series, true_raw: pd.Series, chain, explained: dict, action_dates: set, out: dict,
+                     demerger_days: set = frozenset()) -> pd.Series:
+    """Every remaining move beyond ±JUMP_FLAG: compare our *raw* day move with NSE's raw day move (official closes on
+    that day and the previous session). Disagreement = a bad Yahoo print → rescale the earlier history so the day's
+    move matches NSE. Agreement = a real price move: confirmed genuine, unless it is a split-sized jump with no recorded
+    action — then that single day's return is dropped (an unrecorded split). If NSE has no row for the symbol, the same
+    split-sized rule applies."""
+    r = adj / adj.shift(1)
+    big = r[((r - 1).abs() > config.JUMP_FLAG) & (r.index >= START)]
+    for d, ours in big.items():
+        if d in demerger_days:
+            continue
+        pos = adj.index.get_loc(d)
+        prev = adj.index[pos - 1]
+        raw_ratio = float(true_raw.get(d, np.nan) / true_raw.get(prev, np.nan)) if prev in true_raw.index else np.nan
+        c_d = NB.official_close(nse_symbol_on(sym, d, chain), d)
+        c_p = NB.official_close(nse_symbol_on(sym, prev, chain), prev)
+        split_like = (C.nearest_ratio(min(float(ours), 1 / float(ours)), tol=0.10) is not None
+                      and abs(np.log(float(ours))) >= np.log(2) and d not in action_dates)
+        if c_d and c_p and pd.notna(raw_ratio) and raw_ratio > 0:
+            official = c_d / c_p
+            if abs(np.log(raw_ratio / official)) > NSE_RETURN_TOL:
+                g = raw_ratio / official
+                adj = C.apply_factors(adj, [(d, g)])
+                action_dates.add(d)
+                explained[d] = f"Yahoo's print disagreed with NSE; day move set from NSE's closes ({official - 1:+.1%} raw)"
+                issues.append(C.Issue(sym, str(d.date()), "D_bad_print", "Yahoo day move disagrees with NSE",
+                                      f"Yahoo raw {raw_ratio - 1:+.1%} vs NSE {official - 1:+.1%} (₹{c_p:,.2f} → ₹{c_d:,.2f})",
+                                      "earlier history rescaled so the day's move matches NSE's official closes",
+                                      f"NSE bhavcopies {prev.date()} and {d.date()}"))
+                continue
+            if not split_like:
+                explained[d] = f"genuine move confirmed by NSE's official closes (₹{c_p:,.2f} → ₹{c_d:,.2f})"
+                continue
+        elif not split_like:
+            continue
+        adj, f = C.neutralise_day(adj, d)
+        action_dates.add(d)
+        out["excluded_returns"].append({"ticker": sym, "date": str(d.date()),
+                                        "reason": f"split-sized jump ({float(ours) - 1:+.0%}) with no recorded corporate action"})
+        explained[d] = "split-sized jump with no recorded corporate action — that day's return dropped"
+        issues.append(C.Issue(sym, str(d.date()), "A_split_bonus", "unrecorded split-sized jump",
+                              f"one-day move {float(ours) - 1:+.1%} with no split/bonus in NSE's or Yahoo's records"
+                              + ("" if c_d and c_p else f"; symbol not in NSE's bhavcopy that day"),
+                              "dropped that single day's return (missing, not a loss)", "price data; NSE bhavcopies"))
+    return adj
+
+
 def repair_or_trim_stale(sym: str, raw: pd.Series, chain) -> tuple[pd.Series, pd.Timestamp | None]:
     """Runs of more than STALE_EXCLUDE_DAYS identical closes. If NSE shows the stock trading at other
     prices inside the run, Yahoo's data is wrong: replace every day of the run with NSE's official close.
@@ -474,6 +525,19 @@ def clean_stock(sym: str, meta_row: pd.Series, calendar: pd.DatetimeIndex, nifty
         day = true_raw.index[true_raw.index >= ex][0]
         obs = float(ratio.loc[day]) if pd.notna(ratio.loc[day]) else np.nan
         f = float(a["factor"])
+        parts = a.get("parts") or [f]
+        if pd.notna(obs) and obs > 0:
+            f_best = C.best_part_factor(parts, obs) if len(parts) > 1 else f
+            # one NSE record can bundle a split and a bonus that took effect on different days: if the price shows a
+            # single standard ratio that fits much better than the bundled factor, apply that
+            k_alt = C.nearest_ratio(obs, tol=0.10)
+            if k_alt is not None and abs(np.log(obs / k_alt)) + np.log(1.25) < abs(np.log(obs / f_best)):
+                f_best = k_alt
+            if abs(f_best / f - 1) > 1e-9:
+                issues.append(C.Issue(sym, str(ex.date()), "A_split_bonus", "only part of a combined action visible on the ex-date",
+                                      f"{a['subject']}: combined factor {f:.4f}, price ratio {obs:.4f} matches {f_best:.4f}",
+                                      "applied the matching part only", f"NSE corporate actions ({a['subject']})"))
+                f = f_best
         yhit = yahoo_ev[(yahoo_ev.index >= ex - pd.Timedelta(days=7)) & (yahoo_ev.index <= ex + pd.Timedelta(days=7))]
         ytxt = (f"Yahoo recorded {'; '.join(f'{v:g}-for-1 on {k.date()}' for k, v in yhit.items())}"
                 if len(yhit) else "Yahoo has no record")
@@ -625,6 +689,11 @@ def clean_stock(sym: str, meta_row: pd.Series, calendar: pd.DatetimeIndex, nifty
             explained[d] = (f"genuine move: ratio {v:.4f} resembles a split ratio but neither NSE nor Yahoo records "
                             f"any action; Nifty 50 {mkt:+.1%} that day")
 
+    # A/D: every remaining move beyond ±20% is checked against NSE's own one-day return for that day,
+    #      CLOSE ÷ PREVCLOSE from the bhavcopy (NSE adjusts PREVCLOSE for splits and bonuses on the ex-date)
+    demerger_days = {pd.Timestamp(x["applied_on"]) for x in out["ca_rows"] if x.get("type") in ("demerger", "capital_reduction")}
+    adj = nse_return_check(sym, adj, true_raw, chain, explained, action_dates, out, demerger_days)
+
     # A: double-adjustment check after all adjustments
     for d, v, prob in C.check_double_adjustment(adj, events):
         issues.append(C.Issue(sym, str(d.date()), "A_split_bonus", "adjustment check failed",
@@ -691,7 +760,7 @@ def clean_stock(sym: str, meta_row: pd.Series, calendar: pd.DatetimeIndex, nifty
     # D: every remaining move beyond ±20% explained
     for i in C.flag_large_moves(aligned, sym, explained):
         d = pd.Timestamp(i.date)
-        if "genuine" in i.action:
+        if "treated as a genuine move" in i.action:
             i.action = (f"kept — genuine move: no corporate action within ±3 days, did not revert; "
                         f"Nifty 50 {nifty_ret.get(d, 0.0):+.1%} that day")
         issues.append(i)
@@ -756,8 +825,12 @@ def spot_checks(prices_raw: dict, calendar, changes_tbl, n: int = 24, seed: int 
 def main() -> None:
     log_meta = json.loads((RAW / "fetch_log.json").read_text()) if (RAW / "fetch_log.json").exists() else {}
     fetched_at = pd.Timestamp(log_meta.get("fetched_at", datetime.now().isoformat()))
-    n200 = pd.read_csv(RAW / "nse" / "nifty200.csv")
+    n200 = pd.read_csv(RAW / "nse" / "nifty500.csv")  # the universe (name kept from the Nifty 200 version)
     n100 = set(pd.read_csv(RAW / "nse" / "nifty100.csv")["Symbol"].astype(str).str.strip())
+    mid150 = set(pd.read_csv(RAW / "nse" / "midcap150.csv")["Symbol"].astype(str).str.strip())
+
+    def cap_of(sym: str) -> str:
+        return "Large cap" if sym in n100 else ("Mid cap" if sym in mid150 else "Small cap")
     n200["Symbol"] = n200["Symbol"].astype(str).str.strip()
     changes_tbl = load_symbol_changes()
     demerger_ratios = load_demerger_ratios()
@@ -786,7 +859,7 @@ def main() -> None:
         anchor_rows += info["anchor_rows"]
         excl_rows += info["excluded_returns"]
         rows.append({"symbol": s, "company": r["Company Name"], "industry": r["Industry"],
-                     "cap_bucket": "Large cap" if s in n100 else "Mid cap", "isin": r["ISIN Code"],
+                     "cap_bucket": cap_of(s), "isin": r["ISIN Code"],
                      "status": info["status"], "first_date": info.get("first_date", ""), "n_days": info.get("n_days", 0),
                      "reason": info["reason"], "adj_close_max_gap": None if info["adj_gap"] is None else round(info["adj_gap"], 5),
                      "nse_anchor_matched": (info.get("anchor") or {}).get("matched"),
@@ -858,7 +931,7 @@ def main() -> None:
         "benchmark_sha256": C.checksum_frame(bench),
         "sources": {
             "prices": "Yahoo Finance via yfinance (auto_adjust=False), anchored to NSE bhavcopies",
-            "universe": "NSE Nifty 200 / Nifty 100 constituent lists (archives.nseindia.com)",
+            "universe": "NSE Nifty 500 list; Nifty 100 / Midcap 150 / Smallcap 250 lists for cap buckets (archives.nseindia.com)",
             "corporate_actions": "NSE corporate-actions API; yfinance action history",
         },
         "restated_prices_vs_previous": int(len(restated)),

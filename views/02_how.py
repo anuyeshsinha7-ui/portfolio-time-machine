@@ -12,7 +12,7 @@ meta = D.metadata()
 with left:
     ui.hero("How it works", "5 simple steps", "From your amount to a clear answer", "")
     steps = [("Tell us your amount", "Every result is shown in rupees on it."),
-             ("Meet two portfolios", "A is bold, B is steady — 10 big Indian companies each."),
+             ("Choose sectors & size", "Tick the sectors and company sizes you like; we suggest 10 bold and 10 steady companies."),
              ("See what to buy", "Exact rupees and number of shares for each company."),
              ("Travel back in time", "Replay the 2008 crash, COVID-19 and more on today's portfolios."),
              ("Get your answer", "Does 'safe' stay safe? Which portfolio fits the loss you can live with?")]
@@ -22,7 +22,7 @@ with left:
     ui.list_rows([("📅", "Today", "The latest 12 months", "", ""),
                   ("🌪️", "A crash", "Pick any past crisis", "", ""),
                   ("🌤️", "A calm year", "Pick any quiet spell", "", "")])
-    ui.note(f"Built on {meta['n_core'] + meta['n_extended']} Nifty 200 companies, every price double-checked against the "
+    ui.note(f"Built on {meta['n_core'] + meta['n_extended']} Nifty 500 companies, every price double-checked against the "
             "stock exchange's own records.", "🔍", "good")
 
 if right is not None:
@@ -34,7 +34,7 @@ if right is not None:
 * **Prices:** Yahoo Finance via the `yfinance` library — daily closes from {meta['history_start']} to {meta['as_of']},
   downloaded once and frozen (no market data is downloaded while you use the app).
 * **Official checks:** NSE bhavcopies (the exchange's daily price files) and NSE's corporate-action and symbol-change records.
-* **Universe:** NSE's Nifty 200 and Nifty 100 constituent lists (industry and market-cap bucket).
+* **Universe:** NSE's Nifty 500 list (industry) and the Nifty 100 / Midcap 150 / Smallcap 250 lists (large / mid / small cap).
 * **Risk-free rate:** {config.RISK_FREE_SOURCE}.
 """)
         st.markdown("#### Cleaning, in one picture")

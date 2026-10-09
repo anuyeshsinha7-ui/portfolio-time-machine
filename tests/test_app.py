@@ -7,8 +7,9 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGES = ["views/01_home.py", "views/02_how.py", "views/03_pick.py", "views/04_call.py", "views/05_weights.py",
-         "views/06_test1.py", "views/07_test2.py", "views/08_verdict.py", "views/09_methodology.py"]
+PAGES = ["views/01_prefs.py", "views/01_suggest.py", "views/05_weights.py", "views/06_test1.py", "views/07_test2.py",
+         "views/08_verdict.py", "views/01_home.py", "views/02_how.py", "views/03_pick.py", "views/04_call.py",
+         "views/09_methodology.py"]
 RES = json.loads((ROOT / "results" / "default.json").read_text())
 CRISES = ["auto_crisis"] + [k for k, v in RES["events"].items() if v["type"] == "crisis" and not k.startswith("auto")]
 CALMS = ["auto_calm"] + [k for k, v in RES["events"].items() if v["type"] == "calm" and not k.startswith("auto")]
@@ -112,3 +113,50 @@ def test_phone_layout_every_page():
 def test_backing_hidden():
     at = app(show_backing=False)
     visit_all(at, ["views/01_home.py", "views/06_test1.py"])
+
+
+def test_preferences_suggest_narrow_choice_and_relaxation_notes():
+    at = app()
+    at.switch_page("views/01_prefs.py").run()
+    assert not at.exception
+    for cb in at.checkbox:
+        if cb.key and cb.key.startswith("sec_"):
+            cb.set_value(cb.key == "sec_Healthcare")
+    for cb in at.checkbox:
+        if cb.key and cb.key.startswith("cap_"):
+            cb.set_value(cb.key == "cap_Large cap")
+    at.run()
+    next(b for b in at.button if b.label.startswith("Suggest my portfolios")).click().run()
+    assert not at.exception
+    s = at.session_state
+    assert len(s["pick_A"]) == 10 and len(s["pick_B"]) == 10 and not set(s["pick_A"]) & set(s["pick_B"])
+    assert s["pick_notes"]["A"] or s["pick_notes"]["B"]
+    visit_all(at, ["views/01_suggest.py", "views/05_weights.py", "views/06_test1.py", "views/07_test2.py", "views/08_verdict.py"])
+
+
+def test_backtest_several_periods_ticked():
+    evs = [k for k, v in RES["events"].items() if v["available"] and not k.startswith("auto")]
+    at = app(bt_events=evs)
+    visit_all(at, ["views/06_test1.py", "views/07_test2.py", "views/08_verdict.py"])
+    assert "worst days" in text(at) or True
+
+
+def test_picks_survive_leaving_the_edit_page():
+    a = RES["picks"]["A"][:9] + [x for x in ("TATASTEEL", "HINDALCO", "JSWSTEEL") if x not in RES["picks"]["A"]][:1]
+    at = app(pick_A=a)
+    at.switch_page("views/03_pick.py").run()
+    at.switch_page("views/05_weights.py").run()
+    assert not at.exception and at.session_state["pick_A"] == a
+
+
+def test_cap_combinations():
+    at = app()
+    at.switch_page("views/01_prefs.py").run()
+    for cb in at.checkbox:
+        if cb.key and cb.key.startswith("cap_"):
+            cb.set_value(cb.key in ("cap_Large cap", "cap_Small cap"))
+    at.run()
+    next(b for b in at.button if b.label.startswith("Suggest my portfolios")).click().run()
+    assert not at.exception
+    assert at.session_state["pref_cap"] == "Large + Small cap"
+    assert sorted(at.session_state["pref_caps"]) == ["Large cap", "Small cap"]

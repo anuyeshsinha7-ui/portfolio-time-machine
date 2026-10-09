@@ -5,9 +5,9 @@ Every number on the site comes from the code in `src/` applied to the committed 
 
 ## 1. Data
 
-* **Universe:** today's Nifty 200 (NSE constituent list) with NSE's Industry field; market-cap bucket = Large cap if in the Nifty 100,
-  otherwise Mid cap. **Core** universe (119 stocks) = continuous clean history from 2007-09-17; **extended**
-  (66) = at least 3 years, usable for custom picks; 15 excluded.
+* **Universe:** today's Nifty 500 (NSE constituent list) with NSE's Industry field; market-cap bucket = Large cap (Nifty 100), Mid cap (Midcap 150), Small cap (Smallcap 250),
+  "Flexi" = all three. **Core** universe (231 stocks) = continuous clean history from 2007-09-17; **extended**
+  (200) = at least 3 years, usable for custom picks; 70 excluded.
 * **Prices:** Yahoo Finance daily closes (`auto_adjust=False`) with dividend and split history, anchored to NSE bhavcopy closes and
   rebuilt into total-return prices — see [DATA_QUALITY.md](DATA_QUALITY.md).
 * **Benchmark:** Nifty 50 (`^NSEI`), gaps filled from NSE's official index closes. It is a *price* index while stock prices include
@@ -25,7 +25,7 @@ Sharpe = (μ − r_f)/σ; Sortino = (μ − r_f)/σ_down; skewness; excess kurto
 
 Labels are set on **today's data — the trailing 3 years** — so both time-travel tests are out of sample.
 
-* **High risk** = beta ≥ 1.0 **and** volatility ≥ universe median (30.9% in this snapshot).
+* **High risk** = beta ≥ 1.0 **and** volatility ≥ universe median (35.1% in this snapshot).
 * **Low risk** = beta < 1.0 **and** volatility < universe median. Everything else = Moderate.
 * Composite risk score = average of the beta percentile and the volatility percentile.
 * **Default picker:** A = the 10 highest-scoring High-risk core stocks, B = the 10 lowest-scoring Low-risk core stocks, at most
@@ -113,10 +113,11 @@ moving-block bootstrap of the current window (500 resamples, 5-day blocks) re-so
 * **Robust.** Weights are robust in a period if the turnover needed to reach that period's optimal portfolio is within the 95th percentile of turnover produced by pure estimation noise (bootstrap of today's window).
 * **Fit.** A portfolio fits you if its worst crisis-replay fall in rupees (on your amount) is no bigger than the fall you said you could live with. If both fit, A (the higher expected return) is suggested; if only B fits, B; if neither, the largest amount that keeps B's worst fall within your limit is shown.
 * **Trigger.** Review trigger: revisit the weights when the Nifty 50's 3-month volatility rises above the lowest 3-month volatility seen during the chosen crisis window.
+* **As is.** Recommended as it is when all four checks pass: (1) A is riskier than B with statistical backing — the 95% bootstrap interval for σA/σB lies above 1; (2) A's expected return beats the risk-free rate (Sharpe > 0); (3) B swings less than the Nifty 50 over the latest 12 months; (4) both portfolios meet every weight rule without relaxation. Otherwise it is recommended with caution and the failed checks are named.
 
 ## 10. Limitations
 
-* **Survivorship bias.** Today's Nifty 200 members are looked at back to 2007, so companies that fell out of the index (or failed) are missing. The bias is stronger the further back the event — the 2008–09 results flatter both portfolios most.
+* **Survivorship bias.** Today's Nifty 500 members are looked at back to 2007, so companies that fell out of the index (or failed) are missing. The bias is stronger the further back the event — the 2008–09 results flatter both portfolios most.
 * **Estimation error.** Expected returns and covariances from 252 days are noisy; the bootstrap bands on the Test #2 page show how much the weights move from noise alone.
 * **Distribution assumptions.** Historical VaR assumes the past window is representative; the normal method ignores fat tails; Student-t and Cornish–Fisher are approximations. √10 scaling assumes independent days.
 * **Costs and taxes.** No brokerage, impact costs, securities transaction tax or capital-gains tax are included.

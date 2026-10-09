@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from . import config
+
 RULES = {
     "label_holds": "The high-risk label holds in a period if Portfolio A's historical Expected Shortfall (99%) AND its volatility are both higher than Portfolio B's.",
     "b_held_up": "Portfolio B 'held up' in a crisis if both its historical Expected Shortfall (99%) and its maximum drawdown were smaller than the Nifty 50's in the same window.",
@@ -86,7 +88,7 @@ def review_trigger(crisis_nifty_returns: list[float]) -> float:
 
 
 LIMITATIONS = [
-    ("Survivorship bias", "Today's Nifty 200 members are looked at back to 2007, so companies that fell out of the index (or failed) are missing. "
+    ("Survivorship bias", "Today's Nifty 500 members are looked at back to 2007, so companies that fell out of the index (or failed) are missing. "
      "The bias is stronger the further back the event — the 2008–09 results flatter both portfolios most."),
     ("Estimation error", "Expected returns and covariances from 252 days are noisy; the bootstrap bands on the Test #2 page show how much the "
      "weights move from noise alone."),
@@ -96,3 +98,35 @@ LIMITATIONS = [
     ("Benchmark mismatch", "Stock prices include reinvested dividends but the Nifty 50 is a price index, so 'versus Nifty' comparisons slightly favour the stocks."),
     ("Data", "Residual data issues are listed in the data-quality report (Methodology and data page)."),
 ]
+
+
+RULES["as_is"] = ("Recommended as it is when all four checks pass: (1) A is riskier than B with statistical backing — the "
+                  "95% bootstrap interval for σA/σB lies above 1; (2) A's expected return beats the risk-free rate (Sharpe > 0); "
+                  "(3) B swings less than the Nifty 50 over the latest 12 months; (4) both portfolios meet every weight rule "
+                  "without relaxation. Otherwise it is recommended with caution and the failed checks are named.")
+
+
+def as_is_checks(evidence: dict, P: dict, current: dict) -> list[dict]:
+    """The four 'recommended as it is?' checks on today's portfolios."""
+    vr = evidence["vol_ratio"]
+    a, b = P["A"], P["B"]
+    nifty_vol = current["B"]["nifty"]["volatility"]
+    return [
+        {"name": "Bold really is riskier", "ok": bool(vr["lo"] > 1),
+         "detail": f"A swings {vr['ratio']:.1f}× as much as B (95% range {vr['lo']:.1f}–{vr['hi']:.1f}×)"},
+        {"name": "Bold is paid for its risk", "ok": bool(a["sharpe"] > 0),
+         "detail": f"expected {a['expected_return']:.1%} a year vs {config.RISK_FREE_RATE:.1%} from a Treasury bill"},
+        {"name": "Steady is calmer than the market", "ok": bool(current["B"]["volatility"] < nifty_vol),
+         "detail": f"B {current['B']['volatility']:.1%} vs Nifty 50 {nifty_vol:.1%} yearly swings"},
+        {"name": "All weight rules met", "ok": not (a["constraints"]["warnings"] or b["constraints"]["warnings"]),
+         "detail": "2%–25% per stock, ≤ 40% per sector" + ("" if not (a["constraints"]["warnings"] or b["constraints"]["warnings"])
+                                                           else " — some rules had to be relaxed")},
+    ]
+
+
+def deviation(now: dict, then: dict, conf_key: str) -> dict:
+    """How VaR and ES move from today to a past period (historical method, 1-day)."""
+    vn, vt = now["risk"]["Historical"][conf_key]["var"], then["risk"]["Historical"][conf_key]["var"]
+    en, et = now["risk"]["Historical"][conf_key]["es"], then["risk"]["Historical"][conf_key]["es"]
+    return {"var_now": vn, "var_then": vt, "var_change": vt - vn, "var_mult": vt / vn if vn else float("nan"),
+            "es_now": en, "es_then": et, "es_change": et - en, "es_mult": et / en if en else float("nan")}

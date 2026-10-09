@@ -1,4 +1,4 @@
-"""Page 5 — Optimum weights today (brief §8.5, §6.6, §6.10)."""
+"""Step 4 — Today: optimum weights, VaR and ES right now, and whether the portfolios are recommended as they are."""
 import pandas as pd
 import streamlit as st
 
@@ -6,6 +6,7 @@ from src import allocation as AL
 from src import charts as CH
 from src import config
 from src import data as D
+from src import recommend as RC
 from src import ui
 from src.ui import compare
 
@@ -16,7 +17,28 @@ prices = D.latest_prices()
 u = ui.universe_table()
 which = None
 
+checks = RC.as_is_checks(ctx.evidence, ctx.P, ctx.current)
+odds = round(1 / (1 - ctx.conf))
 with left:
+    ui.hero("Today", "Your portfolios right now", f"Weights and risk from the latest 12 months ({ctx.current['start']} → {ctx.current['end']})", "")
+    ui.section("Risk today", f"{ctx.horizon}-day · 1 in {odds} days")
+    tl = []
+    for kk in ("A", "B"):
+        rk = ctx.current[kk]["risk"]["Historical"][k]
+        am = ctx.amount(kk)
+        tl += [(f"{kk} · a bad day could cost", ui.inr_short(ctx.h(rk["var"]) * am), f"VaR {ui.pct(ctx.h(rk['var']))}", kk.lower()),
+               (f"{kk} · worst days average", ui.inr_short(ctx.h(rk["es"]) * am), f"ES {ui.pct(ctx.h(rk['es']))}", kk.lower())]
+    ui.tiles(tl)
+    ui.section("Is it recommended as it is?")
+    ui.list_rows([("✅" if c["ok"] else "⚠️", c["name"], c["detail"], ui.chip("pass", "ok") if c["ok"] else ui.chip("check", "mid"), "")
+                  for c in checks])
+    if all(c["ok"] for c in checks):
+        ui.verdict("👍", "Recommended as it is", "Both portfolios do what their labels promise today. Next, let's see if that "
+                   "survives a crisis.")
+    else:
+        ui.verdict("🤔", "Recommended with caution", "Not every check passed — see above. The backtest shows how it would have "
+                   "held up in real crises.")
+    ui.section("Your weights")
     which = st.segmented_control("Portfolio", ["A", "B"], format_func=lambda x: "A · Bold" if x == "A" else "B · Steady",
                                  default="A", key="w_which", required=True)
     p = ctx.P[which]
@@ -42,9 +64,32 @@ with left:
         ui.note(wmsg, "⚠️", "warn")
     if p.get("fell_back_to_minvar"):
         ui.note("No allowed mix beat the risk-free rate, so A uses the lowest-risk mix instead.", "⚠️", "warn")
+    ui.next_button("Backtest it in uncertain times", "test1")
 
 if right is not None:
     with right:
+        st.markdown(f"#### VaR and ES today, four methods ({ctx.conf:.0%}, {ctx.horizon}-day; ES also at 97.5%)")
+        rows = []
+        for kk in ("A", "B"):
+            rk = ctx.current[kk]["risk"]
+            for m in ("Historical", "Parametric normal", "Monte Carlo (Student-t)", "Cornish–Fisher"):
+                rows.append({"Portfolio": kk, "Method": m, "VaR": ctx.h(rk[m][k]["var"]), "ES": ctx.h(rk[m][k]["es"]),
+                             "ES 97.5%": ctx.h(rk[m]["0.975"]["es"]), "VaR ₹": ui.inr(ctx.h(rk[m][k]["var"]) * ctx.amount(kk)),
+                             "ES ₹": ui.inr(ctx.h(rk[m][k]["es"]) * ctx.amount(kk))})
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch",
+                     column_config={c: st.column_config.NumberColumn(format="percent") for c in ("VaR", "ES", "ES 97.5%")})
+        h1, h2 = st.columns(2)
+        for col, kk, colr in ((h1, "A", CH.A), (h2, "B", CH.B)):
+            r = ctx.current[kk]
+            with col:
+                ui.show(CH.returns_hist(r["returns"]["port"], r["risk"]["Historical"][k]["var"], r["risk"]["Historical"][k]["es"],
+                                        colr, kk, ctx.conf))
+        st.latex(r"\text{VaR}_c = -q_{1-c}(r_p) \qquad \text{ES}_c = -\mathbb{E}[\,r_p \mid r_p \le q_{1-c}\,] \qquad "
+                 r"\text{₹} = \% \times \text{amount}")
+        st.markdown("#### Recommended as it is? — the rule")
+        st.markdown(RC.RULES["as_is"])
+        st.dataframe(pd.DataFrame([{"Check": c["name"], "Passed": c["ok"], "Numbers": c["detail"]} for c in checks]),
+                     hide_index=True, width="stretch")
         st.markdown(f"#### Portfolio {which}: weights, rupees and whole shares")
         out = pd.DataFrame({"Company": u.loc[tb.index, "company"], "Industry": u.loc[tb.index, "industry"], "Weight": tb["weight"],
                             "₹ target": tb["target_rs"].map(ui.inr), "Price": tb["price"].map(lambda x: ui.inr(x, 2)),

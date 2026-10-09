@@ -61,8 +61,13 @@ with left:
         st.warning(s.pop("pick_msg"))
     ui.section("Your portfolios", "tap × to remove")
     allsyms = list(t.index)
-    st.multiselect("Portfolio A · Bold", allsyms, key="pick_A", format_func=lambda x: t.loc[x, "company"])
-    st.multiselect("Portfolio B · Steady", allsyms, key="pick_B", format_func=lambda x: t.loc[x, "company"])
+    # widgets get their own keys; the picks live in non-widget state so they survive leaving this page
+    for kk in ("A", "B"):
+        s[f"ms_{kk}"] = list(s[f"pick_{kk}"])
+    st.multiselect("Portfolio A · Bold", allsyms, key="ms_A", format_func=lambda x: t.loc[x, "company"],
+                   on_change=lambda: s.update(pick_A=list(s["ms_A"])))
+    st.multiselect("Portfolio B · Steady", allsyms, key="ms_B", format_func=lambda x: t.loc[x, "company"],
+                   on_change=lambda: s.update(pick_B=list(s["ms_B"])))
     msgs = U.validate(s["pick_A"], s["pick_B"], t)
     for m in msgs:
         ui.note(m["text"], "⛔" if m["level"] == "error" else "⚠️", "bad" if m["level"] == "error" else "warn")

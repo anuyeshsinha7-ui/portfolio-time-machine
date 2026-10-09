@@ -253,3 +253,27 @@ def turnover_hist(noise, p95, marks: list[tuple]) -> go.Figure:
                       annotation_font_size=11)
     fig.update_xaxes(title="Turnover = ½ Σ |Δw|")
     return _base(fig, 260, None, xfmt=".0%")
+
+
+def risk_compare(labels: list[str], a_vals: list[float], b_vals: list[float], title: str, rupees: bool = False) -> go.Figure:
+    """Grouped bars: a risk measure for A and B today and in each tested period."""
+    fmt = (lambda v: inr_short(v)) if rupees else (lambda v: f"{v:.1%}")
+    fig = go.Figure()
+    for name, vals, col in (("Portfolio A", a_vals, A), ("Portfolio B", b_vals, B)):
+        fig.add_trace(go.Bar(x=labels, y=vals, name=name, marker=dict(color=col), text=[fmt(v) for v in vals],
+                             textposition="outside", textfont=dict(size=10), cliponaxis=False,
+                             hovertemplate="%{x}: %{text}<extra>" + name + "</extra>"))
+    fig.update_layout(barmode="group", bargap=0.25)
+    fig.update_yaxes(tickformat=None if rupees else ".0%", rangemode="tozero")
+    return _base(fig, 340, title)
+
+
+def weights_heat(table: pd.DataFrame, title: str | None = None) -> go.Figure:
+    """Stocks × periods heatmap of weights (today vs each period's optimum)."""
+    z = table.to_numpy()
+    fig = go.Figure(go.Heatmap(z=z, x=list(table.columns), y=list(table.index), zmin=0, zmax=max(0.25, float(np.nanmax(z))),
+                               colorscale=[[0, "#121826"], [0.5, "#2B5A9E"], [1, A]], text=np.vectorize(lambda v: f"{v:.0%}")(z),
+                               texttemplate="%{text}", textfont=dict(size=10), showscale=False,
+                               hovertemplate="%{y} · %{x}: %{text}<extra></extra>"))
+    fig.update_layout(yaxis=dict(autorange="reversed"), xaxis=dict(side="top"))
+    return _base(fig, 120 + 26 * len(table), title)
