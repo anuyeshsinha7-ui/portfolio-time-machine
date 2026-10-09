@@ -694,12 +694,14 @@ SPATIAL_CSS = """
 .ptm-working-head { color: #9DB8F5 !important; display: inline-block; padding: 5px 12px; border-radius: 999px;
   background: rgba(59,125,216,.16); border: 1px solid rgba(59,125,216,.35); }
 .ptm-working-title { margin-top: .5rem !important; }
+.st-key-ptm_working_top { justify-content: space-between; }
+.st-key-ptm_working_top [class*="st-key-ptm_present_on"] button { min-height: 2.1rem; padding: 0 .95rem; font-size: .85rem; }
 
 /* the ☰ menu: a compact round button that stays inside the tab bar */
-.st-key-ptm_tabs { overflow: hidden; }
-.st-key-ptm_tabs [data-testid="stPopover"], .st-key-ptm_tabs [data-testid="stPopover"] > div { width: 38px !important; max-width: 38px !important; }
-.st-key-ptm_tabs > div:has([data-testid="stPopover"]) { flex: 0 0 40px !important; margin-right: 2px; }
-.st-key-ptm_tabs [data-testid="stPopover"] button { width: 36px !important; height: 36px !important; min-height: 36px !important;
+.st-key-ptm_tabs { overflow: hidden; padding-right: 6px !important; }
+.st-key-ptm_tabs [data-testid="stPopover"], .st-key-ptm_tabs [data-testid="stPopover"] > div { width: 34px !important; max-width: 34px !important; }
+.st-key-ptm_tabs > div:has([data-testid="stPopover"]) { flex: 0 0 36px !important; margin-right: 4px; }
+.st-key-ptm_tabs [data-testid="stPopover"] button { width: 32px !important; height: 32px !important; min-height: 32px !important;
   border-radius: 50% !important; padding: 0 !important; justify-content: center; }
 .st-key-ptm_tabs [data-testid="stPopover"] button [data-testid="stIconMaterial"] { display: none !important; }
 
@@ -729,6 +731,20 @@ div:has(> .st-key-ptm_screen) { height: clamp(360px, calc(100vh - 205px), 660px)
   .ptm-homebar { display: none; }
   .block-container { padding-bottom: 7.5rem !important; }
 }
+</style>
+"""
+
+PRESENT_CSS = """
+<style>
+/* phone-only view for presenting: a bigger phone in the middle, nothing else */
+.st-key-ptm_phone { width: 460px !important; transform: none !important; }
+.st-key-ptm_phone:hover { transform: none !important; }
+div:has(> .st-key-ptm_screen) { height: clamp(420px, calc(100vh - 190px), 860px) !important; }
+.st-key-ptm_present_off { position: fixed !important; top: 18px; right: 22px; z-index: 1000; width: auto !important; }
+.st-key-ptm_present_off button { padding: 0 1.1rem !important; background: rgba(20,26,42,.7) !important; }
+.ptm-caption-phone { display: none; }
+.st-key-ptm_stage [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child { position: static !important; }
+.ptm-footer { display: none; }
 </style>
 """
 
@@ -854,7 +870,10 @@ def setup_frames(pages: dict, page_title: str, controls) -> None:
         return
     st.html(DEVICE_CSS)
     st.html(SPATIAL_CSS)
-    show_working = s.get("show_backing", True)
+    presenting = s.get("present_mode", False)
+    if presenting:
+        st.html(PRESENT_CSS)
+    show_working = s.get("show_backing", True) and not presenting
     stage = st.container(key="ptm_stage")
     with stage:
         cols = st.columns([0.36, 0.64], gap="large") if show_working else st.columns([1, 1.2, 1])[1:2]
@@ -866,14 +885,24 @@ def setup_frames(pages: dict, page_title: str, controls) -> None:
                 if confirmed:
                     _tab_bar(pages, page_title)
                 st.html("<div class='ptm-homebar'><span></span></div>")
-            st.html("<div class='ptm-caption-phone'>The customer app, as a client sees it on their phone — tap through it.</div>")
+            if presenting:
+                st.button("⤡ Back to normal view", key="ptm_present_off",
+                          on_click=lambda: s.update(present_mode=False))
+            else:
+                st.html("<div class='ptm-caption-phone'>The customer app, as a client sees it on their phone — tap through it.</div>")
+                if not show_working:
+                    st.button("⤢ Phone only (for presenting)", key="ptm_present_on", width="stretch",
+                              on_click=lambda: s.update(present_mode=True))
         working = None
         if show_working:
             with cols[1]:
                 working = st.container(key="ptm_working")
                 with working:
-                    st.html(f"<div class='ptm-working-head'>How we got these numbers</div>"
-                            f"<div class='ptm-working-title'>Behind the {page_title.split(' — ')[0]} screen</div>")
+                    with st.container(horizontal=True, vertical_alignment="center", key="ptm_working_top"):
+                        st.html("<div class='ptm-working-head'>How we got these numbers</div>")
+                        st.button("⤢ Phone only", key="ptm_present_on", help="Hide this panel and enlarge the phone, for presenting",
+                                  on_click=lambda: s.update(present_mode=True))
+                    st.html(f"<div class='ptm-working-title'>Behind the {page_title.split(' — ')[0]} screen</div>")
     s["_frames"] = {"client": screen, "working": working}
 
 

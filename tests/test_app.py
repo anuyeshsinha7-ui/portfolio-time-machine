@@ -192,3 +192,15 @@ def test_back_button_returns_to_previous_screen():
     assert not at.exception
     assert "Top 15 Bold" in text(at)
     assert at.session_state["is_phone"]  # the phone layout survives page switches
+
+
+def test_phone_only_presenting_view_and_back():
+    at = app()
+    at.switch_page("views/05_weights.py").run()
+    next(b for b in at.button if b.key == "ptm_present_on").click().run()
+    assert not at.exception and at.session_state["present_mode"]
+    assert "Behind the Today screen" not in text(at)
+    at.switch_page("views/06_test1.py").run()  # stays in phone-only view while moving around
+    assert not at.exception and at.session_state["present_mode"]
+    next(b for b in at.button if b.key == "ptm_present_off").click().run()
+    assert not at.exception and not at.session_state["present_mode"]
