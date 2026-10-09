@@ -19,7 +19,7 @@ def _base(fig: go.Figure, height=380, title=None, yfmt=None, xfmt=None) -> go.Fi
     fig.update_layout(height=height, margin=dict(l=8, r=8, t=46 if title else 10, b=8),
                       title=dict(text=title or "", font=dict(size=14)),
                       legend=dict(orientation="h", yanchor="bottom", y=1.0, x=0, font=dict(size=11)),
-                      font=dict(size=12, family="Source Sans Pro, Helvetica, Arial", color="#C9CFDB"), plot_bgcolor="rgba(0,0,0,0)",
+                      font=dict(size=12, family="Inter, -apple-system, Helvetica, Arial", color="#C9CFDB"), plot_bgcolor="rgba(0,0,0,0)",
                       paper_bgcolor="rgba(0,0,0,0)", hoverlabel=dict(bgcolor="#1E2638", font=dict(color="#E6E9EF")))
     fig.update_xaxes(gridcolor="#263043", zeroline=False, tickformat=xfmt)
     fig.update_yaxes(gridcolor="#263043", zeroline=False, tickformat=yfmt)

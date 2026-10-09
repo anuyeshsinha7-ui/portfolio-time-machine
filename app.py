@@ -77,7 +77,9 @@ def controls(where: str) -> None:
     st.segmented_control("Confidence level", [0.95, 0.99], key="conf", format_func=lambda c: f"{c:.0%}", required=True)
     st.segmented_control("Horizon", [1, 10], key="horizon", format_func=lambda h: f"{h} day" + ("s" if h > 1 else ""), required=True)
     st.toggle("Show the Backing", key="show_backing", help="Off = the client view only")
-    st.toggle("📱 Full-screen app", key="phone", help="On: the app fills the screen, as on a real phone. Off: virtual phone + the working.")
+    st.session_state["phone_toggle"] = st.session_state["is_phone"]
+    st.toggle("📱 Full-screen app", key="phone_toggle", help="On: the app fills the screen, as on a real phone. Off: virtual phone + the working.",
+              on_change=lambda: st.session_state.update(is_phone=st.session_state["phone_toggle"]))
     if st.button("Reset to the default recommendation", width="stretch", key=f"reset_{where}"):
         ui.reset_team_picks()
         st.rerun()

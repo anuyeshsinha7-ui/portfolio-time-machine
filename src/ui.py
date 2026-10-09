@@ -143,7 +143,7 @@ def fig_style(fig: go.Figure, height: int = 380, title: str | None = None) -> go
 
 
 def show(fig: go.Figure) -> None:
-    if st.session_state.get("phone") or _CTX["in_client"]:
+    if st.session_state.get("is_phone") or _CTX["in_client"]:
         h = fig.layout.height or 380
         fig.update_layout(height=min(int(h * 0.82), 420) if h < 600 else 520,
                           margin=dict(l=4, r=4, t=36 if (fig.layout.title.text or "") else 8, b=4),
@@ -188,7 +188,7 @@ def universe_table() -> pd.DataFrame:
 def init_state() -> None:
     for k, v in DEFAULT_STATE.items():
         st.session_state.setdefault(k, v)
-    st.session_state.setdefault("phone", detect_phone())
+    st.session_state.setdefault("is_phone", detect_phone())  # plain state: widget state is dropped on page switches
     res = default_results()
     st.session_state.setdefault("pick_A", list(res["picks"]["A"]))
     st.session_state.setdefault("pick_B", list(res["picks"]["B"]))
@@ -597,6 +597,161 @@ button[kind="primary"], button[kind="secondary"] { min-height: 2.8rem; border-ra
 """
 
 
+# ---------------------------------------------------------------- spatial look: glass windows floating over a soft glow
+SPATIAL_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root { --glass: rgba(255,255,255,.065); --glass-hi: rgba(255,255,255,.11); --edge: rgba(255,255,255,.13);
+  --edge-top: rgba(255,255,255,.30); --blur: blur(26px) saturate(165%);
+  --lift: 0 24px 60px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.25); --shine: inset 0 1px 0 rgba(255,255,255,.22); }
+.stApp { font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(1100px 680px at 8% 4%, rgba(232,115,90,.30), transparent 62%),
+    radial-gradient(1000px 640px at 92% 12%, rgba(59,125,216,.32), transparent 62%),
+    radial-gradient(900px 620px at 55% 105%, rgba(124,92,255,.26), transparent 60%),
+    linear-gradient(165deg, #060912 0%, #0A1020 48%, #080B15 100%) !important;
+  background-attachment: fixed !important; }
+[data-testid="stAppViewContainer"], [data-testid="stMain"], .main, [data-testid="stHeader"] { background: transparent !important; }
+.stApp h1, .stApp h2, .stApp h3, .stApp h4 { letter-spacing: -.015em; }
+
+/* glass surfaces */
+.app-plan, .app-tile, .app-cmp, .app-list, .app-verdict, .ptm-concept, .ptm-card, .app-note {
+  background: linear-gradient(160deg, var(--glass-hi), var(--glass)) !important; border: 1px solid var(--edge) !important;
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  box-shadow: var(--shine), 0 10px 30px rgba(0,0,0,.28) !important; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+.app-tile:hover, .app-plan:hover, .app-list:hover, .app-cmp:hover {
+  transform: translateY(-2px); border-color: rgba(255,255,255,.22) !important; box-shadow: var(--shine), 0 18px 40px rgba(0,0,0,.38) !important; }
+.app-tile, .app-cmp, .app-list, .app-note { border-radius: 20px !important; }
+.app-plan, .app-verdict { border-radius: 24px !important; }
+.app-tile.a { border-left: 1px solid var(--edge) !important; box-shadow: var(--shine), inset 3px 0 0 #E8735A, 0 10px 30px rgba(0,0,0,.28) !important; }
+.app-tile.b { border-left: 1px solid var(--edge) !important; box-shadow: var(--shine), inset 3px 0 0 #3B7DD8, 0 10px 30px rgba(0,0,0,.28) !important; }
+.app-note.warn { background: linear-gradient(160deg, rgba(242,201,107,.16), rgba(242,201,107,.05)) !important; border-color: rgba(242,201,107,.28) !important; }
+.app-note.good { background: linear-gradient(160deg, rgba(127,211,160,.16), rgba(127,211,160,.05)) !important; border-color: rgba(127,211,160,.28) !important; }
+.app-note.bad { background: linear-gradient(160deg, rgba(241,154,154,.16), rgba(241,154,154,.05)) !important; border-color: rgba(241,154,154,.28) !important; }
+.app-li { border-bottom-color: rgba(255,255,255,.07) !important; }
+.app-li .ic, .app-plan .ic { background: rgba(255,255,255,.08) !important; border: 1px solid rgba(255,255,255,.10);
+  box-shadow: var(--shine); border-radius: 12px !important; }
+.app-hero { border-radius: 28px !important; border: 1px solid var(--edge) !important; backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  background: linear-gradient(135deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 100%) !important;
+  box-shadow: var(--shine), var(--lift) !important; position: relative; overflow: hidden; }
+.app-hero::after { content: ""; position: absolute; inset: -40% 40% 40% -20%; background: radial-gradient(closest-side, rgba(255,255,255,.18), transparent);
+  pointer-events: none; }
+.app-hero.a { background: linear-gradient(135deg, rgba(232,115,90,.62), rgba(201,83,59,.22)) !important; }
+.app-hero.b { background: linear-gradient(135deg, rgba(59,125,216,.62), rgba(36,87,165,.22)) !important; }
+.app-hero.crisis { background: linear-gradient(135deg, rgba(220,72,72,.58), rgba(126,32,32,.22)) !important; }
+.app-hero.calm { background: linear-gradient(135deg, rgba(46,158,91,.58), rgba(28,107,60,.22)) !important; }
+.chip { backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.10); }
+.app-step .n { box-shadow: 0 0 0 4px rgba(232,115,90,.18), 0 6px 16px rgba(232,115,90,.45); }
+
+/* controls: glass pills, glowing primary */
+.stApp button[kind="secondary"], .stApp [data-testid="stPopover"] button, .stApp [data-testid="stBaseButton-secondary"] {
+  background: rgba(255,255,255,.08) !important; border: 1px solid var(--edge) !important; border-radius: 999px !important;
+  backdrop-filter: var(--blur); box-shadow: var(--shine); transition: background .2s ease, transform .2s ease; }
+.stApp button[kind="secondary"]:hover { background: rgba(255,255,255,.14) !important; transform: translateY(-1px); }
+.stApp button[kind="primary"], .stApp [data-testid="stBaseButton-primary"] {
+  background: linear-gradient(135deg, #F08A6E 0%, #E8735A 45%, #C9533B 100%) !important; border: 1px solid rgba(255,255,255,.25) !important;
+  border-radius: 999px !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 10px 28px rgba(232,115,90,.45) !important;
+  transition: transform .2s ease, box-shadow .2s ease; }
+.stApp button[kind="primary"]:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 14px 36px rgba(232,115,90,.6) !important; }
+.stApp [data-baseweb="input"], .stApp [data-baseweb="select"] > div, .stApp [data-baseweb="textarea"] {
+  background: rgba(255,255,255,.06) !important; border-color: var(--edge) !important; border-radius: 14px !important; }
+.stApp [data-testid="stSegmentedControl"] button, .stApp [data-testid="stPills"] button { border-radius: 999px !important; }
+[data-testid="stPopoverBody"] { background: rgba(20,26,42,.72) !important; backdrop-filter: blur(30px) saturate(170%);
+  -webkit-backdrop-filter: blur(30px) saturate(170%); border: 1px solid var(--edge) !important; border-radius: 22px !important;
+  box-shadow: var(--shine), var(--lift) !important; }
+.stApp [data-testid="stExpander"] details { background: linear-gradient(160deg, var(--glass-hi), var(--glass)) !important;
+  border: 1px solid var(--edge) !important; border-radius: 20px !important; backdrop-filter: var(--blur); box-shadow: var(--shine); }
+.stApp [data-testid="stDataFrame"], .stApp [data-testid="stTable"] { border-radius: 18px; overflow: hidden; border: 1px solid var(--edge);
+  box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.stApp [data-testid="stPlotlyChart"], .stApp [data-testid="stGraphVizChart"] { background: linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.08); border-radius: 22px; padding: 6px; }
+
+/* the virtual phone: a floating glass device */
+.st-key-ptm_phone { border: 0 !important; border-radius: 50px !important;
+  background: linear-gradient(170deg, rgba(30,38,58,.62), rgba(12,16,28,.72)) !important;
+  backdrop-filter: blur(34px) saturate(170%); -webkit-backdrop-filter: blur(34px) saturate(170%);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.22), 0 0 0 9px rgba(255,255,255,.045), 0 0 0 10px rgba(255,255,255,.12),
+              inset 0 1px 0 rgba(255,255,255,.28), 0 50px 110px rgba(0,0,0,.6), 0 0 120px rgba(124,92,255,.18) !important;
+  transform: perspective(1600px) rotateY(3deg); transition: transform .5s ease; }
+.st-key-ptm_phone:hover { transform: perspective(1600px) rotateY(0deg); }
+.ptm-status, .st-key-ptm_screen, .ptm-homebar { background: transparent !important; }
+.st-key-ptm_appbar { border-bottom: 1px solid rgba(255,255,255,.08) !important; background: transparent !important; }
+.st-key-ptm_tabs { margin: 6px 10px 2px !important; border: 1px solid var(--edge) !important; border-radius: 26px !important;
+  background: rgba(255,255,255,.08) !important; backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  box-shadow: var(--shine), 0 12px 30px rgba(0,0,0,.35) !important; }
+.st-key-ptm_tabs a { border-radius: 18px !important; transition: background .2s ease; }
+.st-key-ptm_tabs > div:has([data-testid="stPopover"]) { flex: 0 0 42px !important; }
+.st-key-ptm_tabs [data-testid="stPopover"] button { padding: 0 !important; min-width: 0 !important; }
+.st-key-ptm_tabs a:hover { background: rgba(255,255,255,.08); }
+.ptm-homebar span { background: rgba(255,255,255,.55) !important; }
+.ptm-caption-phone { color: rgba(230,233,239,.55) !important; }
+
+/* the working panel: a floating glass window beside the phone */
+.st-key-ptm_working { background: linear-gradient(160deg, rgba(255,255,255,.075), rgba(255,255,255,.025)) !important;
+  border: 1px solid var(--edge); border-radius: 34px; padding: 26px 30px 30px !important;
+  backdrop-filter: blur(30px) saturate(160%); -webkit-backdrop-filter: blur(30px) saturate(160%);
+  box-shadow: var(--shine), 0 40px 90px rgba(0,0,0,.45); }
+.ptm-working-head { color: #9DB8F5 !important; display: inline-block; padding: 5px 12px; border-radius: 999px;
+  background: rgba(59,125,216,.16); border: 1px solid rgba(59,125,216,.35); }
+.ptm-working-title { margin-top: .5rem !important; }
+
+/* the ☰ menu: a compact round button that stays inside the tab bar */
+.st-key-ptm_tabs { overflow: hidden; }
+.st-key-ptm_tabs [data-testid="stPopover"], .st-key-ptm_tabs [data-testid="stPopover"] > div { width: 38px !important; max-width: 38px !important; }
+.st-key-ptm_tabs > div:has([data-testid="stPopover"]) { flex: 0 0 40px !important; margin-right: 2px; }
+.st-key-ptm_tabs [data-testid="stPopover"] button { width: 36px !important; height: 36px !important; min-height: 36px !important;
+  border-radius: 50% !important; padding: 0 !important; justify-content: center; }
+.st-key-ptm_tabs [data-testid="stPopover"] button [data-testid="stIconMaterial"] { display: none !important; }
+
+/* back button: a round glass button in the app bar */
+.st-key-ptm_appbar [class*="st-key-ptm_back"] button { width: 2.3rem; height: 2.3rem; min-height: 2.3rem; padding: 0; border-radius: 50%;
+  background: rgba(255,255,255,.09); border: 1px solid var(--edge); box-shadow: var(--shine); font-size: 1.6rem; line-height: 1; }
+.st-key-ptm_appbar [class*="st-key-ptm_back"] button:hover { background: rgba(255,255,255,.16); }
+.st-key-ptm_appbar [class*="st-key-ptm_back"] button p { font-size: 1.6rem; line-height: 1; margin-top: -2px; }
+.st-key-ptm_appbar > div:has([data-testid="stMarkdown"]) { flex: 1 1 auto; min-width: 0; }
+
+/* the virtual phone stays in view while the working panel scrolls, and always fits the window */
+.st-key-ptm_stage [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {
+  position: sticky !important; top: .6rem; align-self: flex-start !important; z-index: 2; }
+div:has(> .st-key-ptm_screen) { height: clamp(360px, calc(100vh - 205px), 660px) !important; min-height: 0 !important; flex: 0 0 auto !important; }
+.st-key-ptm_screen { min-height: 0 !important; }
+.st-key-ptm_screen { height: 100% !important; }
+
+/* narrow screens without the phone flag: drop the device frame and float the tab bar at the bottom */
+@media (max-width: 767px) {
+  .st-key-ptm_working { padding: 16px !important; border-radius: 24px; }
+  .st-key-ptm_phone { transform: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    box-shadow: none !important; background: transparent !important; border-radius: 0 !important; }
+  div:has(> .st-key-ptm_screen), .st-key-ptm_screen { height: auto !important; max-height: none !important; overflow: visible !important; }
+  .st-key-ptm_screen > div { overflow: visible !important; }
+  .st-key-ptm_tabs { position: fixed !important; left: 10px !important; right: 10px !important; z-index: 999;
+    bottom: calc(10px + env(safe-area-inset-bottom)) !important; margin: 0 !important; background: rgba(18,23,38,.86) !important; }
+  .ptm-homebar { display: none; }
+  .block-container { padding-bottom: 7.5rem !important; }
+}
+</style>
+"""
+
+MOBILE_SPATIAL_CSS = """
+<style>
+[data-testid="stHeader"] { display: none !important; }
+.block-container { padding-top: .7rem !important; }
+.st-key-ptm_appbar { position: sticky; top: 8px !important; z-index: 990; margin: 0 0 .7rem 0 !important; width: 100% !important;
+  border-radius: 24px; padding: .4rem .55rem !important; background: rgba(20,26,42,.62) !important;
+  backdrop-filter: blur(24px) saturate(170%); -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid rgba(255,255,255,.13) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 12px 30px rgba(0,0,0,.4); }
+.st-key-ptm_tabs > div:has([data-testid="stPopover"]) { flex: 0 0 46px !important; }
+.st-key-ptm_tabs [data-testid="stPopover"] button { padding: 0 !important; min-width: 0 !important; }
+.st-key-ptm_tabs a p, .st-key-ptm_tabs a span { font-size: .62rem !important; }
+.st-key-ptm_tabs { left: 10px !important; right: 10px !important; bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+  margin: 0 !important; border-radius: 28px !important; background: rgba(18,23,38,.86) !important;
+  backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 18px 40px rgba(0,0,0,.5) !important; padding: .3rem .25rem !important; }
+.block-container { padding-bottom: 7.5rem !important; }
+</style>
+"""
+
+
 class _Client:
     """Wraps the customer-view container so charts drawn inside it are sized for a phone screen."""
 
@@ -616,9 +771,49 @@ class _Client:
         return getattr(self._c, name)
 
 
-def _app_bar(page_title: str, controls) -> None:
+FLOW = ["start", "prefs", "suggest", "weights", "test1", "test2", "verdict"]
+
+
+def _page_key(pages: dict, page_title: str) -> str | None:
+    for k, pg in pages.items():
+        if pg.title == page_title:
+            return k
+    return None
+
+
+def _back_target(pages: dict, page_title: str) -> str | None:
+    """Where ‹ Back goes: the screen you came from, else the previous step of the flow."""
+    s = st.session_state
+    cur = _page_key(pages, page_title)
+    if cur is None:
+        return None
+    hist = s.setdefault("_hist", [])
+    if not hist or hist[-1] != cur:
+        hist.append(cur)
+        del hist[:-30]
+    if len(hist) >= 2:
+        return hist[-2]
+    if cur in FLOW and FLOW.index(cur) > 0:
+        return FLOW[FLOW.index(cur) - 1]
+    return "suggest" if cur != "start" else None
+
+
+def _go_back(pages: dict, target: str) -> None:
+    hist = st.session_state.get("_hist", [])
+    if len(hist) >= 2 and hist[-2] == target:
+        hist.pop()  # leave the current screen; the target is now on top
+    else:
+        hist[:] = [target]
+    st.switch_page(pages[target])
+
+
+def _app_bar(page_title: str, controls, pages: dict | None = None) -> None:
+    target = _back_target(pages, page_title) if pages and st.session_state["amount_confirmed"] else None
     bar = st.container(key="ptm_appbar", horizontal=True, vertical_alignment="center", horizontal_alignment="distribute")
     with bar:
+        if target:
+            if st.button("‹", key=f"ptm_back_{page_title}", help="Back", type="tertiary"):
+                _go_back(pages, target)
         a, b = amounts()
         right_txt = f"A {inr_short(a)} · B {inr_short(b)}" if st.session_state["amount_confirmed"] else "Portfolio Time Machine"
         st.markdown(f"**⏳ {page_title.split(' — ')[0]}**  \n<span style='color:#9AA3B5'>{right_txt}</span>",
@@ -646,9 +841,11 @@ def setup_frames(pages: dict, page_title: str, controls) -> None:
     s = st.session_state
     confirmed = s["amount_confirmed"]
     st.html(APP_CSS)
-    if s.get("phone"):
+    if s.get("is_phone"):
         st.html(MOBILE_CSS)
-        _app_bar(page_title, controls)
+        st.html(SPATIAL_CSS)
+        st.html(MOBILE_SPATIAL_CSS)
+        _app_bar(page_title, controls, pages)
         client = st.container()
         working = st.expander("📐 How we got these numbers") if s.get("show_backing", True) else None
         if confirmed:
@@ -656,6 +853,7 @@ def setup_frames(pages: dict, page_title: str, controls) -> None:
         s["_frames"] = {"client": client, "working": working}
         return
     st.html(DEVICE_CSS)
+    st.html(SPATIAL_CSS)
     show_working = s.get("show_backing", True)
     stage = st.container(key="ptm_stage")
     with stage:
@@ -663,7 +861,7 @@ def setup_frames(pages: dict, page_title: str, controls) -> None:
         with cols[0]:
             with st.container(key="ptm_phone"):
                 st.html("<div class='ptm-status'><span>9:41</span><span class='island'></span><span class='icons'>▂▄▆ ᯤ ▮</span></div>")
-                _app_bar(page_title, controls)
+                _app_bar(page_title, controls, pages)
                 screen = st.container(key="ptm_screen", height=640, border=False)
                 if confirmed:
                     _tab_bar(pages, page_title)
