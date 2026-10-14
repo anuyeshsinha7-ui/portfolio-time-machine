@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Portfolio Time Machine</title>
+  <script>
+    // GitHub Pages has one real file for the dashboard (app/index.html). Streamlit puts the screen name in the address
+    // (app/today, app/test1 …), so a refresh asks for a file that does not exist and lands here: send the visitor back
+    // to the dashboard and tell it which screen to reopen.
+    (function () {
+      var path = location.pathname, i = path.indexOf("/app/");
+      if (i >= 0) {
+        var q = new URLSearchParams(location.search);
+        var slug = path.slice(i + 5).split("/")[0];
+        if (slug) q.set("page", slug);
+        location.replace(path.slice(0, i + 5) + "?" + q.toString());
+      } else {
+        var parts = path.split("/").filter(Boolean);  // project site: /<repo>/…  → back to the landing page
+        location.replace(parts.length ? "/" + parts[0] + "/" : "/");
+      }
+    })();
+  </script>
+</head>
+<body style="background:#0B0F17;color:#E6E9EF;font-family:sans-serif;padding:2rem">Reopening the dashboard…</body>
+</html>
