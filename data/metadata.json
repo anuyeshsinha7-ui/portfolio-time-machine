@@ -8,8 +8,8 @@
  "n_extended": 200,
  "n_excluded": 70,
  "sessions": 4694,
- "prices_sha256": "e38f124df92186ce0331c6f395d264b72c68d83a7f9680f1b4713ea4c4f7a615",
- "benchmark_sha256": "e56da9225efc24cc9623dcd0737fc5a003a5cc12af1e4f999edede8fe5af01b0",
+ "prices_sha256": "b88ca56aa3f19a49e4f88dedb31d0aa2cd7685308da7f56b072770cc5ac2886c",
+ "benchmark_sha256": "1b64c56737ee05a58e05528005d6379264a12996c0d45f8c25700a02aa4ef97f",
  "sources": {
   "prices": "Yahoo Finance via yfinance (auto_adjust=False), anchored to NSE bhavcopies",
   "universe": "NSE Nifty 500 list; Nifty 100 / Midcap 150 / Smallcap 250 lists for cap buckets (archives.nseindia.com)",

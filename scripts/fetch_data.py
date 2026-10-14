@@ -17,7 +17,6 @@ Last-resort fallback: put one CSV per ticker in data/manual_csv/<SYMBOL>.csv
 from __future__ import annotations
 
 import argparse
-import io
 import json
 import sys
 import time

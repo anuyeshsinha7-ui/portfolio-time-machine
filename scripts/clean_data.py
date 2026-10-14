@@ -419,7 +419,7 @@ def nse_return_check(sym: str, adj: pd.Series, true_raw: pd.Series, chain, expla
         explained[d] = "split-sized jump with no recorded corporate action — that day's return dropped"
         issues.append(C.Issue(sym, str(d.date()), "A_split_bonus", "unrecorded split-sized jump",
                               f"one-day move {float(ours) - 1:+.1%} with no split/bonus in NSE's or Yahoo's records"
-                              + ("" if c_d and c_p else f"; symbol not in NSE's bhavcopy that day"),
+                              + ("" if c_d and c_p else "; symbol not in NSE's bhavcopy that day"),
                               "dropped that single day's return (missing, not a loss)", "price data; NSE bhavcopies"))
     return adj
 
@@ -619,7 +619,7 @@ def clean_stock(sym: str, meta_row: pd.Series, calendar: pd.DatetimeIndex, nifty
                                   "dropped that single day's return (missing, not a loss)", f"NSE corporate actions ({a['subject']})"))
         else:
             row.update(source="NSE lists the action; price shows no unusual fall — no adjustment needed")
-            issues.append(C.Issue(sym, str(ex.date()), f"B_demerger", f"{a['kind']}: no price impact",
+            issues.append(C.Issue(sym, str(ex.date()), "B_demerger", f"{a['kind']}: no price impact",
                                   f"one-day price ratio {r:.4f} ({rel:+.1%} vs Nifty 50)", "no adjustment",
                                   f"NSE corporate actions ({a['subject']})"))
         action_dates.add(day)
@@ -927,8 +927,9 @@ def main() -> None:
         "n_extended": int((universe["status"] == "extended").sum()),
         "n_excluded": int((universe["status"] == "excluded").sum()),
         "sessions": int(len(calendar)),
-        "prices_sha256": C.checksum_frame(prices),
-        "benchmark_sha256": C.checksum_frame(bench),
+        # fingerprint what was written (6 significant digits), so anyone can re-check the committed files
+        "prices_sha256": C.checksum_frame(pd.read_csv(snap, index_col="Date", parse_dates=["Date"])),
+        "benchmark_sha256": C.checksum_frame(pd.read_csv(DATA / "benchmark.csv.gz", index_col="Date", parse_dates=["Date"])),
         "sources": {
             "prices": "Yahoo Finance via yfinance (auto_adjust=False), anchored to NSE bhavcopies",
             "universe": "NSE Nifty 500 list; Nifty 100 / Midcap 150 / Smallcap 250 lists for cap buckets (archives.nseindia.com)",

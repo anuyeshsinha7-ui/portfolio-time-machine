@@ -1,5 +1,4 @@
 """Page 4 — The risk call: why A is high risk and B is low risk (brief §8.4, §6.3)."""
-import numpy as np
 import pandas as pd
 import streamlit as st
 

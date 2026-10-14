@@ -16,7 +16,6 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from src import config  # noqa: E402
-from src import data as D  # noqa: E402
 from src import engine as E  # noqa: E402
 from src import universe as U  # noqa: E402
 

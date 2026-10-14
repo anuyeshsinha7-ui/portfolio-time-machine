@@ -135,7 +135,7 @@ moving-block bootstrap of the current window ({C.BOOTSTRAP_RESAMPLES} resamples,
 
 def guide(res: dict) -> str:
     off = res["official"]
-    cr, cm, cur = res["regimes"][f"{off['crisis']}|standard"], res["regimes"][f"{off['calm']}|standard"], res["current"]
+    cr, cm = res["regimes"][f"{off['crisis']}|standard"], res["regimes"][f"{off['calm']}|standard"]
     E, P, ev = res["events"], res["portfolios"], res["evidence"]
     board = res["scoreboard"]["standard"]
     lv, bv = RC.label_verdict(cr, cm, board), RC.b_verdict(cr, board)

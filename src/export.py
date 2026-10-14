@@ -14,15 +14,15 @@ def workbook(ctx_parts: dict) -> bytes:
     P, ev = ctx_parts["portfolios"], ctx_parts["evidence"]
     aa, ab = ctx_parts["amounts"]
     sheets = {}
-    sheets["Read me"] = pd.DataFrame({"Item": ["Project", "Data as of", "Amount A (₹)", "Amount B (₹)", "Risk-free rate", "Note"],
-                                      "Value": [config.APP_NAME, D.as_of(), aa, ab, config.RISK_FREE_RATE,
+    amount = {"A": aa, "B": ab, "C": (aa + ab) / 2}  # C is the alternative home for the same money
+    sheets["Read me"] = pd.DataFrame({"Item": ["Project", "Data as of", "Amount A (₹)", "Amount B (₹)", "Amount C (₹)", "Risk-free rate", "Note"],
+                                      "Value": [config.APP_NAME, D.as_of(), aa, ab, amount["C"], config.RISK_FREE_RATE,
                                                 "Educational project — not investment advice."]})
     rows = []
-    for k in ("A", "B"):
+    for k in ("A", "B", "C"):
         p = P[k]
-        amt = aa if k == "A" else ab
         for s, w in p["weights"].items():
-            rows.append({"Portfolio": k, "Symbol": s, "Weight": w, "₹ target": w * amt, "μ (annual)": p["mu"][s],
+            rows.append({"Portfolio": k, "Objective": p["objective"], "Symbol": s, "Weight": w, "₹ target": w * amount[k], "μ (annual)": p["mu"][s],
                          "σ (annual)": p["vol_i"][s]})
     sheets["Weights today"] = pd.DataFrame(rows)
     sheets["Risk call"] = pd.DataFrame([{"Portfolio": k, **{m: ev[k][m] for m in ("weighted_beta", "portfolio_beta", "portfolio_vol",
@@ -33,7 +33,7 @@ def workbook(ctx_parts: dict) -> bytes:
                                                          "portfolio_vol": vr["hi"]}
     rows, t2 = [], []
     for name, reg, e in ctx_parts["regimes"]:
-        for k in ("A", "B"):
+        for k in ("A", "B", "C"):
             r = reg[k]
             base = {"Period": name, "Event": e["name"] if e else "Current", "Start": reg["start"], "End": reg["end"], "Portfolio": k}
             for m, blk in r["risk"].items():
