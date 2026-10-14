@@ -82,8 +82,9 @@ if right is not None:
                     "the real weights end up a little off target and some cash is left over.")
         st.markdown("#### The smallest amount that works for these stocks")
         rows = []
-        for k in ("A", "B"):
+        for k in ("A", "B", "C"):
             w = pd.Series(res["portfolios"][k]["weights"] if ui.is_default_picks() else ui.context().P[k]["weights"])
+            w = w[w > 1e-4]  # C may leave stocks out
             m = AL.min_sensible_amount(w, prices)
             worst = (prices.reindex(w.index) / w).idxmax()
             rows.append((f"Portfolio {k}", ui.inr(m), worst, ui.inr(prices[worst], 2), ui.pct(w[worst])))

@@ -107,6 +107,8 @@ Volatility ratio σA/σB = **2.99**, block-bootstrap 95% CI **2.74 – 3.26** (5
 | A | 0.99 | 4.00% | 4.24% | 4.53% | 4.96% |
 | B | 0.95 | 1.24% | 1.10% | 1.71% | 1.63% |
 | B | 0.99 | 1.91% | 1.83% | 2.34% | 2.12% |
+| C | 0.95 | 2.06% | 2.18% | 2.61% | 3.09% |
+| C | 0.99 | 2.82% | 3.45% | 3.38% | 3.96% |
 
 ## 4. Test #1 — does the label hold? (official periods, standard 252-day windows)
 
@@ -114,19 +116,22 @@ Volatility ratio σA/σB = **2.99**, block-bootstrap 95% CI **2.74 – 3.26** (5
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | Current | A | 3.06% | 4.24% | 4.96% | 4.46% | 29.2% | 1.32 | 16.0% | −6.3% | 0.31 | ₹74,417 |
 | Current | B | 1.10% | 1.83% | 2.12% | 1.88% | 11.2% | 0.60 | 9.8% | −2.3% | 0.24 | ₹31,783 |
+| Current | C | 2.18% | 3.45% | 3.96% | 3.57% | 22.1% | 0.95 | 12.5% | −4.8% | 0.23 | ₹59,348 |
 | Crisis | A | 5.50% | 8.46% | 9.49% | 8.40% | 47.2% | 0.86 | 72.6% | −10.8% | 0.42 | ₹1.42 lakh |
 | Crisis | B | 2.43% | 5.56% | 6.78% | 5.20% | 26.0% | 0.51 | 30.5% | −7.6% | 0.27 | ₹1.02 lakh |
+| Crisis | C | 4.22% | 7.05% | 9.53% | 7.70% | 41.2% | 0.75 | 60.5% | −12.0% | 0.33 | ₹1.43 lakh |
 | Calm | A | 2.33% | 3.78% | 4.32% | 3.70% | 23.8% | 1.31 | 12.5% | −4.7% | 0.21 | ₹64,770 |
 | Calm | B | 1.09% | 1.59% | 1.67% | 1.56% | 11.6% | 0.84 | 7.4% | −1.7% | 0.12 | ₹25,003 |
+| Calm | C | 1.81% | 2.86% | 3.43% | 2.91% | 19.0% | 1.07 | 11.9% | −3.7% | 0.14 | ₹51,471 |
 
 VaR/ES (99%, 1-day) by method in the official crisis:
 
-| Method | A VaR99 | A ES99 | B VaR99 | B ES99 |
-|---|---|---|---|---|
-| Historical | 8.46% | 9.49% | 5.56% | 6.78% |
-| Parametric normal | 7.25% | 8.25% | 3.88% | 4.44% |
-| Monte Carlo (Student-t) | 8.41% | 11.13% | 4.28% | 5.77% |
-| Cornish–Fisher | 8.40% | 10.43% | 5.77% | 7.83% |
+| Method | A VaR99 | A ES99 | B VaR99 | B ES99 | C VaR99 | C ES99 |
+|---|---|---|---|---|---|---|
+| Historical | 8.46% | 9.49% | 5.56% | 6.78% | 7.05% | 9.53% |
+| Parametric normal | 7.25% | 8.25% | 3.88% | 4.44% | 6.26% | 7.14% |
+| Monte Carlo (Student-t) | 8.41% | 11.13% | 4.28% | 5.77% | 7.75% | 10.62% |
+| Cornish–Fisher | 8.40% | 10.43% | 5.77% | 7.83% | 8.24% | 10.76% |
 
 * High-risk label held: crisis **True**, calm **True**, all events **13/13** → verdict **Yes**.
 * B held up (ES and drawdown below the Nifty 50's) in the official crisis: **True**; across crises 6/10 → **Partly**.
@@ -136,7 +141,9 @@ VaR/ES (99%, 1-day) by method in the official crisis:
 * Breach test A, VaR calibrated on current: 99% → expected about 2.5, got **21** (Kupiec p = 2.59e-13); 95% → expected 12.6, got **38** (p = 2.09e-09).
 * Breach test B, VaR calibrated on calm: 99% → expected about 2.5, got **37** (Kupiec p = 3.55e-31); 95% → expected 12.6, got **53** (p = 7.17e-19).
 * Breach test B, VaR calibrated on current: 99% → expected about 2.5, got **27** (Kupiec p = 1.67e-19); 95% → expected 12.6, got **53** (p = 7.17e-19).
-* Crisis replay on ₹15,00,000: A lowest ₹4,67,565 (fall ₹10,32,435), B lowest ₹11,03,649 (fall ₹3,96,351), Nifty 50 fall 57.6%.
+* Breach test C, VaR calibrated on calm: 99% → expected about 2.5, got **35** (Kupiec p = 1.01e-28); 95% → expected 12.6, got **49** (p = 4.21e-16).
+* Breach test C, VaR calibrated on current: 99% → expected about 2.5, got **24** (Kupiec p = 2.55e-16); 95% → expected 12.6, got **44** (p = 6.96e-13).
+* Crisis replay on ₹15,00,000: A lowest ₹4,67,565 (fall ₹10,32,435), B lowest ₹11,03,649 (fall ₹3,96,351), C lowest ₹6,84,714 (fall ₹8,15,286), Nifty 50 fall 57.6%.
 
 ## 5. Test #2 — would the optimiser still pick our weights?
 
@@ -148,9 +155,13 @@ VaR/ES (99%, 1-day) by method in the official crisis:
 | B | Crisis | −0.1% | reachable | −0.1% | 23.8% | 42.8% | ₹6.42 lakh | 43.1% | no | 4.94% |
 | B | Calm | −0.1% | below_minvar | 21.2% | 9.5% | 43.8% | ₹6.57 lakh | 43.1% | yes | 2.07% |
 | B | Current | −0.1% | reachable | −0.1% | 11.2% | 0.0% | ₹2 | 43.1% | no | 0.00% |
+| C | Crisis | 38.2% | unreachable | 9.4% | 28.6% | 100.0% | ₹15 lakh | 74.5% | yes | 20.64% |
+| C | Calm | 38.2% | reachable | 38.2% | 10.5% | 93.8% | ₹14.06 lakh | 74.5% | yes | 9.23% |
+| C | Current | 38.2% | reachable | 38.2% | 22.1% | 0.0% | ₹1 | 74.5% | no | 0.00% |
 
 * A in the crisis — VaR99 before (today's weights) 8.46% → after (crisis-optimal) 8.04%; ES99 9.49% → 9.36%.
 * B in the crisis — VaR99 before (today's weights) 5.56% → after (crisis-optimal) 4.95%; ES99 6.78% → 5.61%.
+* C in the crisis — VaR99 before (today's weights) 7.05% → after (crisis-optimal) 4.79%; ES99 9.53% → 5.65%.
 
 ## 6. All-events scoreboard (standard windows)
 
@@ -173,7 +184,7 @@ VaR/ES (99%, 1-day) by method in the official crisis:
 ## 7. Verdict
 
 * Label: **Yes** for A; B held up: **Partly**.
-* Weight robustness: A **Robust**, B **Partly robust**.
+* Weight robustness: A **Robust**, B **Partly robust**, C **Regime-dependent**.
 * Worst case on ₹15,00,000 (official crisis): A replay fall ₹10,32,435, ES99 ₹1,42,396/day; B replay fall ₹3,96,351, ES99 ₹1,01,693/day.
 * Review trigger: revisit when the Nifty 50's 3-month volatility exceeds 24.9%.
 

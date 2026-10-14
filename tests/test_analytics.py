@@ -402,3 +402,31 @@ def test_stored_results_never_hold_a_negative_var():
                 walk(v)
     walk(res)
     assert len(found) > 1000 and min(found) > 0
+
+
+def test_committed_snapshot_matches_its_fingerprint():
+    import json
+
+    from src import cleaning as CLN
+
+    meta = json.loads((ROOT / "data" / "metadata.json").read_text())
+    assert CLN.checksum_frame(D.prices()) == meta["prices_sha256"]
+    assert CLN.checksum_frame(D.benchmark()) == meta["benchmark_sha256"]
+
+
+def test_excel_export_covers_all_three_portfolios():
+    import io
+    import json
+
+    from src import export as X
+
+    res = json.loads((ROOT / "results" / "default.json").read_text())
+    regs = [("Current", res["current"], None)] + [(k, v, res["events"][k.split("|")[0]]) for k, v in list(res["regimes"].items())[:2]]
+    uni = pd.DataFrame(json.loads((ROOT / "results" / "universe.json").read_text())).set_index("symbol")
+    xl = X.workbook({"portfolios": res["portfolios"], "evidence": res["evidence"], "regimes": regs,
+                     "scoreboard": res["scoreboard"]["standard"], "universe": uni, "events": res["events"], "amounts": (15e5, 15e5)})
+    w = pd.read_excel(io.BytesIO(xl), sheet_name="Weights today")
+    assert set(w["Portfolio"]) == {"A", "B", "C"}
+    assert w.groupby("Portfolio")["Weight"].sum().to_numpy() == pytest.approx([1, 1, 1], abs=1e-5)
+    v = pd.read_excel(io.BytesIO(xl), sheet_name="VaR & ES")
+    assert set(v["Portfolio"]) == {"A", "B", "C"} and (v["VaR"] > 0).all() and (v["ES"] >= v["VaR"] - 1e-12).all()
