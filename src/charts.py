@@ -86,9 +86,9 @@ def returns_hist(r, var, es, colour, name, conf) -> go.Figure:
     r = np.asarray(r)
     fig = go.Figure(go.Histogram(x=r, nbinsx=50, marker=dict(color=colour, opacity=.75), name=f"Daily returns — {name}",
                                  hovertemplate="%{x:.1%}: %{y} days<extra></extra>"))
-    fig.add_vline(x=-var, line=dict(color="#E6E9EF", width=2), annotation_text=f"VaR {conf:.0%}: −{var:.1%}",
+    fig.add_vline(x=-var, line=dict(color="#E6E9EF", width=2), annotation_text=f"VaR {conf:.0%} = {var:.1%} loss",
                   annotation_position="top left", annotation_font_size=11)
-    fig.add_vline(x=-es, line=dict(color=CRISIS, width=2, dash="dash"), annotation_text=f"ES: −{es:.1%}",
+    fig.add_vline(x=-es, line=dict(color=CRISIS, width=2, dash="dash"), annotation_text=f"ES = {es:.1%} loss",
                   annotation_position="bottom left", annotation_font_size=11)
     fig.update_xaxes(title="Daily return")
     return _base(fig, 280, None, xfmt=".0%")
@@ -100,7 +100,7 @@ def breach_timeline(dates, r, var, colour, name) -> go.Figure:
     fig = go.Figure()
     fig.add_trace(go.Bar(x=dates, y=r, marker=dict(color=np.where(hit, CRISIS, "#3A4560")), name="Daily return",
                          hovertemplate="%{x|%d %b %Y}: %{y:.1%}<extra></extra>"))
-    fig.add_hline(y=-var, line=dict(color="#E6E9EF", dash="dash"), annotation_text=f"VaR line −{var:.1%}", annotation_font_size=11)
+    fig.add_hline(y=-var, line=dict(color="#E6E9EF", dash="dash"), annotation_text=f"VaR = {var:.1%} loss", annotation_font_size=11)
     fig.update_layout(showlegend=False)
     return _base(fig, 240, f"Portfolio {name}: red bars breach the VaR line", yfmt=".0%")
 

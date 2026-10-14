@@ -103,39 +103,39 @@ Volatility ratio σA/σB = **2.99**, block-bootstrap 95% CI **2.74 – 3.26** (5
 
 | Portfolio | Confidence | VaR equal-weight | VaR optimised | ES equal-weight | ES optimised |
 |---|---|---|---|---|---|
-| A | 0.95 | 3.20% | 3.32% | 3.78% | 4.09% |
-| A | 0.99 | 4.09% | 4.32% | 4.78% | 5.31% |
-| B | 0.95 | 1.31% | 1.18% | 1.74% | 1.67% |
-| B | 0.99 | 2.42% | 2.25% | 2.54% | 2.25% |
+| A | 0.95 | 3.17% | 3.06% | 3.74% | 4.02% |
+| A | 0.99 | 4.00% | 4.24% | 4.53% | 4.96% |
+| B | 0.95 | 1.24% | 1.10% | 1.71% | 1.63% |
+| B | 0.99 | 1.91% | 1.83% | 2.34% | 2.12% |
 
 ## 4. Test #1 — does the label hold? (official periods, standard 252-day windows)
 
 | Regime | P | VaR95 | VaR99 | ES99 | ES97.5 | Vol | Beta | Max DD | Worst day | Avg corr | ES99 on ₹15L |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Current | A | 3.32% | 4.32% | 5.31% | 4.54% | 29.2% | 1.32 | 16.0% | −6.3% | 0.31 | ₹79,632 |
-| Current | B | 1.18% | 2.25% | 2.25% | 1.93% | 11.2% | 0.60 | 9.8% | −2.3% | 0.24 | ₹33,824 |
-| Crisis | A | 5.73% | 9.00% | 9.92% | 8.61% | 47.2% | 0.86 | 72.6% | −10.8% | 0.42 | ₹1.49 lakh |
-| Crisis | B | 2.45% | 6.72% | 7.18% | 5.56% | 26.0% | 0.51 | 30.5% | −7.6% | 0.27 | ₹1.08 lakh |
-| Calm | A | 2.49% | 4.15% | 4.43% | 3.80% | 23.8% | 1.31 | 12.5% | −4.7% | 0.21 | ₹66,507 |
-| Calm | B | 1.17% | 1.68% | 1.69% | 1.58% | 11.6% | 0.84 | 7.4% | −1.7% | 0.12 | ₹25,329 |
+| Current | A | 3.06% | 4.24% | 4.96% | 4.46% | 29.2% | 1.32 | 16.0% | −6.3% | 0.31 | ₹74,417 |
+| Current | B | 1.10% | 1.83% | 2.12% | 1.88% | 11.2% | 0.60 | 9.8% | −2.3% | 0.24 | ₹31,783 |
+| Crisis | A | 5.50% | 8.46% | 9.49% | 8.40% | 47.2% | 0.86 | 72.6% | −10.8% | 0.42 | ₹1.42 lakh |
+| Crisis | B | 2.43% | 5.56% | 6.78% | 5.20% | 26.0% | 0.51 | 30.5% | −7.6% | 0.27 | ₹1.02 lakh |
+| Calm | A | 2.33% | 3.78% | 4.32% | 3.70% | 23.8% | 1.31 | 12.5% | −4.7% | 0.21 | ₹64,770 |
+| Calm | B | 1.09% | 1.59% | 1.67% | 1.56% | 11.6% | 0.84 | 7.4% | −1.7% | 0.12 | ₹25,003 |
 
 VaR/ES (99%, 1-day) by method in the official crisis:
 
 | Method | A VaR99 | A ES99 | B VaR99 | B ES99 |
 |---|---|---|---|---|
-| Historical | 9.00% | 9.92% | 6.72% | 7.18% |
+| Historical | 8.46% | 9.49% | 5.56% | 6.78% |
 | Parametric normal | 7.25% | 8.25% | 3.88% | 4.44% |
-| Monte Carlo (Student-t) | 8.41% | 11.13% | 4.29% | 5.77% |
+| Monte Carlo (Student-t) | 8.41% | 11.13% | 4.28% | 5.77% |
 | Cornish–Fisher | 8.40% | 10.43% | 5.77% | 7.83% |
 
 * High-risk label held: crisis **True**, calm **True**, all events **13/13** → verdict **Yes**.
 * B held up (ES and drawdown below the Nifty 50's) in the official crisis: **True**; across crises 6/10 → **Partly**.
 * Label stability in the crisis: 3 of 15 of A's stocks keep their label (High risk) when the rule is re-run on crisis data.
 * Label stability in the crisis: 15 of 15 of B's stocks keep their label (Low risk) when the rule is re-run on crisis data.
-* Breach test A, VaR calibrated on calm: 99% → expected about 2.5, got **23** (Kupiec p = 2.68e-15); 95% → expected 12.6, got **46** (p = 3.88e-14).
-* Breach test A, VaR calibrated on current: 99% → expected about 2.5, got **20** (Kupiec p = 2.37e-12); 95% → expected 12.6, got **34** (p = 2.41e-07).
-* Breach test B, VaR calibrated on calm: 99% → expected about 2.5, got **36** (Kupiec p = 6.08e-30); 95% → expected 12.6, got **51** (p = 1.82e-17).
-* Breach test B, VaR calibrated on current: 99% → expected about 2.5, got **19** (Kupiec p = 2.05e-11); 95% → expected 12.6, got **50** (p = 8.87e-17).
+* Breach test A, VaR calibrated on calm: 99% → expected about 2.5, got **25** (Kupiec p = 2.31e-17); 95% → expected 12.6, got **50** (p = 8.87e-17).
+* Breach test A, VaR calibrated on current: 99% → expected about 2.5, got **21** (Kupiec p = 2.59e-13); 95% → expected 12.6, got **38** (p = 2.09e-09).
+* Breach test B, VaR calibrated on calm: 99% → expected about 2.5, got **37** (Kupiec p = 3.55e-31); 95% → expected 12.6, got **53** (p = 7.17e-19).
+* Breach test B, VaR calibrated on current: 99% → expected about 2.5, got **27** (Kupiec p = 1.67e-19); 95% → expected 12.6, got **53** (p = 7.17e-19).
 * Crisis replay on ₹15,00,000: A lowest ₹4,67,565 (fall ₹10,32,435), B lowest ₹11,03,649 (fall ₹3,96,351), Nifty 50 fall 57.6%.
 
 ## 5. Test #2 — would the optimiser still pick our weights?
@@ -149,32 +149,32 @@ VaR/ES (99%, 1-day) by method in the official crisis:
 | B | Calm | −0.1% | below_minvar | 21.2% | 9.5% | 43.8% | ₹6.57 lakh | 43.1% | yes | 2.07% |
 | B | Current | −0.1% | reachable | −0.1% | 11.2% | 0.0% | ₹2 | 43.1% | no | 0.00% |
 
-* A in the crisis — VaR99 before (today's weights) 9.00% → after (crisis-optimal) 8.35%; ES99 9.92% → 10.00%.
-* B in the crisis — VaR99 before (today's weights) 6.72% → after (crisis-optimal) 5.45%; ES99 7.18% → 5.94%.
+* A in the crisis — VaR99 before (today's weights) 8.46% → after (crisis-optimal) 8.04%; ES99 9.49% → 9.36%.
+* B in the crisis — VaR99 before (today's weights) 5.56% → after (crisis-optimal) 4.95%; ES99 6.78% → 5.61%.
 
 ## 6. All-events scoreboard (standard windows)
 
 | Event | Type | Window | ES99 A | ES99 B | Vol A | Vol B | MDD A | MDD B | Worst ₹ fall A | Worst ₹ fall B | Label held | B beat Nifty |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Global Financial Crisis (2008–09) | crisis | 2007-12-06 → 2008-12-17 | 9.92% | 7.18% | 47.2% | 26.0% | 72.6% | 30.5% | ₹10.32 lakh | ₹3.96 lakh | ✓ | ✓ |
-| European debt crisis and US credit downgrade (2011) | crisis | 2010-10-08 → 2011-10-14 | 3.78% | 2.78% | 20.2% | 14.0% | 24.8% | 12.5% | ₹3.41 lakh | ₹1.47 lakh | ✓ | ✓ |
-| Taper tantrum and rupee crash (2013) | crisis | 2013-04-15 → 2014-04-23 | 4.87% | 2.77% | 26.7% | 13.4% | 30.2% | 10.2% | ₹2.26 lakh | ₹0 | ✓ | ✓ |
-| China devaluation and global sell-off (2015–16) | crisis | 2015-01-30 → 2016-02-08 | 8.15% | 4.77% | 27.7% | 17.0% | 31.9% | 13.8% | ₹3.95 lakh | ₹34,746 | ✓ | ✗ |
-| Demonetisation (2016) | crisis | 2016-09-28 → 2017-10-04 | 5.09% | 2.84% | 24.6% | 13.0% | 14.3% | 14.6% | ₹1.42 lakh | ₹2.14 lakh | ✓ | ✗ |
-| IL&FS default and NBFC crisis (2018) | crisis | 2018-07-26 → 2019-08-07 | 7.30% | 2.68% | 31.0% | 14.9% | 50.3% | 15.2% | ₹6.57 lakh | ₹95,238 | ✓ | ✗ |
-| COVID-19 crash (2020) | crisis | 2019-12-13 → 2020-12-15 | 12.33% | 7.97% | 46.4% | 23.9% | 45.9% | 23.7% | ₹6.98 lakh | ₹2.59 lakh | ✓ | ✓ |
-| Russia–Ukraine war and rate hikes (2022) | crisis | 2021-09-16 → 2022-09-20 | 7.00% | 2.89% | 30.1% | 15.4% | 29.9% | 10.2% | ₹3.56 lakh | ₹1.31 lakh | ✓ | ✓ |
-| Adani–Hindenburg sell-off (2023) | crisis | 2022-12-05 → 2023-12-11 | 8.18% | 1.30% | 29.4% | 8.7% | 12.8% | 7.3% | ₹86,636 | ₹1.05 lakh | ✓ | ✓ |
-| Foreign-investor sell-off correction (2024–25) | crisis | 2024-08-28 → 2025-09-01 | 6.59% | 2.25% | 34.8% | 12.2% | 35.8% | 17.1% | ₹5.48 lakh | ₹1.96 lakh | ✓ | ✗ |
-| Low-volatility rally (2017) | calm | 2017-01-30 → 2018-02-01 | 4.43% | 1.69% | 23.8% | 11.6% | 12.5% | 7.4% | ₹0 | ₹6,276 | ✓ | — |
-| Post-election steady market (2014) | calm | 2013-12-02 → 2014-12-15 | 4.85% | 1.73% | 27.9% | 10.3% | 15.2% | 4.0% | ₹1.52 lakh | ₹32,566 | ✓ | — |
-| Low-VIX stretch (2023–24) | calm | 2022-11-25 → 2023-12-01 | 8.18% | 1.30% | 29.3% | 8.8% | 12.8% | 7.5% | ₹63,389 | ₹81,850 | ✓ | — |
+| Global Financial Crisis (2008–09) | crisis | 2007-12-06 → 2008-12-17 | 9.49% | 6.78% | 47.2% | 26.0% | 72.6% | 30.5% | ₹10.32 lakh | ₹3.96 lakh | ✓ | ✓ |
+| European debt crisis and US credit downgrade (2011) | crisis | 2010-10-08 → 2011-10-14 | 3.38% | 2.59% | 20.2% | 14.0% | 24.8% | 12.5% | ₹3.41 lakh | ₹1.47 lakh | ✓ | ✓ |
+| Taper tantrum and rupee crash (2013) | crisis | 2013-04-15 → 2014-04-23 | 4.67% | 2.62% | 26.7% | 13.4% | 30.2% | 10.2% | ₹2.26 lakh | ₹0 | ✓ | ✓ |
+| China devaluation and global sell-off (2015–16) | crisis | 2015-01-30 → 2016-02-08 | 6.90% | 4.10% | 27.7% | 17.0% | 31.9% | 13.8% | ₹3.95 lakh | ₹34,746 | ✓ | ✗ |
+| Demonetisation (2016) | crisis | 2016-09-28 → 2017-10-04 | 4.75% | 2.76% | 24.6% | 13.0% | 14.3% | 14.6% | ₹1.42 lakh | ₹2.14 lakh | ✓ | ✗ |
+| IL&FS default and NBFC crisis (2018) | crisis | 2018-07-26 → 2019-08-07 | 6.50% | 2.57% | 31.0% | 14.9% | 50.3% | 15.2% | ₹6.57 lakh | ₹95,238 | ✓ | ✗ |
+| COVID-19 crash (2020) | crisis | 2019-12-13 → 2020-12-15 | 11.47% | 6.66% | 46.4% | 23.9% | 45.9% | 23.7% | ₹6.98 lakh | ₹2.59 lakh | ✓ | ✓ |
+| Russia–Ukraine war and rate hikes (2022) | crisis | 2021-09-16 → 2022-09-20 | 6.47% | 2.65% | 30.1% | 15.4% | 29.9% | 10.2% | ₹3.56 lakh | ₹1.31 lakh | ✓ | ✓ |
+| Adani–Hindenburg sell-off (2023) | crisis | 2022-12-05 → 2023-12-11 | 7.35% | 1.26% | 29.4% | 8.7% | 12.8% | 7.3% | ₹86,636 | ₹1.05 lakh | ✓ | ✓ |
+| Foreign-investor sell-off correction (2024–25) | crisis | 2024-08-28 → 2025-09-01 | 6.19% | 2.08% | 34.8% | 12.2% | 35.8% | 17.1% | ₹5.48 lakh | ₹1.96 lakh | ✓ | ✗ |
+| Low-volatility rally (2017) | calm | 2017-01-30 → 2018-02-01 | 4.32% | 1.67% | 23.8% | 11.6% | 12.5% | 7.4% | ₹0 | ₹6,276 | ✓ | — |
+| Post-election steady market (2014) | calm | 2013-12-02 → 2014-12-15 | 4.74% | 1.60% | 27.9% | 10.3% | 15.2% | 4.0% | ₹1.52 lakh | ₹32,566 | ✓ | — |
+| Low-VIX stretch (2023–24) | calm | 2022-11-25 → 2023-12-01 | 7.35% | 1.26% | 29.3% | 8.8% | 12.8% | 7.5% | ₹63,389 | ₹81,850 | ✓ | — |
 
 ## 7. Verdict
 
 * Label: **Yes** for A; B held up: **Partly**.
 * Weight robustness: A **Robust**, B **Partly robust**.
-* Worst case on ₹15,00,000 (official crisis): A replay fall ₹10,32,435, ES99 ₹1,48,758/day; B replay fall ₹3,96,351, ES99 ₹1,07,685/day.
+* Worst case on ₹15,00,000 (official crisis): A replay fall ₹10,32,435, ES99 ₹1,42,396/day; B replay fall ₹3,96,351, ES99 ₹1,01,693/day.
 * Review trigger: revisit when the Nifty 50's 3-month volatility exceeds 24.9%.
 
 ## 8. Regime finder — top candidates
@@ -183,14 +183,14 @@ VaR/ES (99%, 1-day) by method in the official crisis:
 
 | Start | End | Return | Vol | Max DD | Worst day | VaR99 |
 |---|---|---|---|---|---|---|
-| 2007-10-31 | 2008-11-07 | −49.6% | 41.8% | 59.9% | −12.2% | 8.70% |
-| 2019-03-13 | 2020-03-24 | −31.2% | 25.2% | 38.4% | −13.0% | 8.30% |
-| 2010-12-15 | 2011-12-28 | −20.1% | 20.9% | 26.2% | −4.1% | 3.21% |
+| 2007-10-31 | 2008-11-07 | −49.6% | 41.8% | 59.9% | −12.2% | 6.30% |
+| 2019-03-13 | 2020-03-24 | −31.2% | 25.2% | 38.4% | −13.0% | 6.56% |
+| 2010-12-15 | 2011-12-28 | −20.1% | 20.9% | 26.2% | −4.1% | 2.50% |
 
 **Calm candidates**
 
 | Start | End | Return | Vol | Max DD | Worst day | VaR99 |
 |---|---|---|---|---|---|---|
-| 2017-01-27 | 2018-01-31 | 27.6% | 8.9% | 4.1% | −1.6% | 1.38% |
-| 2022-11-25 | 2023-12-01 | 9.5% | 9.7% | 9.9% | −1.8% | 1.61% |
-| 2018-04-09 | 2019-04-15 | 12.6% | 12.2% | 14.6% | −2.7% | 2.39% |
+| 2017-01-27 | 2018-01-31 | 27.6% | 8.9% | 4.1% | −1.6% | 1.24% |
+| 2022-11-25 | 2023-12-01 | 9.5% | 9.7% | 9.9% | −1.8% | 1.51% |
+| 2018-04-09 | 2019-04-15 | 12.6% | 12.2% | 14.6% | −2.7% | 2.03% |

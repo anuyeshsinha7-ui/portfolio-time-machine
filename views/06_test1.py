@@ -96,7 +96,8 @@ if right is not None:
     with right:
         st.markdown(f"#### VaR and ES today vs in each period you ticked (historical, {ctx.conf:.0%}, {ctx.horizon}-day)")
         st.markdown("We keep today's weights and replay them on the daily returns of each period. The change (Δ) is the "
-                    "period's number minus today's. 'ES ×' is how many times bigger ES was then.")
+                    "period's number minus today's. VaR and ES are always losses (positive); only the change can be negative, "
+                    "meaning a smaller loss than today. 'ES ×' is how many times bigger ES was then.")
         rows = []
         for eid, reg, ev, prob in results:
             if reg is None:
@@ -104,8 +105,8 @@ if right is not None:
             for kk in ("A", "B", "C"):
                 d = RC.deviation(ctx.current[kk], reg[kk], k)
                 rows.append({"Period": ev["name"], "Window": f"{reg['start']} → {reg['end']}", "P": kk,
-                             "VaR today": ctx.h(d["var_now"]), "VaR then": ctx.h(d["var_then"]), "Δ VaR": ctx.h(d["var_change"]),
-                             "ES today": ctx.h(d["es_now"]), "ES then": ctx.h(d["es_then"]), "Δ ES": ctx.h(d["es_change"]),
+                             "VaR today": ctx.h(d["var_now"]), "VaR then": ctx.h(d["var_then"]), "Change in VaR": ctx.h(d["var_change"]),
+                             "ES today": ctx.h(d["es_now"]), "ES then": ctx.h(d["es_then"]), "Change in ES": ctx.h(d["es_change"]),
                              "ES ×": round(d["es_mult"], 2), "Volatility then": reg[kk]["volatility"], "Biggest fall then": reg[kk]["max_drawdown"]})
         if rows:
             df = pd.DataFrame(rows)

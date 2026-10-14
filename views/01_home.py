@@ -23,8 +23,8 @@ with left:
         fall = cr[key]["replay"]["largest_fall"]
         ui.plan_card(key, amt, [
             ("Expected return a year", ui.pct(p["expected_return"])),
-            (f"A bad day today (1 in {round(1 / (1 - ctx.conf))})", f"−{ui.inr_short(var_today * amt)}"),
-            (f"Worst fall in the {ui.short(ctx.crisis_ev)}", f"−{ui.inr_short(fall * amt)}"),
+            (f"A bad day today (1 in {round(1 / (1 - ctx.conf))})", f"{ui.inr_short(var_today * amt)} loss"),
+            (f"Worst fall in the {ui.short(ctx.crisis_ev)}", f"{ui.inr_short(fall * amt)} lost"),
             ("Stocks · industries held", f"{sum(w > 1e-4 for w in p['weights'].values())} · "
                                          f"{sum(w > 1e-4 for w in p['industry_weights'].values())}"),
         ])
