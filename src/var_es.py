@@ -132,3 +132,24 @@ def all_methods(R: pd.DataFrame, w: pd.Series, cs=(0.95, 0.99, config.ES_BASEL))
 def scale_horizon(x: float, days: int) -> float:
     """√t scaling (assumes independent, identically distributed daily returns)."""
     return x * math.sqrt(days)
+
+
+def matrix_steps(R: pd.DataFrame, w: pd.Series, confs=(0.95, 0.99)) -> dict:
+    """Parametric VaR by the matrix approach taught in class (8 steps, daily, sample N − 1):
+    M → D = M − mean → DᵀD → Σ = DᵀD/(N−1) → w → σ²_p = wᵀΣw → μ_p = wᵀμ → VaR = μ_p + z·σ_p.
+
+    Missing single days count as 0, exactly as in the portfolio return series, so the result equals the
+    'Parametric normal' method (VaR here is the signed return, e.g. −2.5%; the app's loss is its negative)."""
+    M = R.fillna(0.0)
+    w = w.reindex(M.columns).fillna(0.0)
+    mean = M.mean()
+    D = M - mean
+    DtD = D.T @ D
+    n = len(M)
+    Sigma = DtD / (n - 1)
+    var_p = float(w @ Sigma @ w)
+    mu_p = float(w @ mean)
+    sd_p = math.sqrt(var_p)
+    return {"M": M, "mean": mean, "sd": M.std(ddof=1), "D": D, "DtD": DtD, "n": n, "Sigma": Sigma, "w": w,
+            "Sigma_w": Sigma @ w, "var_p": var_p, "sd_p": sd_p, "mu_p": mu_p,
+            "var": {c: mu_p + N.inv_cdf(1 - c) * sd_p for c in confs}, "z": {c: N.inv_cdf(1 - c) for c in confs}}

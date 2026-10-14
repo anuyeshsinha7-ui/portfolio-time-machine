@@ -12,6 +12,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+from . import charts as CH
 from . import config
 from . import data as D
 from . import engine as E
@@ -19,7 +20,7 @@ from . import events as EV
 from . import universe as U
 from .fmt import AmountError, inr, inr_short, parse_amount, pct, validate_amount  # noqa: F401 (re-exported)
 
-A_COL, B_COL, N_COL = config.COLOR_A, config.COLOR_B, config.COLOR_NIFTY
+A_COL, B_COL, C_COL, N_COL = config.COLOR_A, config.COLOR_B, config.COLOR_C, config.COLOR_NIFTY
 CRISIS_COL, CALM_COL = config.COLOR_CRISIS, config.COLOR_CALM
 
 STEPS = [
@@ -49,7 +50,7 @@ CSS = f"""
 .ptm-concept .k {{ font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: #9DB1F0; font-weight: 700; margin-top:.45rem; }}
 .ptm-concept p {{ margin: .1rem 0 .2rem 0; font-size: .9rem; }}
 .ptm-pill {{ display:inline-block; padding: 2px 9px; border-radius: 999px; font-size: .78rem; font-weight: 600; }}
-.ptm-pill.a {{ background: #3A2420; color: #F4A48F; }} .ptm-pill.b {{ background: #1C2C47; color: #8FB8F2; }}
+.ptm-pill.a {{ background: #3A2420; color: #F4A48F; }} .ptm-pill.b {{ background: #1C2C47; color: #8FB8F2; }} .ptm-pill.c {{ background: #2D2342; color: #CDB4F2; }}
 .ptm-pill.ok {{ background: #163225; color: #7FD3A0; }} .ptm-pill.bad {{ background: #3A1D1F; color: #F19A9A; }}
 .ptm-pill.mid {{ background: #3A3016; color: #F2C96B; }} .ptm-pill.grey {{ background:#263043; color:#C9CFDB; }}
 .ptm-verdict {{ font-size: 1.05rem; line-height: 1.5; }}
@@ -144,6 +145,7 @@ def fig_style(fig: go.Figure, height: int = 380, title: str | None = None) -> go
 
 def show(fig: go.Figure) -> None:
     if st.session_state.get("is_phone") or _CTX["in_client"]:
+        fig = go.Figure(fig)  # resize a copy: some figures are cached and shared between reruns
         h = fig.layout.height or 380
         fig.update_layout(height=min(int(h * 0.82), 420) if h < 600 else 520,
                           margin=dict(l=4, r=4, t=36 if (fig.layout.title.text or "") else 8, b=4),
@@ -174,12 +176,12 @@ def detect_phone() -> bool:
     return any(k in ua for k in MOBILE_UA)
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)  # resource, not data: no 1.4 MB deep copy on each of the ~30 calls per rerun
 def default_results() -> dict:
     return json.loads((config.RESULTS_DIR / "default.json").read_text())
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)  # read-only everywhere (callers .copy() before changing it)
 def universe_table() -> pd.DataFrame:
     rows = json.loads((config.RESULTS_DIR / "universe.json").read_text())
     return pd.DataFrame(rows).set_index("symbol")
@@ -272,24 +274,32 @@ def is_default_picks() -> bool:
 
 
 # ---------------------------------------------------------------- cached computations for custom picks
-@st.cache_data(show_spinner=False, max_entries=8)
+@st.cache_resource(show_spinner=False, max_entries=8)  # results are read-only; skip cache_data's copy
 def _portfolios(a: tuple, b: tuple) -> dict:
     pa = E.build_portfolio("A", list(a), config.OBJECTIVE_A, cloud_k=config.RANDOM_PORTFOLIOS_BROWSER)
     pb = E.build_portfolio("B", list(b), config.OBJECTIVE_B, cloud_k=config.RANDOM_PORTFOLIOS_BROWSER)
-    return {"A": pa, "B": pb}
+    pc = E.build_portfolio("C", list(a) + list(b), config.OBJECTIVE_C, cloud_k=config.RANDOM_PORTFOLIOS_BROWSER, w_min=config.C_W_MIN)
+    return {"A": pa, "B": pb, "C": pc}
 
 
-@st.cache_data(show_spinner=False, max_entries=8)
+@st.cache_resource(show_spinner=False, max_entries=8)
 def _evidence(a: tuple, b: tuple) -> dict:
     P = _portfolios(a, b)
-    return E.evidence(P["A"], P["B"], resamples=config.BOOTSTRAP_RESAMPLES_BROWSER)
+    return E.evidence(P["A"], P["B"], resamples=config.BOOTSTRAP_RESAMPLES_BROWSER, table=universe_table())
 
 
-@st.cache_data(show_spinner=False, max_entries=32)
+@st.cache_resource(show_spinner=False, max_entries=32)
+def _labels(start: str, end: str) -> pd.DataFrame:
+    """Every stock's label in a window — the same for any picks, so it is worked out once per window."""
+    return E.labels_in_window(start, end)
+
+
+@st.cache_resource(show_spinner=False, max_entries=32)
 def _regime(a: tuple, b: tuple, start: str, end: str) -> dict:
     P = _portfolios(a, b) if (a, b) != _default_key() else default_results()["portfolios"]
-    lab = E.labels_in_window(start, end)
-    return {"A": E.regime_result(P["A"], start, end, lab), "B": E.regime_result(P["B"], start, end, lab),
+    lab, fp = _labels(start, end), config.FRONTIER_POINTS_BROWSER
+    return {"A": E.regime_result(P["A"], start, end, lab, fp), "B": E.regime_result(P["B"], start, end, lab, fp),
+            "C": E.regime_result(P["C"], start, end, lab, fp),
             "nifty": E.nifty_replay(start, end), "start": start, "end": end}
 
 
@@ -298,7 +308,17 @@ def _default_key():
     return tuple(res["picks"]["A"]), tuple(res["picks"]["B"])
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
+def nifty_history_fig(current: tuple[str, str]):
+    """The 19-year regime-finder chart: identical on every rerun, so it is built once."""
+    evs = [dict(e, short=e["name"].split(" (")[0][:22]) for e in default_results()["events"].values()
+           if e["available"] and not e["id"].startswith("auto")]
+    bench = D.benchmark()
+    vix = bench["INDIAVIX"].dropna() if "INDIAVIX" in bench else None
+    return CH.nifty_history(nifty_close(), evs, vix, current=current)
+
+
+@st.cache_resource(show_spinner=False)
 def nifty_close() -> pd.Series:
     return D.benchmark()["NIFTY50"]
 
@@ -322,7 +342,8 @@ class Ctx:
     default: bool
 
     def amount(self, k: str) -> float:
-        return self.amount_a if k == "A" else self.amount_b
+        # C is the alternative home for the same money: the average of A's and B's amounts (equal unless "separate")
+        return self.amount_a if k == "A" else self.amount_b if k == "B" else (self.amount_a + self.amount_b) / 2
 
     def ck(self) -> str:
         """JSON key for the selected confidence level ('0.95', '0.99' or '0.975')."""
@@ -464,7 +485,7 @@ def compute_scoreboard(ctx: Ctx) -> list[dict]:
 def compute_bootstrap(ctx: Ctx) -> dict:
     a, b = tuple(ctx.P["A"]["symbols"]), tuple(ctx.P["B"]["symbols"])
     out = {}
-    for k in ("A", "B"):
+    for k in ("A", "B", "C"):
         bar = st.progress(0.0, text=f"Bootstrapping Portfolio {k} ({config.BOOTSTRAP_RESAMPLES_BROWSER} resamples)…")
         out[k] = E.bootstrap_noise(ctx.P[k], config.BOOTSTRAP_RESAMPLES_BROWSER,
                                    progress=lambda f, bar=bar, k=k: bar.progress(f, text=f"Bootstrapping Portfolio {k}… {f:.0%}"))
@@ -625,6 +646,7 @@ SPATIAL_CSS = """
 .app-plan, .app-verdict { border-radius: 24px !important; }
 .app-tile.a { border-left: 1px solid var(--edge) !important; box-shadow: var(--shine), inset 3px 0 0 #E8735A, 0 10px 30px rgba(0,0,0,.28) !important; }
 .app-tile.b { border-left: 1px solid var(--edge) !important; box-shadow: var(--shine), inset 3px 0 0 #3B7DD8, 0 10px 30px rgba(0,0,0,.28) !important; }
+.app-tile.c { border-left: 1px solid var(--edge) !important; box-shadow: var(--shine), inset 3px 0 0 #A57BE0, 0 10px 30px rgba(0,0,0,.28) !important; }
 .app-note.warn { background: linear-gradient(160deg, rgba(242,201,107,.16), rgba(242,201,107,.05)) !important; border-color: rgba(242,201,107,.28) !important; }
 .app-note.good { background: linear-gradient(160deg, rgba(127,211,160,.16), rgba(127,211,160,.05)) !important; border-color: rgba(127,211,160,.28) !important; }
 .app-note.bad { background: linear-gradient(160deg, rgba(241,154,154,.16), rgba(241,154,154,.05)) !important; border-color: rgba(241,154,154,.28) !important; }
@@ -638,6 +660,7 @@ SPATIAL_CSS = """
   pointer-events: none; }
 .app-hero.a { background: linear-gradient(135deg, rgba(232,115,90,.62), rgba(201,83,59,.22)) !important; }
 .app-hero.b { background: linear-gradient(135deg, rgba(59,125,216,.62), rgba(36,87,165,.22)) !important; }
+.app-hero.c { background: linear-gradient(135deg, rgba(165,123,224,.62), rgba(110,74,170,.22)) !important; }
 .app-hero.crisis { background: linear-gradient(135deg, rgba(220,72,72,.58), rgba(126,32,32,.22)) !important; }
 .app-hero.calm { background: linear-gradient(135deg, rgba(46,158,91,.58), rgba(28,107,60,.22)) !important; }
 .chip { backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.10); }
@@ -926,6 +949,7 @@ APP_CSS = f"""
 .app-hero .s {{ font-size: .82rem; opacity: .85; }}
 .app-hero.a {{ background: linear-gradient(135deg, #E8735A 0%, #C9533B 100%); }}
 .app-hero.b {{ background: linear-gradient(135deg, #3B7DD8 0%, #2457A5 100%); }}
+.app-hero.c {{ background: linear-gradient(135deg, #A57BE0 0%, #6E4AAA 100%); }}
 .app-hero.crisis {{ background: linear-gradient(135deg, #B83A3A 0%, #7E2020 100%); }}
 .app-hero.calm {{ background: linear-gradient(135deg, #2E9E5B 0%, #1C6B3C 100%); }}
 .app-sec {{ display:flex; justify-content: space-between; align-items: baseline; margin: 16px 2px 6px; }}
@@ -935,7 +959,7 @@ APP_CSS = f"""
   box-shadow: 0 3px 12px rgba(31,36,48,.06); }}
 .app-plan .top {{ display:flex; align-items:center; gap: 10px; }}
 .app-plan .ic {{ width: 38px; height: 38px; border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size: 1.15rem; }}
-.app-plan .ic.a {{ background: #3A2420; }} .app-plan .ic.b {{ background: #1C2C47; }}
+.app-plan .ic.a {{ background: #3A2420; }} .app-plan .ic.b {{ background: #1C2C47; }} .app-plan .ic.c {{ background: #2D2342; }}
 .app-plan .nm {{ font-weight: 750; font-size: .98rem; line-height: 1.15; }}
 .app-plan .tg {{ font-size: .75rem; color: #8E97A8; }}
 .app-plan .amt {{ margin-left: auto; text-align: right; font-weight: 800; font-size: 1.05rem; }}
@@ -947,7 +971,7 @@ APP_CSS = f"""
 .app-tile {{ background: #161D2C; border: 1px solid #263043; border-radius: 16px; padding: 10px 12px; }}
 .app-tile .l {{ font-size: .72rem; color: #8E97A8; }} .app-tile .v {{ font-size: 1.15rem; font-weight: 800; margin-top: 2px; }}
 .app-tile .s {{ font-size: .7rem; color: #8E97A8; }}
-.app-tile.a {{ border-left: 4px solid {A_COL}; }} .app-tile.b {{ border-left: 4px solid {B_COL}; }}
+.app-tile.a {{ border-left: 4px solid {A_COL}; }} .app-tile.b {{ border-left: 4px solid {B_COL}; }} .app-tile.c {{ border-left: 4px solid {C_COL}; }}
 .app-cmp {{ background: #161D2C; border: 1px solid #263043; border-radius: 16px; padding: 12px 14px; margin-bottom: 10px; }}
 .app-cmp .q {{ font-weight: 700; font-size: .88rem; margin-bottom: 8px; }}
 .app-cmp .ln {{ display:grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items:center; margin: 5px 0; font-size: .8rem; }}
@@ -968,7 +992,7 @@ APP_CSS = f"""
 .chip {{ display:inline-block; padding: 2px 8px; border-radius: 999px; font-size: .68rem; font-weight: 700; }}
 .chip.ok {{ background: #163225; color: #7FD3A0; }} .chip.bad {{ background: #3A1D1F; color: #F19A9A; }}
 .chip.mid {{ background: #3A3016; color: #F2C96B; }} .chip.a {{ background: #3A2420; color: #F4A48F; }}
-.chip.b {{ background: #1C2C47; color: #8FB8F2; }} .chip.grey {{ background: #263043; color: #C9CFDB; }}
+.chip.b {{ background: #1C2C47; color: #8FB8F2; }} .chip.c {{ background: #2D2342; color: #CDB4F2; }} .chip.grey {{ background: #263043; color: #C9CFDB; }}
 .app-note {{ display:flex; gap: 10px; background: #162036; border: 1px solid #2B3756; border-radius: 16px; padding: 10px 12px;
   font-size: .82rem; line-height: 1.4; margin-bottom: 10px; }}
 .app-note .i {{ font-size: 1.1rem; }}
@@ -988,8 +1012,10 @@ APP_CSS = f"""
 </style>
 """
 
-PLAN = {"A": ("Portfolio A", "Bold · aims for higher returns", "🚀", "a", "High risk"),
-        "B": ("Portfolio B", "Steady · plays it safe", "🛡️", "b", "Low risk")}
+PLAN = {"A": ("Portfolio A", "Bold · aims for the highest return", "🚀", "a", "High risk"),
+        "B": ("Portfolio B", "Steady · plays it safe", "🛡️", "b", "Low risk"),
+        "C": ("Portfolio C", "Optimum · best return per unit of risk", "⚖️", "c", "Max Sharpe")}
+NAMES = {"A": "A · Bold", "B": "B · Steady", "C": "C · Optimum"}
 
 
 def app_css() -> None:
@@ -1116,3 +1142,95 @@ def regime_for(ctx: "Ctx", eid: str) -> tuple[dict | None, dict, str | None]:
 def next_button(label: str, page_key: str) -> None:
     if st.button(f"{label} →", type="primary", width="stretch", key=f"next_{page_key}"):
         st.switch_page(st.session_state["_pages"][page_key])
+
+
+# ---------------------------------------------------------------- the matrix walkthrough (as taught in class)
+def _mat(df: pd.DataFrame, fmt: str, height: int | None = None) -> None:
+    df = df.rename_axis("")  # no stray 'index' header
+    st.dataframe(df, width="stretch", height=height or "auto",
+                 column_config={c: st.column_config.NumberColumn(format=fmt) for c in df.columns})
+
+
+def _step(n: int, title: str, text: str) -> None:
+    st.markdown(f"**Step {n} · {title}**  \n{text}")
+
+
+def matrix_walkthrough(R: pd.DataFrame, w: pd.Series, conf: float, amount: float, method_loss: float, name: str) -> None:
+    """Parametric VaR in eight matrix steps, with this portfolio's real numbers (daily, sample N − 1)."""
+    from . import var_es as V
+
+    ms = V.matrix_steps(R, w)
+    n, k = ms["n"], len(ms["w"])
+    tick = lambda s_: [x.split(".")[0][:12] for x in s_]  # noqa: E731
+    _step(1, "Matrix M — the returns", f"One row per trading day, one column per stock: **{n} × {k}**. "
+          "The table shows the first 5 days; the mean and standard deviation use all of them.")
+    _mat((ms["M"].head(5) * 100).set_axis(tick(ms["M"].columns), axis=1).set_axis([d.date() for d in ms["M"].index[:5]]), "%.3f%%")
+    _mat(pd.DataFrame({"Mean (daily)": ms["mean"] * 100, "Std dev (daily)": ms["sd"] * 100}).T.set_axis(tick(ms["mean"].index), axis=1),
+         "%.4f%%")
+    _step(2, "Deviation matrix D = M − mean", f"Take each stock's mean away from every day. Same shape: **{n} × {k}**.")
+    _mat((ms["D"].head(5) * 100).set_axis(tick(ms["D"].columns), axis=1).set_axis([d.date() for d in ms["D"].index[:5]]), "%.3f%%")
+    _step(3, "Dᵀ D", f"({k} × {n}) × ({n} × {k}) = **{k} × {k}**: sums of squares on the diagonal, sums of cross-products off it.")
+    with st.expander(f"Show the {k} × {k} matrix DᵀD"):
+        _mat(ms["DtD"].set_axis(tick(ms["DtD"].columns), axis=1).set_axis(tick(ms["DtD"].index)), "%.5f")
+    _step(4, "Variance–covariance matrix Σ = DᵀD ÷ (N − 1)",
+          f"Divide by N − 1 = {n - 1}. Diagonal = each stock's variance, off-diagonal = covariances.")
+    with st.expander(f"Show Σ ({k} × {k})"):
+        _mat(ms["Sigma"].set_axis(tick(ms["Sigma"].columns), axis=1).set_axis(tick(ms["Sigma"].index)), "%.7f")
+    _step(5, "Weight vector w", f"Portfolio {name}'s weights as a **{k} × 1** column (they add up to {ms['w'].sum():.0%}).")
+    _mat(pd.DataFrame({"w": ms["w"] * 100}).T.set_axis(tick(ms["w"].index), axis=1), "%.2f%%")
+    _step(6, "Portfolio variance σ²ₚ = wᵀ Σ w", f"First Σ w ({k} × 1), then wᵀ (Σ w): (1 × {k}) × ({k} × 1) = one number.")
+    _mat(pd.DataFrame({"Σ w": ms["Sigma_w"]}).T.set_axis(tick(ms["w"].index), axis=1), "%.7f")
+    st.latex(rf"\sigma_p^2 = w^\top\Sigma w = {ms['var_p']:.7f} \qquad \sigma_p = \sqrt{{{ms['var_p']:.7f}}} = {ms['sd_p'] * 100:.4f}\%")
+    _step(7, "Portfolio mean μₚ = wᵀ μ", f"(1 × {k}) × ({k} × 1).")
+    st.latex(rf"\mu_p = w^\top \mu = {ms['mu_p'] * 100:.4f}\%\ \text{{a day}}")
+    _step(8, "Parametric VaR = μₚ + z · σₚ", "z is the normal score at the significance level (5% → −1.645, 1% → −2.326).")
+    for c in (0.95, 0.99):
+        v = ms["var"][c]
+        st.latex(rf"{(1 - c) * 100:.0f}\%\ \text{{level:}}\quad {ms['mu_p'] * 100:.4f}\% + ({ms['z'][c]:.3f}) \times {ms['sd_p'] * 100:.4f}\% "
+                 rf"= \mathbf{{{v * 100:.4f}\%}}")
+        st.markdown(f"<div style='text-align:center;margin:-.6rem 0 .4rem'>a loss of <b>{inr(abs(v) * amount)}</b> on "
+                    f"{inr(amount)} ({c:.0%} confidence)</div>", unsafe_allow_html=True)
+    ok = abs(-ms["var"][conf] - method_loss) < 1e-6  # the stored figure is rounded to 7 decimals
+    st.caption(("✓ " if ok else "✗ ") + f"Same as the 'Parametric normal' row above ({method_loss:.4%} loss at {conf:.0%}): "
+               "the matrix route and the return-series route are the same calculation. The optimiser uses the yearly versions, "
+               "μ × 252 and Σ × 252.")
+
+
+# ---------------------------------------------------------------- how beta and standard deviation are combined
+def label_working(t: pd.DataFrame, sym: str) -> None:
+    """Both steps of the risk call for one stock, with its real numbers: (1) a two-gate rule gives the label,
+    (2) the average of the two percentile ranks gives the score that orders stocks within a label."""
+    from . import classify as CL
+
+    r, med, n = t.loc[sym], float(t["vol_median"].iloc[0]), len(t)
+    cal = D.calendar()
+    lo = cal[-config.CLASSIFICATION_YEARS * config.TRADING_DAYS]
+    both = pd.concat([D.window(D.returns(), lo, cal[-1])[sym], D.window(D.market_returns(), lo, cal[-1])], axis=1).dropna()
+    cov, var_m, sd = both.cov().iloc[0, 1], both.iloc[:, 1].var(), both.iloc[:, 0].std()
+    st.markdown(f"**Measure both** — {len(both)} daily returns, {both.index[0].date()} to {both.index[-1].date()}, against the Nifty 50:")
+    st.latex(rf"\beta = \frac{{\operatorname{{Cov}}(r_i, r_m)}}{{\operatorname{{Var}}(r_m)}} = \frac{{{cov:.3e}}}{{{var_m:.3e}}} = "
+             rf"{cov / var_m:.2f} \qquad \sigma = {sd:.4f}\times\sqrt{{252}} = {sd * 252 ** 0.5 * 100:.1f}\%")
+    hb, hv = r["beta"] >= CL.BETA_CUT, r["volatility"] >= med
+    st.markdown("**Step 1 · the label — both tests must agree.** Beta asks *does it follow the market's falls?*; standard deviation "
+                "asks *does it swing a lot on its own?* A stock is High risk only if it fails both, Low risk only if it passes "
+                "both; a split answer is Moderate, so one number can never decide the label alone.")
+    st.dataframe(pd.DataFrame([
+        {"Test": "Beta ≥ 1.0 (moves at least as much as the market)", "This stock": f"{r['beta']:.2f}", "Result": "yes" if hb else "no"},
+        {"Test": f"Volatility ≥ {med:.1%} (the middle of all {n} stocks)", "This stock": f"{r['volatility']:.1%}",
+         "Result": "yes" if hv else "no"}]), hide_index=True, width="stretch")
+    st.dataframe(pd.DataFrame({"σ ≥ median": ["High risk", "Moderate"], "σ < median": ["Moderate", "Low risk"]},
+                              index=["β ≥ 1", "β < 1"]), width="stretch")
+    st.markdown(f"→ yes/yes = High, no/no = Low, otherwise Moderate: **{r['label']}**.")
+    same = t[t["label"] == r["label"]].sort_values("risk_score", ascending=False)
+    rank = int(list(same.index).index(sym)) + 1
+    st.markdown("**Step 2 · the score — ranks the stocks inside a label.** Beta and volatility are in different units, so each is "
+                f"turned into a percentile (where it ranks among all {n} stocks, 0–100) and the two are averaged with equal weight:")
+    st.latex(rf"\text{{score}} = \tfrac12\left(P_\beta + P_\sigma\right) = \tfrac12\left({r['beta_pct']:.0f} + {r['vol_pct']:.0f}\right) "
+             rf"= {r['risk_score']:.1f}")
+    st.caption(f"{sym} ranks {rank} of {len(same)} '{r['label']}' stocks by this score. Bold (A) takes the highest scores among High "
+               "risk; Steady (B) the lowest among Low risk. The score never overrides the label — it only orders stocks within it.")
+
+
+def pct_df(df: pd.DataFrame, cols):
+    """Percentage columns shown with two decimals everywhere (Streamlit's 'percent' format drops trailing zeros)."""
+    return df.style.format("{:.2%}", subset=[c for c in cols if c in df.columns], na_rep="—")

@@ -9,7 +9,7 @@ from src import ui
 ctx = ui.context()
 s = st.session_state
 left, right = ui.split()
-A, B = ctx.P["A"], ctx.P["B"]
+A, B, C = ctx.P["A"], ctx.P["B"], ctx.P["C"]
 cr, cm, cur = ctx.crisis, ctx.calm, ctx.current
 k = ctx.ck()
 board = ctx.scoreboard()
@@ -17,15 +17,16 @@ board = ctx.scoreboard()
 with left:
     total = ctx.amount_a + ctx.amount_b
     ui.hero("Your money in two portfolios", ui.inr_short(total),
-            f"A {ui.inr_short(ctx.amount_a)} · B {ui.inr_short(ctx.amount_b)} · prices as of {ctx.res['as_of']}")
-    for key, p, amt in (("A", A, ctx.amount_a), ("B", B, ctx.amount_b)):
+            f"A {ui.inr_short(ctx.amount_a)} · B {ui.inr_short(ctx.amount_b)} · C = the best mix of both · prices as of {ctx.res['as_of']}")
+    for key, p, amt in (("A", A, ctx.amount_a), ("B", B, ctx.amount_b), ("C", C, ctx.amount("C"))):
         var_today = ctx.h(cur[key]["risk"]["Historical"][k]["var"])
         fall = cr[key]["replay"]["largest_fall"]
         ui.plan_card(key, amt, [
             ("Expected return a year", ui.pct(p["expected_return"])),
             (f"A bad day today (1 in {round(1 / (1 - ctx.conf))})", f"−{ui.inr_short(var_today * amt)}"),
             (f"Worst fall in the {ui.short(ctx.crisis_ev)}", f"−{ui.inr_short(fall * amt)}"),
-            ("Stocks · industries", f"{len(p['symbols'])} · {len(p['industry_weights'])}"),
+            ("Stocks · industries held", f"{sum(w > 1e-4 for w in p['weights'].values())} · "
+                                         f"{sum(w > 1e-4 for w in p['industry_weights'].values())}"),
         ])
     held = RC.label_holds(cr["A"], cr["B"])
     ui.section("The answer", "time-travel tests")
@@ -44,7 +45,8 @@ if right is not None:
     with right:
         st.markdown("#### What the app tests")
         st.markdown(f"We build two portfolios of Nifty 500 stocks **today**. A is high risk (beta of 1 or more and volatility at or "
-                    f"above the middle value). B is low risk. Then we send both back to real crises and calm periods. Prices are "
+                    f"above the middle value), weighted for the highest return. B is low risk, weighted for the lowest variance. "
+                    f"C, the optimum, mixes A's and B's stocks for the best Sharpe ratio. Then we send all three back to real crises and calm periods. Prices are "
                     f"up to {ctx.res['as_of']}.")
         st.markdown("#### The three main findings (written from the numbers)")
         st.markdown(f"1. {NR.es_finding(ctx.crisis_ev['name'], cr['A'], cr['B'], ctx.amount_a, ctx.amount_b, held)}")

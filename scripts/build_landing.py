@@ -58,7 +58,8 @@ def main(site: Path) -> None:
         f"({rs(t2['turnover'])}) — {'more' if t2['turnover'] > p95 else 'less'} than estimation noise alone produces ({pct(p95, 0)}).",
     ]
     cards = []
-    for k, nm, col in (("A", "High risk — going for return", config.COLOR_A), ("B", "Low risk — playing it safe", config.COLOR_B)):
+    for k, nm, col in (("A", "High risk — maximum return", config.COLOR_A), ("B", "Low risk — minimum variance", config.COLOR_B),
+                       ("C", "Optimum — maximum Sharpe, A + B stocks", config.COLOR_C)):
         p = P[k]
         r = crisis[k]
         ind = ", ".join(list(p["industry_weights"])[:3])
@@ -67,8 +68,9 @@ def main(site: Path) -> None:
         <div class="k">Portfolio {k}</div><div class="nm">{nm}</div>
         <div class="big"><span class="amt">{inr_short(AMT)}</span></div>
         <ul>
-          <li>{len(p['symbols'])} stocks · {html.escape(ind)}…</li>
-          <li>Beta {res['evidence'][k]['weighted_beta']:.2f} · volatility {pct(res['evidence'][k]['portfolio_vol'])}</li>
+          <li>{sum(w > 1e-4 for w in p['weights'].values())} stocks held · {html.escape(ind)}…</li>
+          <li>{f"Beta {res['evidence'][k]['weighted_beta']:.2f} · volatility {pct(res['evidence'][k]['portfolio_vol'])}" if k in res['evidence']
+               else f"Expected return {pct(p['expected_return'])} · Sharpe {p['sharpe']:.2f}"}</li>
           <li>Bad day today (99% VaR): {rs(cur[k]['risk']['Historical']['0.99']['var'])}</li>
           <li>Worst fall in the {html.escape(ev_c['name'])}: {rs(r['replay']['largest_fall'])}</li>
         </ul>

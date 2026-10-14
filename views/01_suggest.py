@@ -5,7 +5,6 @@ import streamlit as st
 from src import charts as CH
 from src import classify as CL
 from src import config
-from src import data as D
 from src import ui
 
 s = st.session_state
@@ -64,19 +63,14 @@ if right is not None:
                                  "Volatility": r["volatility"], "Label": r["label"], "Score": round(r["risk_score"], 1),
                                  "History from": r["first_date"], "Beta (full)": round(r["beta_full"], 2), "Label (full)": r["label_full"]})
         df = pd.DataFrame(rows)
-        st.dataframe(df, hide_index=True, width="stretch", column_config={"Volatility": st.column_config.NumberColumn(format="percent")})
+        st.dataframe(ui.pct_df(df, ["Volatility"]), hide_index=True, width="stretch")
         ui.show(CH.beta_vol_scatter(t, med, s["rec_A"], s["rec_B"]))
         st.caption("The dashed lines mark beta = 1 and the middle volatility of all stocks. Bold picks sit at the top right, Steady "
                    "picks at the bottom left. Rank is the order of the risk score (the average of where the stock's beta and "
                    "volatility rank) within your choice. Stocks with prices back to 2007 are ranked first, so every crisis can be tested.")
         sym = st.selectbox("Show the working for", s["rec_A"] + s["rec_B"], key="sugg_example")
-        cal = D.calendar()
-        R = D.window(D.returns(), cal[-config.CLASSIFICATION_YEARS * 252], cal[-1])
-        m = D.window(D.market_returns(), cal[-config.CLASSIFICATION_YEARS * 252], cal[-1])
-        both = pd.concat([R[sym], m], axis=1).dropna()
-        cov, var_m, sd = both.cov().iloc[0, 1], both.iloc[:, 1].var(), both.iloc[:, 0].std()
-        st.latex(rf"\beta = \frac{{{cov:.3e}}}{{{var_m:.3e}}} = {cov / var_m:.2f} \qquad "
-                 rf"\sigma = {sd:.4f}\times\sqrt{{252}} = {sd * 252 ** 0.5 * 100:.1f}\%")
+        st.markdown(f"#### How beta and standard deviation are combined — {sym}")
+        ui.label_working(t, sym)
         ui.concept_box("Beta and standard deviation",
                        "Beta tells you how much a stock moves when the whole market moves. Standard deviation tells you how much "
                        "its price jumps around on its own.",

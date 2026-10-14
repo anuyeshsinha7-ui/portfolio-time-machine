@@ -57,16 +57,24 @@ def mu_sigma(R: pd.DataFrame, shrink: bool = False):
 
 
 # ---------------------------------------------------------------- portfolio set-up (current window)
+def constraints_of(p: dict) -> O.Constraints:
+    """The portfolio's own limits (C has a 0% floor), reused in every regime."""
+    c = p["constraints"]
+    return O.build_constraints(industries_of(p["symbols"]), c["w_min"], c["w_max"], c["ind_max"])
+
+
 def build_portfolio(name: str, symbols: list[str], objective: str, shrink: bool = False,
-                    cloud_k: int = config.RANDOM_PORTFOLIOS) -> dict:
+                    cloud_k: int = config.RANDOM_PORTFOLIOS, w_min: float = config.W_MIN) -> dict:
     cal = D.calendar()
     cs, ce = RG.current_window(cal)
     R, m = window_returns(symbols, cs, ce)
-    cons = O.build_constraints(industries_of(symbols))
+    cons = O.build_constraints(industries_of(symbols), w_min=w_min)
     mu, S = mu_sigma(R, shrink)
     fell_back = False
     if objective == "max_sharpe":
         w, fell_back = O.max_sharpe(mu, S, cons)
+    elif objective == "max_return":
+        w = O.max_return(mu, cons)[1]
     else:
         w = O.min_variance(mu, S, cons)
     viol = O.check(w, cons)
@@ -100,10 +108,11 @@ def var_block(R: pd.DataFrame, w: pd.Series) -> dict:
 
 
 # ---------------------------------------------------------------- evidence for "the call" (§6.3)
-def evidence(pa: dict, pb: dict, resamples: int = config.BOOTSTRAP_RESAMPLES) -> dict:
+def evidence(pa: dict, pb: dict, resamples: int = config.BOOTSTRAP_RESAMPLES, table: pd.DataFrame | None = None) -> dict:
+    """table: today's classification if already at hand (the browser passes the shipped one instead of recomputing it)."""
     cal = D.calendar()
     start = cal[-config.CLASSIFICATION_YEARS * config.TRADING_DAYS]
-    table = U.classification()
+    table = U.classification() if table is None else table
     u = D.universe()
     out = {"window": {"start": str(start.date()), "end": str(cal[-1].date())}}
     port_r = {}
@@ -149,9 +158,9 @@ def regime_result(p: dict, start, end, universe_labels: pd.DataFrame | None = No
     nh_var, nh_es = V.historical(nifty_r.to_numpy(), 0.99)
     # label stability
     stab = None
-    if universe_labels is not None and len(universe_labels):
-        lab = universe_labels
-        want = CL.HIGH if p["name"] == "A" else CL.LOW
+    lab = universe_labels
+    want = {"A": CL.HIGH, "B": CL.LOW}.get(p["name"])  # C has no label to test
+    if want is not None and lab is not None and len(lab):
         present = [s for s in symbols if s in lab.index]
         stab = {"same": int(sum(lab.loc[s, "label"] == want for s in present)), "of": len(present),
                 "labels": {s: lab.loc[s, "label"] for s in present}, "vol_median": float(lab["vol_median"].iloc[0])}
@@ -159,7 +168,7 @@ def regime_result(p: dict, start, end, universe_labels: pd.DataFrame | None = No
     P = D.window(D.prices(), start, end)[symbols].ffill()
     bh = M.buy_and_hold_value(P, w, 1.0)
     # test #2: target-return optimisation in this regime
-    cons = O.build_constraints(industries_of(symbols))
+    cons = constraints_of(p)
     mu, S = mu_sigma(R.fillna(0.0))
     tc = O.solve_target_case(mu, S, cons, p["target_return"])
     w_reg = pd.Series(tc["weights"], index=symbols)
@@ -199,7 +208,7 @@ def nifty_replay(start, end) -> dict:
 
 def labels_in_window(start, end) -> pd.DataFrame:
     """Re-run the §6.2 rule with the regime's own data (all stocks with data for the window)."""
-    t = U.metrics_table(start, end)
+    t = U.metrics_table(start, end, labels_only=True)
     return CL.classify(t) if len(t) else t
 
 
@@ -208,7 +217,7 @@ def bootstrap_noise(p: dict, resamples: int, progress=None) -> dict:
     cal = D.calendar()
     cs, ce = RG.current_window(cal)
     R, _ = window_returns(p["symbols"], cs, ce)
-    cons = O.build_constraints(industries_of(p["symbols"]))
+    cons = constraints_of(p)
     target = p["target_return"]
 
     def solve(Rb):
@@ -252,14 +261,16 @@ def run_all(pa_syms: list[str], pb_syms: list[str], event_ids=None, modes=("stan
     """Full result set: portfolios, evidence, current regime, every requested event × window mode."""
     pa = build_portfolio("A", pa_syms, config.OBJECTIVE_A, cloud_k=cloud_k)
     pb = build_portfolio("B", pb_syms, config.OBJECTIVE_B, cloud_k=cloud_k)
+    pc = build_portfolio("C", pa_syms + pb_syms, config.OBJECTIVE_C, cloud_k=cloud_k, w_min=config.C_W_MIN)
     evs = resolve_events()
     ids = [k for k, v in evs.items() if v["available"]] if event_ids is None else list(event_ids)
     cal = D.calendar()
     cs, ce = RG.current_window(cal)
-    out = {"as_of": D.as_of(), "portfolios": {"A": pa, "B": pb}, "events": {k: event_payload(v) for k, v in evs.items()},
+    out = {"as_of": D.as_of(), "portfolios": {"A": pa, "B": pb, "C": pc}, "events": {k: event_payload(v) for k, v in evs.items()},
            "current": {}, "regimes": {}, "nifty": {}}
     lab_cur = labels_in_window(cs, ce)
     out["current"] = {"A": regime_result(pa, cs, ce, lab_cur), "B": regime_result(pb, cs, ce, lab_cur),
+                      "C": regime_result(pc, cs, ce, lab_cur),
                       "nifty": nifty_replay(cs, ce), "start": str(cs.date()), "end": str(ce.date())}
     jobs = [(i, md) for i in ids for md in modes if evs[i]["windows"].get(md) is not None]
     for n, (i, md) in enumerate(jobs, 1):
@@ -267,12 +278,13 @@ def run_all(pa_syms: list[str], pb_syms: list[str], event_ids=None, modes=("stan
         lab = labels_in_window(s, e)
         key = f"{i}|{md}"
         out["regimes"][key] = {"A": regime_result(pa, s, e, lab), "B": regime_result(pb, s, e, lab),
+                               "C": regime_result(pc, s, e, lab),
                                "nifty": nifty_replay(s, e), "start": str(pd.Timestamp(s).date()), "end": str(pd.Timestamp(e).date())}
         if progress:
             progress(n / max(len(jobs), 1), evs[i]["name"])
     out["evidence"] = evidence(pa, pb, resamples=resamples)
     if with_bootstrap:
-        out["bootstrap"] = {"A": bootstrap_noise(pa, resamples), "B": bootstrap_noise(pb, resamples)}
+        out["bootstrap"] = {k: bootstrap_noise(p, resamples) for k, p in (("A", pa), ("B", pb), ("C", pc))}
     out["regime_finder"] = regime_finder()
     return out
 

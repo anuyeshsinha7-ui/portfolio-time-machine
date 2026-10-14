@@ -40,7 +40,7 @@ with left:
              f"Beat the market in the chosen crash: {'yes' if bv['crisis'] else 'no'}"
              + (f" · in {bv['crises_held']} of {bv['crises_total']} crashes" if board else ""), ui.chip(bv["verdict"], TONE[bv["verdict"]]), "")]
     if boot:
-        for key in ("A", "B"):
+        for key in ("A", "B", "C"):
             rb = RC.robustness(ctx.crisis[key]["test2"]["turnover"], ctx.calm[key]["test2"]["turnover"], boot[key]["turnover_p95"])
             rows.append(("🔁", f"Are {key}'s weights robust?", "Would the optimiser really rebuild it in other times?",
                          ui.chip(rb["verdict"], TONE[rb["verdict"]]), ""))
@@ -50,18 +50,21 @@ with left:
     if s.get("tolerance") not in opts:
         s["tolerance"] = min(opts, key=lambda o: abs(o - 0.25 * ctx.amount_a))
     tol = st.select_slider("The biggest fall I could live with", options=opts, key="tolerance", format_func=ui.inr_short)
-    f = RC.fit(tol, ctx.crisis["A"]["replay"]["largest_fall"], ctx.crisis["B"]["replay"]["largest_fall"], ctx.amount_a, ctx.amount_b)
-    ui.compare(f"Worst fall in the {ui.short(ctx.crisis_ev)}", f["worst_A"], f["worst_B"], f"−{ui.inr_short(f['worst_A'])}",
-               f"−{ui.inr_short(f['worst_B'])}", f"Your limit: −{ui.inr_short(tol)}")
-    if f["pick"] == "A":
-        ui.verdict("🚀", "Portfolio A fits you", f"Even in the crash its fall stayed within your {ui.inr_short(tol)}, and it expects the higher "
-                   f"return ({ui.pct(ctx.P['A']['expected_return'])} a year vs {ui.pct(ctx.P['B']['expected_return'])}).")
-    elif f["pick"] == "B":
-        ui.verdict("🛡️", "Portfolio B fits you", f"A could fall {ui.inr_short(f['worst_A'])} in a crash like this — more than your "
-                   f"{ui.inr_short(tol)}. B's worst was {ui.inr_short(f['worst_B'])}.")
+    f = RC.fit(tol, {kk: ctx.crisis[kk]["replay"]["largest_fall"] for kk in ("A", "B", "C")},
+               {kk: ctx.amount(kk) for kk in ("A", "B", "C")}, {kk: ctx.P[kk]["expected_return"] for kk in ("A", "B", "C")})
+    ui.list_rows([(ui.PLAN[kk][2], f"Portfolio {ui.NAMES[kk]}", f"worst fall in the {ui.short(ctx.crisis_ev)}",
+                   f"−{ui.inr_short(f['worst'][kk])}", ui.chip("fits", "ok") if kk in f["fits"] else ui.chip("too big", "bad"))
+                  for kk in ("A", "B", "C")])
+    st.caption(f"Your limit: −{ui.inr_short(tol)}")
+    if f["pick"]:
+        others = [x for x in f["fits"] if x != f["pick"]]
+        ui.verdict(ui.PLAN[f["pick"]][2], f"Portfolio {ui.NAMES[f['pick']]} fits you",
+                   f"Its worst fall in the crash stayed within your {ui.inr_short(tol)}, and of the portfolios that did"
+                   f"{' (' + ', '.join(others) + ' too)' if others else ''} it expects the highest return: "
+                   f"{ui.pct(ctx.P[f['pick']]['expected_return'])} a year.")
     else:
-        ui.verdict("✋", "Neither fits at this amount", f"To keep a crash like this within {ui.inr_short(tol)}, put at most "
-                   f"<b>{ui.inr_short(f['max_amount_B'])}</b> in Portfolio B.")
+        ui.verdict("✋", "None fits at this amount", f"To keep a crash like this within {ui.inr_short(tol)}, put at most "
+                   f"<b>{ui.inr_short(f['max_amount_safest'])}</b> in Portfolio {ui.NAMES[f['safest']]}, the one that fell least.")
     ui.section("When to check again")
     ui.note(f"Review your weights if the market's 3-month ups-and-downs rise above <b>{ui.pct(trig)}</b> (the calmest it got during the "
             f"crash). Today: <b>{ui.pct(now_vol)}</b> — {'time to review.' if now_vol > trig else 'all clear.'}",
@@ -87,18 +90,18 @@ if right is not None:
                          "Biggest fall B": reg["B"]["max_drawdown"], "Biggest fall Nifty": reg["B"]["nifty"]["max_drawdown"],
                          "Label held": RC.label_holds(reg["A"], reg["B"]), "B beat Nifty": RC.b_held_up(reg["B"])})
         df = pd.DataFrame(rows)
-        st.dataframe(df, hide_index=True, width="stretch",
-                     column_config={c: st.column_config.NumberColumn(format="percent") for c in df.columns[1:8]})
+        st.dataframe(ui.pct_df(df, df.columns[1:8]), hide_index=True, width="stretch")
         st.markdown("#### What this analysis can't tell you")
         for t_, d_ in RC.LIMITATIONS:
             st.markdown(f"* **{t_}.** {d_}")
         if board:
             ui.show(CH.scoreboard_heatmap(board, ctx.amount_a, ctx.amount_b))
         st.markdown("#### How we pick a portfolio for you")
-        st.graphviz_chart(f"""
-digraph R {{ rankdir=TB; bgcolor="transparent"; node [shape=box, style="rounded,filled", fillcolor="#161D2C", color="#3A4560",
- fontname="Helvetica", fontsize=10]; edge [color="#6B7690", fontsize=9, fontname="Helvetica"];
- t [label="Your loss limit\\n{ui.inr(s.get('tolerance') or 0)}"]; a [label="A's worst crisis fall\\n≤ limit?"];
- b [label="B's worst crisis fall\\n≤ limit?"]; ra [label="Suggest A\\n(expected to earn more)", fillcolor="#3A2420", color="#E8735A"];
- rb [label="Suggest B", fillcolor="#1C2C47", color="#3B7DD8"]; rn [label="Neither: cut the amount\\nto fit B"];
- t -> a; a -> ra [label="yes"]; a -> b [label="no"]; b -> rb [label="yes"]; b -> rn [label="no"]; }}""", width="stretch")
+        st.markdown("1. For each portfolio, take its biggest fall in the chosen crisis (bought on day one and held) × your amount.\n"
+                    "2. Keep the portfolios whose fall stays within your limit.\n"
+                    "3. Of those, suggest the one with the highest expected return.\n"
+                    "4. If none fits, say how much could go into the one that fell least.")
+        st.dataframe(ui.pct_df(pd.DataFrame([{"Portfolio": ui.NAMES[kk], "Worst fall": ctx.crisis[kk]["replay"]["largest_fall"],
+                                    "Worst fall ₹": ui.inr(f["worst"][kk]), "Within limit": kk in f["fits"],
+                                    "Expected return": ctx.P[kk]["expected_return"]} for kk in ("A", "B", "C")]), ("Worst fall", "Expected return")),
+                     hide_index=True, width="stretch")

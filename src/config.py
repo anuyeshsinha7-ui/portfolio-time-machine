@@ -17,8 +17,11 @@ DOCS_DIR = ROOT / "docs"
 # ---------------------------------------------------------------- app identity
 APP_NAME = "Portfolio Time Machine"
 TAGLINE = "Does 'safe' stay safe when the market crashes?"
-TEAM = ["[Name 1]", "[Name 2]", "[Name 3]", "[Name 4]"]
-CREDIT_LINE = "PGDM, Great Lakes Institute of Management, Gurgaon"
+GROUP = "Group 14"
+TEAM_ROLLS = [("Anu Yesh Sinha", "P2513012"), ("Rishabh Agrawal", "P2513054"), ("Ritul Bokde", "P2513057"),
+              ("Liash Roy", "P2513032"), ("Baidurja Biswas", "P2511020"), ("Kasutabh Data", "P2511037")]
+TEAM = [n for n, _ in TEAM_ROLLS]
+CREDIT_LINE = f"{GROUP} · PGDM, Great Lakes Institute of Management, Gurgaon"
 GITHUB_USER = "anuyeshsinha7-ui"
 REPO_NAME = "portfolio-time-machine"
 REPO_URL = f"https://github.com/{GITHUB_USER}/{REPO_NAME}"
@@ -75,9 +78,12 @@ MIN_STOCKS = 10  # smallest portfolio allowed when the client picks stocks by ha
 MAX_STOCKS = 20
 PICK_N = 15  # stocks the app recommends for each portfolio
 MAX_PER_INDUSTRY_PICK = 5  # in a recommendation, so each portfolio spans at least 3 sectors
-OBJECTIVE_A = "max_sharpe"
-OBJECTIVE_B = "min_variance"
+OBJECTIVE_A = "max_return"  # Bold: the highest return the limits allow (a linear program)
+OBJECTIVE_B = "min_variance"  # Steady: the least variance
+OBJECTIVE_C = "max_sharpe"  # Optimum: the best return per unit of risk, over A's and B's stocks together
+C_W_MIN = 0.0  # C holds 2×15 stocks; a 2% floor would lock 60% into an equal split, so C may drop stocks
 FRONTIER_POINTS = 60
+FRONTIER_POINTS_BROWSER = 20  # per-period frontiers recomputed in the browser for custom picks (chart only)
 RANDOM_PORTFOLIOS = 5_000
 RANDOM_PORTFOLIOS_BROWSER = 2_000
 
@@ -118,6 +124,7 @@ SPLIT_RATIOS = {  # price ratio P_t / P_{t-1} → description
 # ---------------------------------------------------------------- colours (one system, brief §9)
 COLOR_A = "#E8735A"  # warm coral
 COLOR_B = "#3B7DD8"  # cool blue
+COLOR_C = "#A57BE0"  # violet — Optimum
 COLOR_NIFTY = "#8A8F98"  # grey
 COLOR_CRISIS = "#D64545"
 COLOR_CALM = "#2E9E5B"

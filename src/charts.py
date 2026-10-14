@@ -10,7 +10,9 @@ from plotly.subplots import make_subplots
 from . import config
 from .fmt import inr_short
 
-A, B, N = config.COLOR_A, config.COLOR_B, config.COLOR_NIFTY
+A, B, C, N = config.COLOR_A, config.COLOR_B, config.COLOR_C, config.COLOR_NIFTY
+COLS = {"A": A, "B": B, "C": C}
+CHOSEN = {"max_sharpe": "maximum Sharpe", "min_variance": "minimum variance", "max_return": "maximum return"}
 CRISIS, CALM = config.COLOR_CRISIS, config.COLOR_CALM
 COL = {"A": A, "B": B, "Nifty 50": N}
 
@@ -26,11 +28,13 @@ def _base(fig: go.Figure, height=380, title=None, yfmt=None, xfmt=None) -> go.Fi
     return fig
 
 
-def replay(dates, a, b, n, amount_a, amount_b, title=None) -> go.Figure:
-    """₹ path of buy-and-hold A, B and the Nifty 50 from the client's amount."""
+def replay(dates, a, b, n, amount_a, amount_b, title=None, c=None, amount_c=None) -> go.Figure:
+    """₹ path of buy-and-hold A, B (and C) and the Nifty 50 from the client's amount."""
     fig = go.Figure()
-    for name, path, amt, col in (("Portfolio A", a, amount_a, A), ("Portfolio B", b, amount_b, B),
-                                 ("Nifty 50", n, (amount_a + amount_b) / 2, N)):
+    lines = [("Portfolio A", a, amount_a, A), ("Portfolio B", b, amount_b, B)]
+    if c is not None:
+        lines.append(("Portfolio C", c, amount_c, C))
+    for name, path, amt, col in lines + [("Nifty 50", n, (amount_a + amount_b) / 2, N)]:
         v = np.asarray(path) * amt
         fig.add_trace(go.Scatter(x=dates, y=v, name=name, line=dict(color=col, width=2.4 if name != "Nifty 50" else 1.6,
                                                                        dash=None if name != "Nifty 50" else "dot"),
@@ -47,7 +51,7 @@ def frontier(p: dict, regimes: list[tuple] | None = None, title=None, show_cloud
     """Current efficient frontier with the random cloud, individual stocks, minimum variance, max Sharpe and the
     chosen point; optional regime frontiers [(name, colour, frontier dict, today's (vol, ret), optimal (vol, ret))]."""
     fig = go.Figure()
-    col = A if p["name"] == "A" else B
+    col = COLS[p["name"]]
     if show_cloud and p.get("cloud"):
         c = p["cloud"]
         fig.add_trace(go.Scattergl(x=c["vol"], y=c["ret"], mode="markers", name="5,000 random portfolios" if len(c["vol"]) > 2500 else "Random portfolios",
@@ -64,7 +68,7 @@ def frontier(p: dict, regimes: list[tuple] | None = None, title=None, show_cloud
     fig.add_trace(go.Scatter(x=[mv["vol"]], y=[mv["ret"]], mode="markers", name="Least risky mix",
                              marker=dict(symbol="diamond", size=12, color="#E6E9EF")))
     fig.add_trace(go.Scatter(x=[p["expected_vol"]], y=[p["expected_return"]], mode="markers",
-                             name=f"Chosen: {'maximum Sharpe' if p['objective'] == 'max_sharpe' else 'minimum variance'}",
+                             name=f"Chosen: {CHOSEN[p['objective']]}",
                              marker=dict(symbol="star", size=17, color=col, line=dict(color="#E6E9EF", width=1))))
     for name, rc, rfr, today, opt in regimes or []:
         fig.add_trace(go.Scatter(x=rfr["vols"], y=rfr["rets"], mode="lines", name=f"Frontier — {name}",
@@ -189,21 +193,25 @@ def nifty_history(close: pd.Series, events: list[dict], vix: pd.Series | None = 
     if vix is not None:
         fig.add_trace(go.Scatter(x=vix.index, y=vix, line=dict(color="#B45AC9", width=1), name="India VIX",
                                  hovertemplate="%{x|%b %Y}: %{y:.1f}<extra></extra>"), row=4, col=1)
+    # one layout update instead of ~60 add_vrect calls: plotly re-validates the whole layout on every add_* call
+    def ax(r):
+        return "" if r == 1 else str(r)
+    shapes, notes = [], []
+
+    def shade(x0, x1, fill, label, colour):
+        shapes.extend(dict(type="rect", xref=f"x{ax(r)}", yref=f"y{ax(r)} domain", x0=x0, x1=x1, y0=0, y1=1,
+                           fillcolor=fill, line_width=0, layer="below") for r in range(1, rows + 1))
+        notes.append(dict(x=x0, y=1, xref="x", yref="y domain", text=label, showarrow=False, xanchor="left", yanchor="top",
+                          textangle=-90, font=dict(size=9, color=colour)))
     for ev in events:
         w = ev["windows"]["standard"]
-        if not w:
-            continue
-        fill = config.COLOR_CRISIS_FILL if ev["type"] == "crisis" else config.COLOR_CALM_FILL
-        for row in range(1, rows + 1):
-            fig.add_vrect(x0=w[0], x1=w[1], fillcolor=fill, line_width=0, row=row, col=1)
-        fig.add_annotation(x=w[0], y=1, yref="y domain", text=ev.get("short", ev["name"]), showarrow=False, xanchor="left",
-                           yanchor="top", textangle=-90, font=dict(size=9, color=CRISIS if ev["type"] == "crisis" else CALM),
-                           row=1, col=1)
+        if w:
+            crisis = ev["type"] == "crisis"
+            shade(w[0], w[1], config.COLOR_CRISIS_FILL if crisis else config.COLOR_CALM_FILL, ev.get("short", ev["name"]),
+                  CRISIS if crisis else CALM)
     if current:
-        for row in range(1, rows + 1):
-            fig.add_vrect(x0=current[0], x1=current[1], fillcolor="rgba(59,125,216,.12)", line_width=0, row=row, col=1)
-        fig.add_annotation(x=current[0], y=1, yref="y domain", text="Current", showarrow=False, xanchor="left", yanchor="top",
-                           textangle=-90, font=dict(size=9, color=B), row=1, col=1)
+        shade(current[0], current[1], "rgba(59,125,216,.12)", "Current", B)
+    fig.update_layout(shapes=shapes, annotations=list(fig.layout.annotations) + notes)
     fig.update_yaxes(type="log", row=1, col=1)
     fig.update_yaxes(tickformat=".0%", row=2, col=1)
     fig.update_yaxes(tickformat=".0%", row=3, col=1)
@@ -255,11 +263,13 @@ def turnover_hist(noise, p95, marks: list[tuple]) -> go.Figure:
     return _base(fig, 260, None, xfmt=".0%")
 
 
-def risk_compare(labels: list[str], a_vals: list[float], b_vals: list[float], title: str, rupees: bool = False) -> go.Figure:
-    """Grouped bars: a risk measure for A and B today and in each tested period."""
+def risk_compare(labels: list[str], a_vals: list[float], b_vals: list[float], title: str, rupees: bool = False,
+                 c_vals: list[float] | None = None) -> go.Figure:
+    """Grouped bars: a risk measure for A, B (and C) today and in each tested period."""
     fmt = (lambda v: inr_short(v)) if rupees else (lambda v: f"{v:.1%}")
     fig = go.Figure()
-    for name, vals, col in (("Portfolio A", a_vals, A), ("Portfolio B", b_vals, B)):
+    bars = [("Portfolio A", a_vals, A), ("Portfolio B", b_vals, B)] + ([("Portfolio C", c_vals, C)] if c_vals else [])
+    for name, vals, col in bars:
         fig.add_trace(go.Bar(x=labels, y=vals, name=name, marker=dict(color=col), text=[fmt(v) for v in vals],
                              textposition="outside", textfont=dict(size=10), cliponaxis=False,
                              hovertemplate="%{x}: %{text}<extra>" + name + "</extra>"))

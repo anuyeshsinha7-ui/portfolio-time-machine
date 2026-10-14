@@ -28,8 +28,7 @@ with left:
     ui.portfolio_badge()
     if not results:
         ui.note("Tick some periods on the Backtest screen first.", "☝️", "warn")
-    which = st.segmented_control("Portfolio", ["A", "B"], format_func=lambda x: "A · Bold" if x == "A" else "B · Steady",
-                                 default="A", key="t2_which", required=True)
+    which = st.segmented_control("Portfolio", ["A", "B", "C"], format_func=ui.NAMES.get, default="A", key="t2_which", required=True)
     p = ctx.P[which]
     amt = ctx.amount(which)
     ui.tiles([("Today's target return", ui.pct(p["target_return"]), "a year, with today's weights", which.lower()),
@@ -94,7 +93,7 @@ if right is not None and results:
             full[ev["name"]] = pd.Series(reg_[which]["test2"]["weights"])
         full.index = [f"{x} · {u.loc[x, 'company']}" for x in full.index]
         full.index.name = "Company"
-        st.dataframe(full, width="stretch", column_config={c: st.column_config.NumberColumn(format="percent") for c in full.columns})
+        st.dataframe(ui.pct_df(full, full.columns), width="stretch")
         rows = []
         for eid, reg_, ev in results:
             t2 = reg_[which]["test2"]
@@ -105,8 +104,7 @@ if right is not None and results:
                          "VaR before": ctx.h(reg_[which]["risk"]["Historical"][k]["var"]),
                          "VaR after": ctx.h(t2["var_after"]["Historical"][k]["var"])})
         df = pd.DataFrame(rows)
-        st.dataframe(df, hide_index=True, width="stretch", column_config={
-            c: st.column_config.NumberColumn(format="percent") for c in df.columns if c not in ("Period", "Case", "₹ to move")})
+        st.dataframe(ui.pct_df(df, [c for c in df.columns if c not in ("Period", "Case", "₹ to move")]), hide_index=True, width="stretch")
         st.caption(" ".join(f"**{v.split(' — ')[0]}**: {v.split(' — ')[1]}." for v in CASE.values()) +
                    " Share to move = half the sum of all weight changes, so 20% means a fifth of the money changes hands.")
         PAL = [CH.CRISIS, CH.CALM, "#B45AC9", "#E0A33A", "#4BB5C1", "#8A8F98", "#6C7AE0"]

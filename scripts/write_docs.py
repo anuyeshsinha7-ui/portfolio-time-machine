@@ -82,9 +82,12 @@ Labels are set on **today's data — the trailing {C.CLASSIFICATION_YEARS} years
 
 μ = mean daily simple return × 252; Σ = sample covariance × 252 (Ledoit–Wolf shrinkage available, implemented in NumPy).
 Constraints in every window: Σw = 1; {C.W_MIN:.0%} ≤ wᵢ ≤ {C.W_MAX:.0%}; industry weight ≤ {C.INDUSTRY_MAX:.0%}; feasibility is checked and
-relaxed with a visible warning if needed. **A = maximum Sharpe ratio, B = global minimum variance**, solved with SciPy SLSQP (analytic
-gradients, several feasible starting points, tight tolerances), every constraint re-checked after the solve; the test suite cross-checks
-both against cvxpy (maximum Sharpe via the convex reformulation) and the frontier grid. Frontier: R_min = minimum-variance return,
+relaxed with a visible warning if needed. **A = maximum expected return** (a linear program, `scipy.optimize.linprog`), **B = global
+minimum variance**, **C = maximum Sharpe ratio over A's and B's stocks together** (minimum weight {C.C_W_MIN:.0%}, since 30 × 2% would lock
+60% into an equal split). B and C are solved with SciPy SLSQP (analytic gradients, several feasible starting points, tight tolerances),
+every constraint re-checked after the solve; the test suite cross-checks them against cvxpy (maximum Sharpe via the convex
+reformulation) and the frontier grid, and A against random feasible portfolios. Parametric VaR is also shown by the matrix method
+taught in class: Σ = DᵀD/(N−1), σ²ₚ = wᵀΣw, μₚ = wᵀμ, VaR = μₚ + zσₚ (daily), which equals the 'Parametric normal' method exactly. Frontier: R_min = minimum-variance return,
 R_max = highest achievable return (linear program, `scipy.optimize.linprog`), {C.FRONTIER_POINTS} targets in between; plus
 {C.RANDOM_PORTFOLIOS:,} random feasible portfolios.
 
@@ -152,12 +155,12 @@ All numbers below are for **{inr(AMT)} in each portfolio** and the official peri
 
 | Time | Speaker | Page | What to do and say |
 |---|---|---|---|
-| 0:00–1:00 | [Name 1] | Landing → Start | Hook: "Does 'safe' stay safe when the market crashes?" Type an amount on the landing page (try 15 lakh), open the dashboard, show it arrives on Start. |
-| 1:00–3:00 | [Name 1] | Pick stocks → The risk call | The rule (beta ≥ 1 and volatility ≥ median). A: weighted beta **{ev['A']['weighted_beta']:.2f}**, volatility **{pct(ev['A']['portfolio_vol'])}**; B: **{ev['B']['weighted_beta']:.2f}**, **{pct(ev['B']['portfolio_vol'])}**. σA/σB = **{ev['vol_ratio']['ratio']:.2f}**, 95% CI **{ev['vol_ratio']['lo']:.2f}–{ev['vol_ratio']['hi']:.2f}** → statistically backed. |
-| 3:00–4:30 | [Name 2] | Optimum weights | A = max Sharpe (expected return {pct(P['A']['expected_return'])}, Sharpe {P['A']['sharpe']:.2f}); B = min variance (volatility {pct(P['B']['expected_vol'])}). Show the frontier and whole-share allocation. VaR before/after: B's 99% VaR {pct(P['B']['var_before_after']['equal']['Historical']['0.99']['var'], 2)} → {pct(P['B']['var_before_after']['optimised']['Historical']['0.99']['var'], 2)}. |
-| 4:30–8:30 | [Name 3] | Test #1 | Crisis replay: {inr(AMT)} in A falls to **{inr(cr['A']['replay']['low'] * AMT)}**, B to **{inr(cr['B']['replay']['low'] * AMT)}**, Nifty −{pct(cr['nifty']['largest_fall'])}. ES99: A **{pct(es(cr, 'A'))}** vs B **{pct(es(cr, 'B'))}** → label held. Breach test: VaR fitted in calm → A **{bt['A']['breaches']}**, B **{bt['B']['breaches']}** breaches vs ≈{bt['A']['expected']:.1f} expected. **Switch the event live to COVID-19**{f" (ES99 A {pct(es(covid, 'A'))} vs B {pct(es(covid, 'B'))})" if covid else ''}. Scoreboard: label held in **{lv['events_held']}/{lv['events_total']}** events; B beat the Nifty in **{bv['crises_held']}/{bv['crises_total']}** crises. |
-| 8:30–12:00 | [Name 4] | Test #2 | Target = {pct(P['A']['target_return'])} for A, {pct(P['B']['target_return'])} for B. In the crisis A's target is **{ta['case']}**; turnover **{pct(ta['turnover'], 0)}** ({inr_short(ta['turnover'] * AMT)}) vs noise p95 {pct(p95a, 0)}. B: **{tb['case']}**, turnover {pct(tb['turnover'], 0)} vs {pct(p95b, 0)}. Show bootstrap bands. |
-| 12:00–13:30 | [Name 4] | Verdict | Label: **{lv['verdict']}**; 'safe stayed safe': **{bv['verdict']}**. Enter a loss limit (e.g. ₹4 lakh) and show which portfolio fits. Review trigger. |
+| 0:00–1:00 | {C.TEAM[0]} | Landing → Start | Hook: "Does 'safe' stay safe when the market crashes?" Type an amount on the landing page (try 15 lakh), open the dashboard, show it arrives on Start. |
+| 1:00–3:00 | {C.TEAM[1]} | Pick stocks → The risk call | The rule (beta ≥ 1 and volatility ≥ median). A: weighted beta **{ev['A']['weighted_beta']:.2f}**, volatility **{pct(ev['A']['portfolio_vol'])}**; B: **{ev['B']['weighted_beta']:.2f}**, **{pct(ev['B']['portfolio_vol'])}**. σA/σB = **{ev['vol_ratio']['ratio']:.2f}**, 95% CI **{ev['vol_ratio']['lo']:.2f}–{ev['vol_ratio']['hi']:.2f}** → statistically backed. |
+| 3:00–4:30 | {C.TEAM[2]} | Optimum weights | A = max return (expected return {pct(P['A']['expected_return'])}, volatility {pct(P['A']['expected_vol'])}); B = min variance (volatility {pct(P['B']['expected_vol'])}); C = max Sharpe over both sets (return {pct(P['C']['expected_return'])}, Sharpe {P['C']['sharpe']:.2f}). Walk the matrix steps wᵀΣw → VaR on the Backing. Show the frontier and whole-share allocation. VaR before/after: B's 99% VaR {pct(P['B']['var_before_after']['equal']['Historical']['0.99']['var'], 2)} → {pct(P['B']['var_before_after']['optimised']['Historical']['0.99']['var'], 2)}. |
+| 4:30–8:30 | {C.TEAM[3]} | Test #1 | Crisis replay: {inr(AMT)} in A falls to **{inr(cr['A']['replay']['low'] * AMT)}**, B to **{inr(cr['B']['replay']['low'] * AMT)}**, Nifty −{pct(cr['nifty']['largest_fall'])}. ES99: A **{pct(es(cr, 'A'))}** vs B **{pct(es(cr, 'B'))}** → label held. Breach test: VaR fitted in calm → A **{bt['A']['breaches']}**, B **{bt['B']['breaches']}** breaches vs ≈{bt['A']['expected']:.1f} expected. **Switch the event live to COVID-19**{f" (ES99 A {pct(es(covid, 'A'))} vs B {pct(es(covid, 'B'))})" if covid else ''}. Scoreboard: label held in **{lv['events_held']}/{lv['events_total']}** events; B beat the Nifty in **{bv['crises_held']}/{bv['crises_total']}** crises. |
+| 8:30–12:00 | {C.TEAM[4]} | Test #2 | Target = {pct(P['A']['target_return'])} for A, {pct(P['B']['target_return'])} for B. In the crisis A's target is **{ta['case']}**; turnover **{pct(ta['turnover'], 0)}** ({inr_short(ta['turnover'] * AMT)}) vs noise p95 {pct(p95a, 0)}. B: **{tb['case']}**, turnover {pct(tb['turnover'], 0)} vs {pct(p95b, 0)}. Show bootstrap bands. |
+| 12:00–13:30 | {C.TEAM[5]} | Verdict | Label: **{lv['verdict']}**; 'safe stayed safe': **{bv['verdict']}**. Enter a loss limit (e.g. ₹4 lakh) and show which portfolio fits. Review trigger. |
 | 13:30–15:00 | all | — | Buffer / questions. |
 
 ## Ten questions faculty are likely to ask
@@ -168,7 +171,8 @@ All numbers below are for **{inr(AMT)} in each portfolio** and the official peri
 2. **Why historical VaR as the primary method?** It assumes no distribution, so it captures the fat tails and skew of real crisis days; we
    show normal, Student-t Monte Carlo and Cornish–Fisher beside it — the normal method visibly understates crisis risk.
 3. **Isn't Markowitz unstable?** Yes — that is Test #2's point. We measure the instability with a block bootstrap and only call a regime
-   shift real if turnover beats the 95th percentile of noise. The 2%/25% bounds and the 40% industry cap also stop corner solutions.
+   shift real if turnover beats the 95th percentile of noise. The 2%/25% bounds and the 40% industry cap limit corner solutions;
+   A's maximum-return mix is still a corner by nature (25% in the three best past performers), which is why it is the high-risk one.
 4. **Survivorship bias?** Today's Nifty 500 looked back to 2007 excludes companies that failed or dropped out, so history flatters both
    portfolios, most in 2008. We state it on the Methodology page.
 5. **Why 2% and 25% bounds?** 2% keeps all 10+ stocks genuinely held (otherwise the optimiser concentrates in 3–4 names); 25% stops

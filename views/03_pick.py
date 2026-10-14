@@ -3,9 +3,7 @@ import pandas as pd
 import streamlit as st
 
 from src import charts as CH
-from src import classify as CL
 from src import config
-from src import data as D
 from src import ui
 from src import universe as U
 
@@ -90,33 +88,14 @@ if right is not None:
         show = pd.DataFrame({"Company": sub["company"], "Beta": sub["beta"].round(2), "Volatility": sub["volatility"],
                              "Label": sub["label"], "Score": sub["risk_score"].round(0), "Cap": sub["cap_bucket"],
                              "Periods we can test": [coverage_text(x) for x in sub.index]})
-        st.dataframe(show, width="stretch", column_config={"Volatility": st.column_config.NumberColumn(format="percent")})
-        r = t.loc[sym]
+        st.dataframe(ui.pct_df(show, ["Volatility"]), width="stretch")
         st.markdown(f"#### Working out the label for {sym}")
-        st.latex(r"\beta_i = \frac{\operatorname{Cov}(r_i, r_m)}{\operatorname{Var}(r_m)} \qquad "
-                 r"\sigma_i = \operatorname{sd}(r_i)\times\sqrt{252}")
-        cal = D.calendar()
-        R = D.window(D.returns(), cal[-config.CLASSIFICATION_YEARS * 252], cal[-1])
-        m = D.window(D.market_returns(), cal[-config.CLASSIFICATION_YEARS * 252], cal[-1])
-        both = pd.concat([R[sym], m], axis=1).dropna()
-        cov = both.cov().iloc[0, 1]
-        var_m = both.iloc[:, 1].var()
-        sd = both.iloc[:, 0].std()
-        st.markdown(f"We use {len(both)} daily returns, from {both.index[0].date()} to {both.index[-1].date()}:")
-        st.latex(rf"\beta_{{\text{{{sym}}}}} = \frac{{{cov:.3e}}}{{{var_m:.3e}}} = {cov / var_m:.2f} \qquad "
-                 rf"\sigma = {sd:.4f}\times\sqrt{{252}} = {sd * 252 ** 0.5:.1%}".replace("%", r"\%"))
-        verdict = CL.label(r["beta"], r["volatility"], med)
-        st.markdown(f"Beta is {'1.0 or more' if r['beta'] >= 1 else 'below 1.0'} and volatility is "
-                    f"{'at or above' if r['volatility'] >= med else 'below'} the middle value ({ui.pct(med)}), so the label is "
-                    f"**{verdict}**. Risk score: {r['risk_score']:.0f} out of 100.")
-        st.caption(CL.rule_text(med))
+        ui.label_working(t, sym)
         ui.show(CH.beta_vol_scatter(t, med, s["pick_A"], s["pick_B"], highlight=sym))
         st.markdown("#### Does the label change if we use all the history?")
         rob = t.loc[[x for x in s["pick_A"] + s["pick_B"] if x in t.index], ["beta", "beta_full", "volatility", "vol_full", "label", "label_full"]]
         rob.columns = ["Beta 3y", "Beta full", "Vol 3y", "Vol full", "Label 3y", "Label full"]
-        st.dataframe(rob, width="stretch", column_config={"Beta 3y": st.column_config.NumberColumn(format="%.2f"),
-                     "Beta full": st.column_config.NumberColumn(format="%.2f"),
-                     "Vol 3y": st.column_config.NumberColumn(format="percent"), "Vol full": st.column_config.NumberColumn(format="percent")})
+        st.dataframe(ui.pct_df(rob, ["Vol 3y", "Vol full"]).format("{:.2f}", subset=["Beta 3y", "Beta full"]), width="stretch")
         same = (rob["Label 3y"] == rob["Label full"]).sum()
         st.caption(f"{same} of {len(rob)} picks keep the same label when we use all their history (since 2007, or since they listed).")
         ui.concept_box("Beta", "If the whole market rises 1%, a stock with beta 1.5 tends to rise about 1.5%. When the market falls "
