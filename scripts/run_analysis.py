@@ -47,8 +47,8 @@ def main() -> None:
     say(f"Official periods (auto picks from the regime finder): **crisis = {E[off['crisis']]['label']}**; "
         f"**calm = {E[off['calm']]['label']}**. Current window: {cur['start']} → {cur['end']}.\n")
 
-    say("## 1. The two portfolios\n")
-    for k in "AB":
+    say("## 1. The three portfolios (A = max return, B = min variance, C = max Sharpe over A + B)\n")
+    for k in "ABC":
         p = P[k]
         say(f"**Portfolio {k}** — objective `{p['objective']}`; expected return {pct(p['expected_return'])}, volatility "
             f"{pct(p['expected_vol'])}, Sharpe {p['sharpe']:.2f} (current window, risk-free {pct(config.RISK_FREE_RATE, 2)}).\n")

@@ -6,7 +6,7 @@
 
 *Does 'safe' stay safe when the market crashes?*
 
-* Two portfolios from today's Nifty 500, built from the sectors and company sizes you choose: **A — high risk** (beta ≥ 1, volatility above the median) and **B — low risk**; the app recommends the top 15 of each automatically (choosing your own is optional), no overlap.
+* Two portfolios from today's Nifty 500, built from the sectors and company sizes you choose: **A — high risk** (beta ≥ 1, volatility above the median), weighted for the highest return, and **B — low risk**, weighted for the lowest variance; the app recommends the top 15 of each automatically (choosing your own is optional), no overlap. A third, **C — optimum**, mixes A's and B's stocks for the best Sharpe ratio.
 * **Time-travel test #1:** Value at Risk and Expected Shortfall (four methods) for both, in a historical crisis, a calm spell and today — did the labels hold?
 * **Time-travel test #2:** re-run Markowitz with each period's data for today's target return — would the optimiser still pick our weights, or is the difference just estimation noise?
 
@@ -16,7 +16,7 @@
 |---|---|---|
 | ![Preferences](docs/screenshots/desktop_01_prefs.png) | ![Backtest](docs/screenshots/desktop_04_test1.png) | ![Phone](docs/screenshots/phone_02_suggest.png) |
 
-## Headline results (snapshot 8 Oct 2026, ₹15 lakh in each)
+## Headline results (snapshot 13 Oct 2026, ₹15 lakh in each)
 
 See [docs/RESULTS_SUMMARY.md](docs/RESULTS_SUMMARY.md) for every number, including the all-events scoreboard.
 
@@ -34,7 +34,7 @@ Tests: `pip install -r requirements-dev.txt && pytest` (browser smoke test: `pyt
 ## Method in brief
 
 * **Labels** from the trailing 3 years (beta to the Nifty 50, annualised volatility); evidence = weighted beta, √(wᵀΣw), drawdown, correlation, and a block-bootstrap CI for σA/σB.
-* **Weights:** A maximises the Sharpe ratio, B minimises variance; 2%–25% per stock, ≤ 40% per industry; SciPy SLSQP, cross-checked against cvxpy.
+* **Weights:** A maximises expected return (linear program), B minimises variance, C maximises the Sharpe ratio over A + B; 2%–25% per stock (C 0%–25%), ≤ 40% per industry; SciPy SLSQP, cross-checked against cvxpy. Parametric VaR is also worked step by step with the matrix method (Σ = DᵀD/(N−1), wᵀΣw).
 * **Regimes:** 252-day windows anchored on the Nifty 50 data — the deepest drawdown (2008) and the calmest year (2017–18) by default, plus 13 catalogue events in a dropdown.
 * **Risk:** historical, normal, Student-t Monte Carlo and Cornish–Fisher VaR/ES; Kupiec breach test; buy-and-hold ₹ crisis replay.
 * Full details: [docs/METHODOLOGY.md](docs/METHODOLOGY.md) · decisions: [DECISIONS.md](DECISIONS.md).
@@ -50,11 +50,20 @@ Python 3.13 · pandas · NumPy · SciPy · Plotly · Streamlit 1.62 · stlite 1.
 ## Updating the site
 
 * **Redeploy:** push to `main` — Actions runs the tests, precomputes, builds `_site/`, smoke-tests it in a browser and publishes.
-* **Refresh the data:** locally run `python scripts/fetch_data.py --refresh` then `python scripts/clean_data.py`; review the data-quality diff (`data/restatements_vs_previous_snapshot.csv`, `docs/DATA_QUALITY.md`); run `python scripts/precompute.py && python scripts/run_analysis.py && python scripts/write_docs.py`; commit the new snapshot and push.
+* **Refresh the data (one command, on your own computer):** `bash scripts/update_data.sh` downloads up to the latest trading day, cleans and checks it against NSE, recomputes every result, runs the tests and rebuilds the site; add `--publish` to commit and push (GitHub redeploys). It stops at the first failure, so bad data never goes live. Review `data/restatements_vs_previous_snapshot.csv` and `docs/DATA_QUALITY.md`. (Not on a timer in the cloud: NSE blocks cloud servers such as GitHub Actions.)
 * **Freeze the snapshot before the presentation** so the slides, [the presentation guide](docs/PRESENTATION_GUIDE.md) and the site match.
 
 ## Team
 
-[Name 1], [Name 2], [Name 3], [Name 4] — PGDM, Great Lakes Institute of Management, Gurgaon.
+**Group 14** — PGDM, Great Lakes Institute of Management, Gurgaon
+
+| Name | Roll no. |
+|---|---|
+| Anu Yesh Sinha | P2513012 |
+| Rishabh Agrawal | P2513054 |
+| Ritul Bokde | P2513057 |
+| Liash Roy | P2513032 |
+| Baidurja Biswas | P2511020 |
+| Kasutabh Data | P2511037 |
 
 *Educational project — not investment advice. Data: Yahoo Finance (via yfinance) and NSE.*

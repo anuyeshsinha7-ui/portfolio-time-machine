@@ -5,7 +5,6 @@ import streamlit as st
 
 from src import charts as CH
 from src import config
-from src import data as D
 from src import recommend as RC
 from src import stats_tests as ST
 from src import ui
@@ -55,7 +54,7 @@ with left:
             ui.note(f"<b>{ui.short(ev)}</b> can't be tested: {prob}.", "⛔", "warn")
             continue
         rows = []
-        for kk in ("A", "B"):
+        for kk in ("A", "B", "C"):
             d = RC.deviation(ctx.current[kk], reg[kk], k)
             am = ctx.amount(kk)
             rows.append((ui.PLAN[kk][2], f"Portfolio {kk} · {ui.PLAN[kk][1].split(' · ')[0]}",
@@ -69,7 +68,8 @@ with left:
         ui.list_rows(rows)
         if ev["type"] == "crisis":
             ui.note(f"Buy-and-hold low: A {ui.inr_short(reg['A']['replay']['low'] * ctx.amount_a)} · B "
-                    f"{ui.inr_short(reg['B']['replay']['low'] * ctx.amount_b)} (Nifty fell {reg['nifty']['largest_fall']:.0%})", "📉")
+                    f"{ui.inr_short(reg['B']['replay']['low'] * ctx.amount_b)} · C {ui.inr_short(reg['C']['replay']['low'] * ctx.amount('C'))} "
+                    f"(Nifty fell {reg['nifty']['largest_fall']:.0%})", "📉")
     ok = [(eid, reg, ev) for eid, reg, ev, prob in results if reg is not None]
     if ok:
         lbl = ["Today"] + [ui.short(ev)[:18] for _, _, ev in ok]
@@ -77,8 +77,10 @@ with left:
                  [ctx.h(r["A"]["risk"]["Historical"][k]["es"]) * ctx.amount_a for _, r, _ in ok]
         b_vals = [ctx.h(ctx.current["B"]["risk"]["Historical"][k]["es"]) * ctx.amount_b] + \
                  [ctx.h(r["B"]["risk"]["Historical"][k]["es"]) * ctx.amount_b for _, r, _ in ok]
+        c_vals = [ctx.h(ctx.current["C"]["risk"]["Historical"][k]["es"]) * ctx.amount("C")] + \
+                 [ctx.h(r["C"]["risk"]["Historical"][k]["es"]) * ctx.amount("C") for _, r, _ in ok]
         ui.section("Worst-days loss, side by side")
-        ui.show(CH.risk_compare(lbl, a_vals, b_vals, None, rupees=True))
+        ui.show(CH.risk_compare(lbl, a_vals, b_vals, None, rupees=True, c_vals=c_vals))
         if crises:
             cr = ctx.crisis
             ui.section(f"Your money through {ui.short(ctx.crisis_ev)}", "bought on day one")
@@ -87,7 +89,7 @@ with left:
                 st.selectbox("Show the replay for", crises, key="bt_focus", format_func=lambda e: ui.short(evs_all[e]),
                              on_change=lambda: s.update(crisis_id=s["bt_focus"]))
             ui.show(CH.replay(cr["nifty"]["dates"], cr["A"]["replay"]["value"], cr["B"]["replay"]["value"], cr["nifty"]["value"],
-                              ctx.amount_a, ctx.amount_b))
+                              ctx.amount_a, ctx.amount_b, c=cr["C"]["replay"]["value"], amount_c=ctx.amount("C")))
     ui.next_button("How should the weights change?", "test2")
 
 if right is not None:
@@ -99,7 +101,7 @@ if right is not None:
         for eid, reg, ev, prob in results:
             if reg is None:
                 continue
-            for kk in ("A", "B"):
+            for kk in ("A", "B", "C"):
                 d = RC.deviation(ctx.current[kk], reg[kk], k)
                 rows.append({"Period": ev["name"], "Window": f"{reg['start']} → {reg['end']}", "P": kk,
                              "VaR today": ctx.h(d["var_now"]), "VaR then": ctx.h(d["var_then"]), "Δ VaR": ctx.h(d["var_change"]),
@@ -107,8 +109,7 @@ if right is not None:
                              "ES ×": round(d["es_mult"], 2), "Volatility then": reg[kk]["volatility"], "Biggest fall then": reg[kk]["max_drawdown"]})
         if rows:
             df = pd.DataFrame(rows)
-            st.dataframe(df, hide_index=True, width="stretch", column_config={
-                c: st.column_config.NumberColumn(format="percent") for c in df.columns if c not in ("Period", "Window", "P", "ES ×")})
+            st.dataframe(ui.pct_df(df, [c for c in df.columns if c not in ("Period", "Window", "P", "ES ×")]), hide_index=True, width="stretch")
             st.latex(r"\Delta\text{VaR} = \text{VaR}_{\text{period}} - \text{VaR}_{\text{today}}, \quad "
                      r"\text{same weights } w_{\text{today}}, \ \text{returns of that period}")
             ui.show(CH.risk_compare(["Today"] + [ev["name"].split(" (")[0][:18] for _, r, ev, p_ in results if r is not None],
@@ -116,7 +117,9 @@ if right is not None:
                                     [ctx.h(r["A"]["risk"]["Historical"][k]["var"]) for _, r, ev, p_ in results if r is not None],
                                     [ctx.h(ctx.current["B"]["risk"]["Historical"][k]["var"])] +
                                     [ctx.h(r["B"]["risk"]["Historical"][k]["var"]) for _, r, ev, p_ in results if r is not None],
-                                    f"VaR {ctx.conf:.0%} (% of the portfolio)"))
+                                    f"VaR {ctx.conf:.0%} (% of the portfolio)",
+                                    c_vals=[ctx.h(ctx.current["C"]["risk"]["Historical"][k]["var"])] +
+                                    [ctx.h(r["C"]["risk"]["Historical"][k]["var"]) for _, r, ev, p_ in results if r is not None]))
         st.markdown("#### The rules for the verdict, and the numbers they use")
         st.markdown(f"* {RC.RULES['label_holds']}\n* {RC.RULES['b_held_up']}")
         rows = []
@@ -127,8 +130,7 @@ if right is not None:
                          "A stocks still High": f"{reg['A']['stability']['same']}/{reg['A']['stability']['of']}" if reg["A"]["stability"] else "",
                          "B stocks still Low": f"{reg['B']['stability']['same']}/{reg['B']['stability']['of']}" if reg["B"]["stability"] else ""})
         df = pd.DataFrame(rows)
-        st.dataframe(df, hide_index=True, width="stretch",
-                     column_config={c: st.column_config.NumberColumn(format="percent") for c in df.columns[1:8]})
+        st.dataframe(ui.pct_df(df, df.columns[1:8]), hide_index=True, width="stretch")
         st.caption("'Still High' and 'still Low' re-run the High/Low rule using each period's own prices and its own middle volatility.")
         board_w = ctx.scoreboard()
         if board_w:
@@ -138,8 +140,7 @@ if right is not None:
                                  "Biggest fall B": r["mdd_B"],
                                  "Label held": "✓" if r["label_held"] else "✗",
                                  "B beat Nifty": ("✓" if r["b_held_up"] else "✗") if r["type"] == "crisis" else "—"} for r in board_w])
-            st.dataframe(tbl, hide_index=True, width="stretch",
-                         column_config={c: st.column_config.NumberColumn(format="percent") for c in tbl.columns[3:9]})
+            st.dataframe(ui.pct_df(tbl, tbl.columns[3:9]), hide_index=True, width="stretch")
             ui.show(CH.scoreboard_heatmap(board_w, ctx.amount_a, ctx.amount_b))
         st.markdown("#### How we chose the dates for each period")
         for ev in (ctx.crisis_ev, ctx.calm_ev):
@@ -164,11 +165,7 @@ if right is not None:
             st.warning("Event-only periods can be short. A 99% VaR from fewer than 250 days rests on only a few bad days.")
 
         st.markdown("#### Finding crises and calm periods in the data")
-        close = ui.nifty_close()
-        bench = D.benchmark()
-        evs = [dict(e, short=e["name"].split(" (")[0][:22]) for e in ctx.events.values() if e["available"] and not e["id"].startswith("auto")]
-        vix = bench["INDIAVIX"].dropna() if "INDIAVIX" in bench else None
-        ui.show(CH.nifty_history(close, evs, vix, current=(ctx.current["start"], ctx.current["end"])))
+        ui.show(ui.nifty_history_fig((ctx.current["start"], ctx.current["end"])))
         rf = ctx.res["regime_finder"]
         for kind in ("crisis", "calm"):
             df = pd.DataFrame(rf[f"{kind}_candidates"])
@@ -177,15 +174,14 @@ if right is not None:
                 df.columns = ["Start", "End", "Return", "Volatility", "Biggest fall", "Worst day", "VaR 99%"]
                 st.markdown(f"The top 3 **{kind}** periods the app found by itself "
                             f"({'biggest fall' if kind == 'crisis' else 'lowest volatility'}, 252 days each, no overlaps):")
-                st.dataframe(df, hide_index=True, width="stretch",
-                             column_config={c: st.column_config.NumberColumn(format="percent") for c in df.columns[2:]})
+                st.dataframe(ui.pct_df(df, df.columns[2:]), hide_index=True, width="stretch")
 
         st.markdown(f"#### VaR and ES by method ({ctx.conf:.0%}, {ctx.horizon}-day)")
         st.markdown("Historical uses the real days. Normal assumes a bell curve. Monte Carlo draws random days from a curve with "
                     "more extreme days (Student-t). Cornish–Fisher adjusts the bell curve for lopsided and extreme days.")
         rows = []
         for name, reg, ev in regs:
-            for key in ("A", "B"):
+            for key in ("A", "B", "C"):
                 r = reg[key]["risk"]
                 row = {"Period": name, "Portfolio": key}
                 for m in V.METHODS:
@@ -194,16 +190,15 @@ if right is not None:
                 row["ES 97.5% (Basel)"] = ctx.h(r["Historical"]["0.975"]["es"])
                 rows.append(row)
         df = pd.DataFrame(rows)
-        st.dataframe(df, hide_index=True, width="stretch",
-                     column_config={c: st.column_config.NumberColumn(format="percent") for c in df.columns[2:]})
+        st.dataframe(ui.pct_df(df, df.columns[2:]), hide_index=True, width="stretch")
         if ctx.horizon == 10:
             st.caption("10-day figures are the 1-day figures × √10. That assumes each day is independent of the last. In a crisis, "
                        "bad days come in bunches, so the real 10-day risk is usually bigger.")
         st.latex(r"\text{VaR}_c = -q_{1-c}(r) \qquad \text{ES}_c = -\mathbb{E}[\,r \mid r \le q_{1-c}\,]")
 
         st.markdown("#### How daily returns were spread out in the crisis")
-        h1, h2 = st.columns(2)
-        for col, key, colr in ((h1, "A", CH.A), (h2, "B", CH.B)):
+        hcols = st.columns(3)
+        for col, key, colr in zip(hcols, ("A", "B", "C"), (CH.A, CH.B, CH.C)):
             r = ctx.crisis[key]
             with col:
                 ui.show(CH.returns_hist(r["returns"]["port"], r["risk"]["Historical"][k]["var"], r["risk"]["Historical"][k]["es"],
@@ -213,7 +208,7 @@ if right is not None:
         st.markdown("We set VaR using a calm or recent period, then count how often the crisis losses went past it.")
         calib = st.radio("Set VaR using", ["Calm window", "Current window"], horizontal=True, key="t1_calib")
         src = ctx.calm if calib.startswith("Calm") else ctx.current
-        for key, colr in (("A", CH.A), ("B", CH.B)):
+        for key, colr in (("A", CH.A), ("B", CH.B), ("C", CH.C)):
             bt = ST.breach_test(np.array(src[key]["returns"]["port"]), np.array(ctx.crisis[key]["returns"]["port"]), ctx.conf,
                                 ctx.crisis[key]["returns"]["dates"])
             ui.show(CH.breach_timeline(ctx.crisis[key]["returns"]["dates"], ctx.crisis[key]["returns"]["port"], bt["var"], colr, key))
@@ -226,13 +221,12 @@ if right is not None:
         st.markdown("#### Other measures, and why we show them")
         rows = []
         for name, reg, ev in regs:
-            for key in ("A", "B"):
+            for key in ("A", "B", "C"):
                 r = reg[key]
                 rows.append({"Period": name, "P": key, "Volatility": r["volatility"], "Beta": round(r["beta"], 2),
                              "Biggest fall": r["max_drawdown"], "Worst day": r["worst_day"], "Avg correlation": round(r["avg_pairwise_corr"], 2)})
         df = pd.DataFrame(rows)
-        st.dataframe(df, hide_index=True, width="stretch",
-                     column_config={c: st.column_config.NumberColumn(format="percent") for c in ("Volatility", "Biggest fall", "Worst day")})
+        st.dataframe(ui.pct_df(df, ("Volatility", "Biggest fall", "Worst day")), hide_index=True, width="stretch")
         st.markdown("* **Volatility**: it is part of the label rule, so we check it again in each period.\n"
                     "* **Beta in the period**: does A still move more than the market when it matters?\n"
                     "* **Biggest fall**: what you would actually live through if you bought and held, not just one bad day.\n"

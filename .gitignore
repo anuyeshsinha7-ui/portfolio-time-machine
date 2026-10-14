@@ -9,3 +9,7 @@ data/manual_csv/*.csv
 *.egg-info/
 results/tmp/
 test-results/
+
+# course material (not for circulation) — never publish
+FRA_Faculty Study Material/
+.claude/

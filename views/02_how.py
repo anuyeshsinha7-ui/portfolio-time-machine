@@ -15,7 +15,8 @@ with left:
              ("Choose sectors & size", "Tick the sectors and company sizes you like."),
              ("Get your recommendation", f"We pick the top {config.PICK_N} bold and top {config.PICK_N} steady companies for you "
               "(you can still choose your own)."),
-             ("See what to buy", "Exact rupees and number of shares for each company."),
+             ("See what to buy", "Three ways to weight them: A for the highest return, B for the lowest risk, C (both sets "
+              "together) for the best return per unit of risk. Exact rupees and shares for each company."),
              ("Travel back in time", "Replay the 2008 crash, COVID-19 and more on today's portfolios."),
              ("Get your answer", "Does 'safe' stay safe? Which portfolio fits the loss you can live with?")]
     st.html("<div class='app-steps'>" + "".join(f"<div class='app-step'><div class='n'>{i}</div><div><div class='t1'>{a}</div>"
@@ -54,7 +55,8 @@ digraph C { rankdir=TB; bgcolor="transparent"; node [shape=box, style="rounded,f
             ("Trading days in a year", config.TRADING_DAYS), ("Data used for risk labels", f"the last {config.CLASSIFICATION_YEARS} years"),
             ("Length of each test period", f"{config.REGIME_DAYS} trading days (about 12 months)"),
             ("Where a crisis period starts", f"{config.EVENT_PRE_DAYS} trading days before the market's peak"),
-            ("Weight per stock", f"{config.W_MIN:.0%} to {config.W_MAX:.0%}"), ("Most in one sector", f"{config.INDUSTRY_MAX:.0%}"),
+            ("Weight per stock", f"{config.W_MIN:.0%} to {config.W_MAX:.0%} (C: {config.C_W_MIN:.0%} to {config.W_MAX:.0%})"),
+            ("Portfolio goals", "A: highest return · B: lowest variance · C: highest Sharpe ratio"), ("Most in one sector", f"{config.INDUSTRY_MAX:.0%}"),
             ("Risk-free rate", f"{config.RISK_FREE_RATE:.2%} (91-day Treasury bill)"), ("VaR confidence", "95% and 99% (ES also at 97.5%)"),
             ("Monte Carlo", f"{config.MC_DRAWS:,} random Student-t draws, seed {config.SEED}"),
             ("Bootstrap", f"{config.BOOTSTRAP_RESAMPLES} reshuffles of the data, in {config.BLOCK_DAYS}-day blocks"),

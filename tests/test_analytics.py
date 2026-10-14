@@ -1,5 +1,7 @@
 """Analytics engine tests (brief §10, §13): beta, optimiser constraints and cross-checks,
 VaR/ES orderings, Kupiec, allocation, event anchoring."""
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -13,6 +15,8 @@ from src import optimize as O
 from src import stats_tests as ST
 from src import universe as U
 from src import var_es as V
+
+ROOT = Path(__file__).resolve().parent.parent
 
 
 @pytest.fixture(scope="module")
@@ -298,3 +302,49 @@ def test_pick_by_cap_combination():
     if not res["notes_A"]:
         assert set(t.loc[res["A"], "cap_bucket"]) <= {"Large cap", "Small cap"}
     assert U.cap_label(["Small cap", "Mid cap", "Large cap"]) == "Flexi cap"
+
+
+def test_max_return_is_the_lp_optimum(current_A):
+    mu, S, cons = _setup(current_A)
+    r_max, w = O.max_return(mu, cons)
+    _ok(w, cons)
+    assert mu @ w == pytest.approx(r_max)
+    # no random feasible mix earns more
+    W = O.random_feasible(len(mu), cons, 2000)
+    assert (W @ mu).max() <= r_max + 1e-9
+
+
+def test_portfolio_c_holds_a_and_b_with_zero_floor(picks):
+    from src import engine as E
+    pc = E.build_portfolio("C", picks["A"] + picks["B"], config.OBJECTIVE_C, cloud_k=200, w_min=config.C_W_MIN)
+    w = np.array(list(pc["weights"].values()))
+    assert pc["symbols"] == picks["A"] + picks["B"] and pc["constraints"]["w_min"] == 0.0
+    assert w.sum() == pytest.approx(1, abs=1e-6) and w.min() >= -1e-9 and w.max() <= config.W_MAX + 1e-6
+    assert not pc["constraints"]["violations"]
+
+
+def test_matrix_walkthrough_matches_class_example_and_parametric(current_A, picks):
+    # the professor's two-stock example: TCS / New Gen Tech, 55% / 45%, daily, sample N − 1
+    # course data stays out of the public repo, so this half runs only where the faculty folder exists
+    xl = ROOT / "FRA_Faculty Study Material" / "Session 1 & 2" / "Data set stock prices.xlsx"
+    if xl.exists():
+        prices = pd.read_excel(xl, index_col=0, usecols=[0, 1, 2])
+        ms = V.matrix_steps(prices.pct_change(fill_method=None).iloc[1:], pd.Series({"TCS": 0.55, "New Gen Tech": 0.45}))
+        assert ms["sd_p"] == pytest.approx(0.016263, abs=5e-6)
+        assert ms["var"][0.95] == pytest.approx(-0.025643, abs=5e-6) and ms["var"][0.99] == pytest.approx(-0.036726, abs=5e-6)
+    # on our data the matrix route equals the 'Parametric normal' method exactly
+    w = pd.Series(1 / len(picks["A"]), index=picks["A"])
+    ms = V.matrix_steps(current_A, w)
+    r = M.portfolio_returns(current_A, w).to_numpy()
+    for c in (0.95, 0.99):
+        assert -ms["var"][c] == pytest.approx(V.parametric_normal(r, c)[0], rel=1e-10)
+    assert ms["Sigma"].to_numpy() == pytest.approx(current_A.fillna(0).cov().to_numpy())
+
+
+def test_fast_beta_vol_table_equals_full_metrics():
+    cal = D.calendar()
+    full = U.metrics_table(cal[-600], cal[-1])
+    fast = U.metrics_table(cal[-600], cal[-1], labels_only=True)
+    assert list(fast.index) == list(full.index)
+    assert fast["beta"].to_numpy(dtype=float) == pytest.approx(full["beta"].to_numpy(dtype=float), rel=1e-9, nan_ok=True)
+    assert fast["volatility"].to_numpy(dtype=float) == pytest.approx(full["volatility"].to_numpy(dtype=float), rel=1e-9)

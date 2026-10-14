@@ -1,6 +1,6 @@
 # Methodology
 
-Snapshot as of **2026-10-08**; history from **2007-09-17** (the first Nifty 50 date on Yahoo, `^NSEI`).
+Snapshot as of **2026-10-13**; history from **2007-09-17** (the first Nifty 50 date on Yahoo, `^NSEI`).
 Every number on the site comes from the code in `src/` applied to the committed snapshot in `data/`.
 
 ## 1. Data
@@ -39,7 +39,7 @@ Labels are set on **today's data — the trailing 3 years** — so both time-tra
 ## 4. Regimes and events
 
 * Equal-length windows of **252 trading days** (≈ 12 months, mirroring the 12-month stress period behind Basel's stressed VaR).
-* **Current** = the latest 252 days (2025-09-30 → 2026-10-08).
+* **Current** = the latest 252 days (2025-10-06 → 2026-10-13).
 * **Crisis (auto)** = the window around the deepest Nifty 50 drawdown, starting 21 trading days before the pre-crash peak.
 * **Calm (auto)** = the lowest-volatility 252-day window overlapping neither Current nor the auto crisis.
 * **Catalogue events** (`data/events.json`) have *search ranges*; the window is anchored on the data — crisis: the deepest peak-to-trough
@@ -60,7 +60,7 @@ Labels are set on **today's data — the trailing 3 years** — so both time-tra
 | Russia–Ukraine war and rate hikes (2022) | crisis | 2021-10-01 → 2022-06-30 | 2021-09-16 → 2022-09-20 | yes | Nifty 50 fell 17.2% peak to trough inside the search range | https://en.wikipedia.org/wiki/2022_stock_market_decline |
 | Adani–Hindenburg sell-off (2023) | crisis | 2023-01-01 → 2023-03-31 | 2022-12-05 → 2023-12-11 | yes | Nifty 50 fell 7.1% peak to trough inside the search range | https://en.wikipedia.org/wiki/Hindenburg_Research |
 | Foreign-investor sell-off correction (2024–25) | crisis | 2024-09-01 → 2025-03-31 | 2024-08-28 → 2025-09-01 | yes | Nifty 50 fell 15.8% peak to trough inside the search range | NSDL FPI Monitor, foreign portfolio investment net equity flows Oct 2024 – Feb 2025 (https://www.fpi.nsdl.co.in/) |
-| US tariff shock (2025) | crisis | 2025-03-01 → 2025-04-30 | 2024-09-25 → 2025-09-29 | no — standard: moved 103 trading days earlier so it does not overlap the Current window; dropped: the Nifty 50 data does not support this as a crisis (fall under the threshold) | Nifty 50 fell 6.4% peak to trough inside the search range | https://en.wikipedia.org/wiki/Liberation_Day_tariffs |
+| US tariff shock (2025) | crisis | 2025-03-01 → 2025-04-30 | 2024-09-30 → 2025-10-03 | no — standard: moved 100 trading days earlier so it does not overlap the Current window; dropped: the Nifty 50 data does not support this as a crisis (fall under the threshold) | Nifty 50 fell 6.4% peak to trough inside the search range | https://en.wikipedia.org/wiki/Liberation_Day_tariffs |
 | Low-volatility rally (2017) | calm | 2017-01-01 → 2017-12-31 | 2017-01-30 → 2018-02-01 | yes | lowest 126-day Nifty 50 volatility in the range 7.8% vs full-sample median 15.4% | https://www.nseindia.com/reports-indices-historical-vix |
 | Post-election steady market (2014) | calm | 2014-06-01 → 2015-02-28 | 2013-12-02 → 2014-12-15 | yes | lowest 126-day Nifty 50 volatility in the range 12.3% vs full-sample median 15.4% | https://en.wikipedia.org/wiki/2014_Indian_general_election |
 | Low-VIX stretch (2023–24) | calm | 2023-04-01 → 2024-03-31 | 2022-11-25 → 2023-12-01 | yes | lowest 126-day Nifty 50 volatility in the range 8.1% vs full-sample median 15.4% | https://www.nseindia.com/reports-indices-historical-vix |
@@ -69,9 +69,12 @@ Labels are set on **today's data — the trailing 3 years** — so both time-tra
 
 μ = mean daily simple return × 252; Σ = sample covariance × 252 (Ledoit–Wolf shrinkage available, implemented in NumPy).
 Constraints in every window: Σw = 1; 2% ≤ wᵢ ≤ 25%; industry weight ≤ 40%; feasibility is checked and
-relaxed with a visible warning if needed. **A = maximum Sharpe ratio, B = global minimum variance**, solved with SciPy SLSQP (analytic
-gradients, several feasible starting points, tight tolerances), every constraint re-checked after the solve; the test suite cross-checks
-both against cvxpy (maximum Sharpe via the convex reformulation) and the frontier grid. Frontier: R_min = minimum-variance return,
+relaxed with a visible warning if needed. **A = maximum expected return** (a linear program, `scipy.optimize.linprog`), **B = global
+minimum variance**, **C = maximum Sharpe ratio over A's and B's stocks together** (minimum weight 0%, since 30 × 2% would lock
+60% into an equal split). B and C are solved with SciPy SLSQP (analytic gradients, several feasible starting points, tight tolerances),
+every constraint re-checked after the solve; the test suite cross-checks them against cvxpy (maximum Sharpe via the convex
+reformulation) and the frontier grid, and A against random feasible portfolios. Parametric VaR is also shown by the matrix method
+taught in class: Σ = DᵀD/(N−1), σ²ₚ = wᵀΣw, μₚ = wᵀμ, VaR = μₚ + zσₚ (daily), which equals the 'Parametric normal' method exactly. Frontier: R_min = minimum-variance return,
 R_max = highest achievable return (linear program, `scipy.optimize.linprog`), 60 targets in between; plus
 5,000 random feasible portfolios.
 
@@ -112,7 +115,7 @@ moving-block bootstrap of the current window (500 resamples, 5-day blocks) re-so
 * **B held up.** Portfolio B 'held up' in a crisis if its Expected Shortfall (99%, historical) and its biggest fall were both smaller than the Nifty 50's in the same period.
 * **Yes partly no.** Label verdict. Yes: the label held in the chosen crisis, the chosen calm period and at least 80% of all periods in the list. Partly: it held in at least one chosen period or at least half of all periods. Otherwise No.
 * **Robust.** The weights are robust in a period if the share of money you would need to move to reach that period's best weights is no more than the 95th percentile of what random noise in the data alone would make you move (measured by reshuffling today's data).
-* **Fit.** A portfolio fits you if its worst fall in rupees in a crisis replay (on your amount) is no bigger than the fall you said you could live with. If both fit, we suggest A because it is expected to earn more. If only B fits, we suggest B. If neither fits, we show the largest amount that keeps B's worst fall within your limit.
+* **Fit.** A portfolio fits you if its worst fall in rupees in a crisis replay (on your amount) is no bigger than the fall you said you could live with. Of the portfolios that fit (A, B and C), we suggest the one expected to earn the most. If none fits, we show the largest amount that keeps the portfolio that fell least within your limit.
 * **Trigger.** When to look again: review the weights when the Nifty 50's 3-month volatility goes above the lowest 3-month volatility seen during the chosen crisis.
 * **As is.** We call it recommended as it is when all four checks pass. (1) A is clearly riskier than B: the 95% bootstrap range for A's volatility divided by B's stays above 1. (2) A is expected to earn more than a safe Treasury bill (Sharpe above 0). (3) B moved less than the Nifty 50 over the latest 12 months. (4) Both portfolios meet every weight limit without loosening any. If a check fails, we say 'recommended with caution' and name the check.
 

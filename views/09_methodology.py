@@ -70,6 +70,9 @@ if right is not None:
         st.latex(r"\beta = \frac{\operatorname{Cov}(r, r_m)}{\operatorname{Var}(r_m)} \quad \text{MDD} = \max_t\Big(1 - \frac{W_t}{\max_{s\le t} W_s}\Big)")
         st.latex(r"\text{Sharpe} = \frac{\mu - r_f}{\sigma} \quad \text{Sortino} = \frac{\mu - r_f}{\sigma_{\text{down}}}")
         st.latex(r"z_{CF} = z + \tfrac{(z^2-1)S}{6} + \tfrac{(z^3-3z)K}{24} - \tfrac{(2z^3-5z)S^2}{36}")
+        st.latex(r"\textbf{A: } \max_w \mu^\top w \quad \textbf{B: } \min_w w^\top \Sigma w \quad "
+                 r"\textbf{C: } \max_w \tfrac{\mu^\top w - r_f}{\sqrt{w^\top \Sigma w}} \quad "
+                 r"\sigma_p^2 = w^\top \Sigma w,\ \Sigma = \tfrac{D^\top D}{N-1},\ D = M - \bar M")
         st.markdown(f"""
 * **Returns** are simple daily returns, with 252 trading days in a year. VaR, ES and the best-mix line keep the **weights fixed**
   (as if you topped up every day). The rupee crisis replay **buys once and holds** from the first day of the period.

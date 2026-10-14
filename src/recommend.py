@@ -13,7 +13,7 @@ RULES = {
     "b_held_up": "Portfolio B 'held up' in a crisis if its Expected Shortfall (99%, historical) and its biggest fall were both smaller than the Nifty 50's in the same period.",
     "yes_partly_no": "Label verdict. Yes: the label held in the chosen crisis, the chosen calm period and at least 80% of all periods in the list. Partly: it held in at least one chosen period or at least half of all periods. Otherwise No.",
     "robust": "The weights are robust in a period if the share of money you would need to move to reach that period's best weights is no more than the 95th percentile of what random noise in the data alone would make you move (measured by reshuffling today's data).",
-    "fit": "A portfolio fits you if its worst fall in rupees in a crisis replay (on your amount) is no bigger than the fall you said you could live with. If both fit, we suggest A because it is expected to earn more. If only B fits, we suggest B. If neither fits, we show the largest amount that keeps B's worst fall within your limit.",
+    "fit": "A portfolio fits you if its worst fall in rupees in a crisis replay (on your amount) is no bigger than the fall you said you could live with. Of the portfolios that fit (A, B and C), we suggest the one expected to earn the most. If none fits, we show the largest amount that keeps the portfolio that fell least within your limit.",
     "trigger": "When to look again: review the weights when the Nifty 50's 3-month volatility goes above the lowest 3-month volatility seen during the chosen crisis.",
 }
 
@@ -62,20 +62,15 @@ def robustness(turnover_crisis: float, turnover_calm: float, noise_p95: float) -
     return {"verdict": v, "crisis_significant": bool(sig_c), "calm_significant": bool(sig_m), "noise_p95": noise_p95}
 
 
-def fit(tolerance_rs: float, fall_a: float, fall_b: float, amount_a: float, amount_b: float) -> dict:
-    worst_a, worst_b = fall_a * amount_a, fall_b * amount_b
-    fits_a, fits_b = worst_a <= tolerance_rs, worst_b <= tolerance_rs
-    if fits_a and fits_b:
-        pick = "A"
-    elif fits_b:
-        pick = "B"
-    elif fits_a:
-        pick = "A"
-    else:
-        pick = None
-    max_b = tolerance_rs / fall_b if fall_b > 0 else float("inf")
-    return {"pick": pick, "fits_A": fits_a, "fits_B": fits_b, "worst_A": worst_a, "worst_B": worst_b,
-            "max_amount_B": max_b}
+def fit(tolerance_rs: float, falls: dict, amounts: dict, expected: dict) -> dict:
+    """Of the portfolios whose worst crisis fall (₹) stays within the client's limit, pick the one expected to earn the
+    most. If none fits, say how much could go into the one that falls least."""
+    worst = {k: falls[k] * amounts[k] for k in falls}
+    fits = [k for k in falls if worst[k] <= tolerance_rs]
+    pick = max(fits, key=lambda k: expected[k]) if fits else None
+    safest = min(falls, key=falls.get)
+    max_amt = tolerance_rs / falls[safest] if falls[safest] > 0 else float("inf")
+    return {"pick": pick, "fits": fits, "worst": worst, "safest": safest, "max_amount_safest": max_amt}
 
 
 def review_trigger(crisis_nifty_returns: list[float]) -> float:

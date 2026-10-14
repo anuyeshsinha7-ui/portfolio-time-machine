@@ -89,6 +89,26 @@ def excess_kurtosis(r: pd.Series) -> float:
     return float(r.dropna().kurt())
 
 
+def beta_vol_table(R: pd.DataFrame, m: pd.Series) -> pd.DataFrame:
+    """Just beta and volatility for every column, vectorised (what the label rule needs).
+
+    Same numbers as beta() and ann_vol() column by column: volatility on each stock's own days, beta on the days
+    the stock and the market both have a return; columns with fewer than 20 days are dropped, as in stock_table."""
+    x = R.to_numpy(dtype=float)
+    y = m.reindex(R.index).to_numpy(dtype=float)[:, None]
+    both = ~np.isnan(x) & ~np.isnan(y)
+    nb = both.sum(0)
+    xm = np.where(both, x, 0.0)
+    ym = np.where(both, y, 0.0)
+    mx, my = xm.sum(0) / np.maximum(nb, 1), ym.sum(0) / np.maximum(nb, 1)
+    dx, dy = np.where(both, x - mx, 0.0), np.where(both, y - my, 0.0)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        b = (dx * dy).sum(0) / (dy * dy).sum(0)
+    b[nb < 3] = np.nan
+    out = pd.DataFrame({"volatility": R.std(ddof=1) * np.sqrt(T), "beta": b}, index=R.columns)
+    return out[R.notna().sum() >= 20]
+
+
 def stock_table(R: pd.DataFrame, m: pd.Series, rf: float = config.RISK_FREE_RATE) -> pd.DataFrame:
     """Every §6.1 metric for each column of R over the rows given."""
     rows = {}

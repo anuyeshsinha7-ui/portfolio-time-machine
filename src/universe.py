@@ -18,9 +18,9 @@ def usable() -> pd.DataFrame:
     return u[u["status"].isin(["core", "extended"])].copy()
 
 
-def metrics_table(start=None, end=None, symbols=None, require_full: bool = True) -> pd.DataFrame:
+def metrics_table(start=None, end=None, symbols=None, require_full: bool = True, labels_only: bool = False) -> pd.DataFrame:
     """§6.1 metrics for every usable stock; with require_full, only stocks with (almost) the whole
-    window of data between start and end."""
+    window of data between start and end. labels_only: just beta and volatility (fast, for the label rule)."""
     R, m = D.returns(), D.market_returns()
     if start is not None:
         R, m = D.window(R, start, end), D.window(m, start, end)
@@ -31,7 +31,7 @@ def metrics_table(start=None, end=None, symbols=None, require_full: bool = True)
         cols = [c for c in full if R[c].notna().mean() > 0.95]
     else:
         cols = list(R.columns)
-    return M.stock_table(R[cols], m)
+    return M.beta_vol_table(R[cols], m) if labels_only else M.stock_table(R[cols], m)
 
 
 def classification(years: int = config.CLASSIFICATION_YEARS) -> pd.DataFrame:
