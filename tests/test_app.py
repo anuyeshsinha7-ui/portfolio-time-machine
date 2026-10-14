@@ -204,3 +204,13 @@ def test_phone_only_presenting_view_and_back():
     assert not at.exception and at.session_state["present_mode"]
     next(b for b in at.button if b.key == "ptm_present_off").click().run()
     assert not at.exception and not at.session_state["present_mode"]
+
+
+def test_refresh_returns_to_the_same_screen():
+    """After a browser refresh, 404.html reopens the dashboard with ?page=<screen>; after the amount, that screen comes back."""
+    at = AppTest.from_file(str(ROOT / "app.py"), default_timeout=120)
+    at.query_params["page"] = "verdict"
+    at.run()
+    assert "How much would you like to invest?" in text(at)
+    next(b for b in at.button if b.label.startswith("Continue")).click().run()
+    assert not at.exception and "Does 'safe' stay safe?" in text(at)

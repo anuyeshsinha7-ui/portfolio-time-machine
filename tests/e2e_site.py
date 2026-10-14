@@ -27,6 +27,18 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a):
         pass
 
+    def send_error(self, code, message=None, explain=None):
+        """Like GitHub Pages: a missing file gets the site's 404.html (with status 404)."""
+        page = Path(self.directory) / "404.html"
+        if code != 404 or not page.exists():
+            return super().send_error(code, message, explain)
+        body = page.read_bytes()
+        self.send_response(404)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
 
 def serve(site: Path, port: int):
     srv = socketserver.TCPServer(("127.0.0.1", port), functools.partial(Quiet, directory=str(site)))
@@ -102,6 +114,12 @@ def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int =
                         page.screenshot(path=str(screens / f"{label}_{PAGES.index((key, heading)) + 1:02d}_{key}.png"),
                                         full_page=not phone)
                     print(f"[{label}] {key}: {'OK' if not err else 'ERROR'}")
+                # refreshing the browser on a screen must come back to that screen, not a 404
+                page.reload()
+                page.wait_for_selector("text=How much would you like to invest?", timeout=240_000)
+                page.get_by_role("button", name="Continue →").click()
+                page.get_by_text(PAGES[-1][1]).first.wait_for(timeout=120_000)
+                print(f"[{label}] refresh on {PAGES[-1][0]} ({page.url.split('/app/')[1]}): back on the same screen")
                 ctx.close()
             browser.close()
     finally:

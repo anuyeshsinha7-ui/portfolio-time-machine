@@ -40,7 +40,10 @@ def app_file_list() -> list[str]:
 def write_loader(files: list[str]) -> None:
     theme = {"theme.base": "dark", "theme.primaryColor": config.COLOR_ACCENT, "theme.backgroundColor": config.COLOR_BG,
              "theme.secondaryBackgroundColor": config.COLOR_PANEL, "theme.textColor": config.COLOR_INK,
-             "theme.font": "sans serif", "client.toolbarMode": "minimal"}
+             "theme.font": "sans serif", "client.toolbarMode": "minimal",
+             # the app's files never change in the browser; the watcher's endless async polling is what eventually
+             # crashes Pyodide in Chrome after idling (stlite#1493, pyodide#5702)
+             "server.fileWatcherType": "none"}
     file_map = {f: {"url": f"files/{f}"} for f in files}
     tpl = (ROOT / "site_src" / "app" / "index.html").read_text()
     html = (tpl.replace("{{STLITE_VERSION}}", STLITE_VERSION)

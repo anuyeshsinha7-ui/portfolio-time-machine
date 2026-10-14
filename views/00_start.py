@@ -52,7 +52,7 @@ with left:
         st.error(e)
     if not errors and val_a:
         a_amt, b_amt = AL.split_amounts(mode, val_a, val_b)
-        ui.tiles([("Portfolio A · Bold", ui.inr_short(a_amt), "aims for higher returns", "a"),
+        ui.tiles([("Portfolio A · Bold", ui.inr_short(a_amt), "aims for the highest return", "a"),
                   ("Portfolio B · Steady", ui.inr_short(b_amt), "plays it safe", "b")])
     if st.button("Continue →", type="primary", disabled=bool(errors), width="stretch"):
         s["amount_mode"] = mode
@@ -64,7 +64,9 @@ with left:
             s["amount_b"] = val_b if mode == "separate" else val_a
             s["amount_total"] = s["amount_a"] + s["amount_b"]
         s["amount_confirmed"] = True
-        st.switch_page(s["_pages"]["prefs"])
+        slug = s.pop("resume_page", None)
+        back = [pg for pg in s["_pages"].values() if slug and pg.url_path == slug and slug != "start"]
+        st.switch_page(back[0] if back else s["_pages"]["prefs"])  # after a refresh, return to the screen they were on
     st.caption("Educational project — not investment advice.")
 
 if right is not None:

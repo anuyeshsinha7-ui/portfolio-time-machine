@@ -41,12 +41,43 @@
     } else {
       const t0 = performance.now();
       window.__ptmBoot = { start: t0 };
-      mount({
+      window.__ptmApp = mount({
         requirements: {{REQUIREMENTS}},
         entrypoint: "app.py",
         files,
         streamlitConfig: {{CONFIG}},
       }, document.getElementById("root"));
+      // Watchdog: in Chrome, Pyodide can crash after long idling (stlite#1493). A crashed engine leaves a page that looks
+      // fine but ignores every click, so restart it instead. The reload comes back to the same screen via 404.html.
+      const FATAL = /memory access out of bounds|table index is out of bounds|NoGilError|fatal error|RuntimeError: unreachable/i;
+      let recovering = false, busySince = null;
+      const recover = (why) => {
+        if (recovering || !window.__ptmBoot.ready) return;
+        recovering = true;
+        console.warn("PTM watchdog: restarting the Python engine —", why);
+        const d = document.createElement("div");
+        d.id = "ptm-loading";
+        d.innerHTML = "<div class='box'><h1>⏳ Waking the dashboard up…</h1><p>The Python engine in your browser stopped " +
+          "responding (a known browser issue after a long pause). Restarting it now — you'll be back on this screen after " +
+          "you confirm your amount.</p><div class='bar'><span></span></div></div>";
+        document.body.appendChild(d);
+        setTimeout(() => location.reload(), 1500);
+      };
+      const isFatal = (x) => FATAL.test(String((x && (x.message || x.reason || x)) || ""));
+      window.addEventListener("error", (e) => isFatal(e.message || e.error) && recover(e.message));
+      window.addEventListener("unhandledrejection", (e) => isFatal(e.reason) && recover(String(e.reason)));
+      const ping = () => Promise.race([window.__ptmApp.readFile("app.py", { encoding: "utf8" }).then(() => true, () => false),
+                                       new Promise((r) => setTimeout(() => r(false), 10000))]);
+      const check = async () => {
+        if (recovering || !window.__ptmBoot.ready || document.visibilityState !== "visible") return;
+        if (await ping()) { busySince = null; return; }
+        const running = document.querySelector('[data-testid="stStatusWidget"]');
+        if (!running) return recover("no answer from Python");
+        busySince = busySince || performance.now();  // a long calculation also delays the answer: allow two minutes
+        if (performance.now() - busySince > 120000) recover("Python busy for over two minutes");
+      };
+      setInterval(check, 15000);
+      document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && check());
       const steps = ["Downloading Python…", "Installing pandas, NumPy, SciPy and Plotly…", "Loading the data snapshot…", "Almost there…"];
       let i = 0;
       const ticker = setInterval(() => { i = Math.min(i + 1, steps.length - 1); document.getElementById("ptm-step").textContent = steps[i]; }, 6000);

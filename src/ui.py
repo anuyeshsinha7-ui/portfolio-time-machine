@@ -207,6 +207,7 @@ def init_state() -> None:
         st.session_state["qp_done"] = True
         try:
             q = st.query_params.get("amount")
+            st.session_state["resume_page"] = st.query_params.get("page")  # set by site 404.html after a refresh
         except Exception:  # some hosts do not expose query parameters
             q = None
         if q:
