@@ -64,6 +64,6 @@ Python 3.13 · pandas · NumPy · SciPy · Plotly · Streamlit 1.62 · stlite 1.
 | Ritul Bokde | P2513057 |
 | Liash Roy | P2513032 |
 | Baidurja Biswas | P2511020 |
-| Kasutabh Data | P2511037 |
+| Kasutabh Datta | P2511037 |
 
 *Educational project — not investment advice. Data: Yahoo Finance (via yfinance) and NSE.*

@@ -158,11 +158,13 @@ def test_var_es_orderings_all_methods(current_A, picks):
 
 
 def test_historical_var_known_values():
+    # class convention: interpolated percentile (Excel PERCENTILE.INC / pandas quantile)
     r = np.array([-0.05, -0.04, -0.03, -0.02, -0.01] + [0.01] * 95)
-    v, e = V.historical(r, 0.95)
-    assert v == pytest.approx(0.01) and e == pytest.approx(0.03)
     v99, e99 = V.historical(r, 0.99)
-    assert v99 == pytest.approx(0.05) and e99 == pytest.approx(0.05)
+    assert v99 == pytest.approx(-np.percentile(r, 1)) and v99 == pytest.approx(0.0401)  # 0.99 × 4% + 0.01 × 5%
+    assert e99 == pytest.approx(0.05)  # only the −5% day is at or below the cut-off
+    v95, e95 = V.historical(r, 0.95)
+    assert v95 == pytest.approx(-pd.Series(r).quantile(0.05)) and e95 == pytest.approx(0.03)
 
 
 def test_parametric_normal_formula():
@@ -332,6 +334,15 @@ def test_matrix_walkthrough_matches_class_example_and_parametric(current_A, pick
         ms = V.matrix_steps(prices.pct_change(fill_method=None).iloc[1:], pd.Series({"TCS": 0.55, "New Gen Tech": 0.45}))
         assert ms["sd_p"] == pytest.approx(0.016263, abs=5e-6)
         assert ms["var"][0.95] == pytest.approx(-0.025643, abs=5e-6) and ms["var"][0.99] == pytest.approx(-0.036726, abs=5e-6)
+        # historical VaR from the class sheet (=PERCENTILE on each stock's returns): TCS −1.99% / −3.58%, NGT −3.96% / −6.38%
+        rets = prices.pct_change(fill_method=None).iloc[1:]
+        for col, v95, v99 in (("TCS", 0.0199, 0.0358), ("New Gen Tech", 0.0396, 0.0638)):
+            assert V.historical(rets[col].to_numpy(), 0.95)[0] == pytest.approx(v95, abs=5e-5)
+            assert V.historical(rets[col].to_numpy(), 0.99)[0] == pytest.approx(v99, abs=5e-5)
+        # and the class portfolio sheet: daily portfolio return Σ wᵢrᵢ (55% / 45%), then PERCENTILE → −2.301% / −3.738%
+        port = M.portfolio_returns(rets, pd.Series({"TCS": 0.55, "New Gen Tech": 0.45})).to_numpy()
+        assert V.historical(port, 0.95)[0] == pytest.approx(0.02301, abs=5e-6)
+        assert V.historical(port, 0.99)[0] == pytest.approx(0.03738, abs=5e-6)
     # on our data the matrix route equals the 'Parametric normal' method exactly
     w = pd.Series(1 / len(picks["A"]), index=picks["A"])
     ms = V.matrix_steps(current_A, w)
@@ -348,3 +359,46 @@ def test_fast_beta_vol_table_equals_full_metrics():
     assert list(fast.index) == list(full.index)
     assert fast["beta"].to_numpy(dtype=float) == pytest.approx(full["beta"].to_numpy(dtype=float), rel=1e-9, nan_ok=True)
     assert fast["volatility"].to_numpy(dtype=float) == pytest.approx(full["volatility"].to_numpy(dtype=float), rel=1e-9)
+
+
+def test_var_is_a_positive_loss_for_random_portfolios_and_windows():
+    """VaR and ES are losses: positive, ES ≥ VaR, 99% ≥ 95%, for every method, on random portfolios and windows."""
+    from scipy import stats
+
+    rng = np.random.default_rng(11)
+    R_all, cal = D.returns(), D.calendar()
+    core = list(D.universe().query("status == 'core'").index)
+    for _ in range(12):
+        n = int(rng.integers(126, 400))
+        i = int(rng.integers(0, len(cal) - n))
+        syms = list(rng.choice(core, int(rng.integers(10, 31)), replace=False))
+        R = R_all.iloc[i:i + n][syms]
+        w = pd.Series(rng.dirichlet(np.ones(len(syms))), index=syms)
+        out = V.all_methods(R, w)
+        port = (R.fillna(0) @ w).to_numpy()
+        for m in V.METHODS:
+            for c in (0.95, 0.975, 0.99):
+                assert out[m][c]["var"] > 0 and out[m][c]["es"] >= out[m][c]["var"] - 1e-12, (m, c)
+            assert out[m][0.99]["var"] >= out[m][0.95]["var"] - 1e-12, m
+        mu, sd = port.mean(), port.std(ddof=1)
+        assert out["Parametric normal"][0.99]["var"] == pytest.approx(-(mu + stats.norm.ppf(0.01) * sd))
+
+
+def test_stored_results_never_hold_a_negative_var():
+    import json
+
+    res = json.loads((ROOT / "results" / "default.json").read_text())
+    found = []
+
+    def walk(o):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k in ("var", "es") and isinstance(v, (int, float)):
+                    found.append(v)
+                else:
+                    walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+    walk(res)
+    assert len(found) > 1000 and min(found) > 0

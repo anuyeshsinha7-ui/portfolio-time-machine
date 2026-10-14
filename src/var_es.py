@@ -4,7 +4,8 @@ Losses are positive fractions of the portfolio value over a 1-day horizon; 10-da
 √10 scaling. ES ≥ VaR and VaR(99%) ≥ VaR(95%) hold by construction (and are tested).
 
 Methods
-1. Historical simulation (primary): the empirical loss quantile; ES = mean loss beyond it.
+1. Historical simulation (primary): the class convention — the (1−c) percentile of the returns with linear
+   interpolation (Excel PERCENTILE / pandas quantile), as a loss; ES = mean loss on the days at or beyond it.
 2. Parametric normal: VaR = −(μ + σ z), ES = −μ + σ φ(z)/(1−c).
 3. Monte Carlo, multivariate Student-t: 10,000 draws, degrees of freedom fitted to the window's
    portfolio returns (floored at 3), covariance matched to the sample, fixed seed.
@@ -26,13 +27,11 @@ METHODS = ["Historical", "Parametric normal", "Monte Carlo (Student-t)", "Cornis
 
 
 def historical(r: np.ndarray, c: float) -> tuple[float, float]:
-    r = np.sort(np.asarray(r, dtype=float)[~np.isnan(r)])
-    n = len(r)
-    k = max(int(math.floor(round(n * (1 - c), 9))), 1)  # number of tail observations
-    var = -r[k - 1] if k <= n else float("nan")
-    # tail = worst k observations (losses at least as bad as VaR)
-    es = -r[:k].mean()
-    return float(var), float(max(es, var))
+    r = np.asarray(r, dtype=float)
+    r = r[~np.isnan(r)]
+    q = float(np.quantile(r, 1 - c))  # linear interpolation = Excel PERCENTILE.INC = pandas .quantile (as taught in class)
+    es = -float(r[r <= q].mean())  # never empty: the interpolated q is at least the worst day
+    return -q, max(es, -q)
 
 
 def parametric_normal(r: np.ndarray, c: float) -> tuple[float, float]:

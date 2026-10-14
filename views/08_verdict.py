@@ -53,9 +53,9 @@ with left:
     f = RC.fit(tol, {kk: ctx.crisis[kk]["replay"]["largest_fall"] for kk in ("A", "B", "C")},
                {kk: ctx.amount(kk) for kk in ("A", "B", "C")}, {kk: ctx.P[kk]["expected_return"] for kk in ("A", "B", "C")})
     ui.list_rows([(ui.PLAN[kk][2], f"Portfolio {ui.NAMES[kk]}", f"worst fall in the {ui.short(ctx.crisis_ev)}",
-                   f"−{ui.inr_short(f['worst'][kk])}", ui.chip("fits", "ok") if kk in f["fits"] else ui.chip("too big", "bad"))
+                   f"{ui.inr_short(f['worst'][kk])} lost", ui.chip("fits", "ok") if kk in f["fits"] else ui.chip("too big", "bad"))
                   for kk in ("A", "B", "C")])
-    st.caption(f"Your limit: −{ui.inr_short(tol)}")
+    st.caption(f"Your limit: a fall of {ui.inr_short(tol)}")
     if f["pick"]:
         others = [x for x in f["fits"] if x != f["pick"]]
         ui.verdict(ui.PLAN[f["pick"]][2], f"Portfolio {ui.NAMES[f['pick']]} fits you",

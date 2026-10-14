@@ -1183,12 +1183,15 @@ def matrix_walkthrough(R: pd.DataFrame, w: pd.Series, conf: float, amount: float
     st.latex(rf"\sigma_p^2 = w^\top\Sigma w = {ms['var_p']:.7f} \qquad \sigma_p = \sqrt{{{ms['var_p']:.7f}}} = {ms['sd_p'] * 100:.4f}\%")
     _step(7, "Portfolio mean μₚ = wᵀ μ", f"(1 × {k}) × ({k} × 1).")
     st.latex(rf"\mu_p = w^\top \mu = {ms['mu_p'] * 100:.4f}\%\ \text{{a day}}")
-    _step(8, "Parametric VaR = μₚ + z · σₚ", "z is the normal score at the significance level (5% → −1.645, 1% → −2.326).")
+    _step(8, "Parametric VaR", "First find the cut-off return r* = μₚ + z · σₚ, where z is the normal score at the significance "
+          "level (5% → −1.645, 1% → −2.326). r* is negative because it is a bad day; VaR is that same number stated as a "
+          "loss, so VaR = −r* is positive. (The class sheet shows r*; the app shows VaR.)")
     for c in (0.95, 0.99):
         v = ms["var"][c]
-        st.latex(rf"{(1 - c) * 100:.0f}\%\ \text{{level:}}\quad {ms['mu_p'] * 100:.4f}\% + ({ms['z'][c]:.3f}) \times {ms['sd_p'] * 100:.4f}\% "
-                 rf"= \mathbf{{{v * 100:.4f}\%}}")
-        st.markdown(f"<div style='text-align:center;margin:-.6rem 0 .4rem'>a loss of <b>{inr(abs(v) * amount)}</b> on "
+        st.latex(rf"{(1 - c) * 100:.0f}\%\ \text{{level:}}\quad r^* = {ms['mu_p'] * 100:.4f}\% + ({ms['z'][c]:.3f}) \times "
+                 rf"{ms['sd_p'] * 100:.4f}\% = {v * 100:.4f}\% \;\Rightarrow\; \text{{VaR}}_{{{c * 100:.0f}\%}} = "
+                 rf"\mathbf{{{-v * 100:.4f}\%}}")
+        st.markdown(f"<div style='text-align:center;margin:-.6rem 0 .4rem'>a loss of <b>{inr(-v * amount)}</b> on "
                     f"{inr(amount)} ({c:.0%} confidence)</div>", unsafe_allow_html=True)
     ok = abs(-ms["var"][conf] - method_loss) < 1e-6  # the stored figure is rounded to 7 decimals
     st.caption(("✓ " if ok else "✗ ") + f"Same as the 'Parametric normal' row above ({method_loss:.4%} loss at {conf:.0%}): "

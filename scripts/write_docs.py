@@ -96,7 +96,8 @@ R_max = highest achievable return (linear program, `scipy.optimize.linprog`), {C
 Losses are positive fractions; ₹ figures = fraction × the client's amount. 1-day horizon; 10-day via √10 (assumes i.i.d. days).
 Confidence 95% and 99%, plus ES at 97.5% (Basel FRTB).
 
-1. **Historical simulation** (primary): VaR = the k-th worst return, k = ⌊n(1−c)⌋; ES = mean of the k worst.
+1. **Historical simulation** (primary, the class convention): VaR = −(the (1−c) percentile of daily returns, linear interpolation as in
+   Excel `PERCENTILE` / pandas `quantile`); ES = −(mean of the returns at or below that percentile).
 2. **Parametric normal:** VaR = −(μ + σz), ES = −μ + σφ(z)/(1−c).
 3. **Monte Carlo, multivariate Student-t:** {C.MC_DRAWS:,} draws, degrees of freedom fitted by maximum likelihood to the window's portfolio
    returns and floored at {C.T_DOF_FLOOR:g}, covariance matched to the sample, seed {C.SEED}.

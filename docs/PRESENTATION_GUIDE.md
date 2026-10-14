@@ -11,10 +11,10 @@ All numbers below are for **₹15,00,000 in each portfolio** and the official pe
 |---|---|---|---|
 | 0:00–1:00 | Anu Yesh Sinha | Landing → Start | Hook: "Does 'safe' stay safe when the market crashes?" Type an amount on the landing page (try 15 lakh), open the dashboard, show it arrives on Start. |
 | 1:00–3:00 | Rishabh Agrawal | Pick stocks → The risk call | The rule (beta ≥ 1 and volatility ≥ median). A: weighted beta **1.57**, volatility **34.1%**; B: **0.58**, **11.4%**. σA/σB = **2.99**, 95% CI **2.74–3.26** → statistically backed. |
-| 3:00–4:30 | Ritul Bokde | Optimum weights | A = max return (expected return 35.8%, volatility 29.2%); B = min variance (volatility 11.2%); C = max Sharpe over both sets (return 38.2%, Sharpe 1.47). Walk the matrix steps wᵀΣw → VaR on the Backing. Show the frontier and whole-share allocation. VaR before/after: B's 99% VaR 2.42% → 2.25%. |
-| 4:30–8:30 | Liash Roy | Test #1 | Crisis replay: ₹15,00,000 in A falls to **₹4,67,565**, B to **₹11,03,649**, Nifty −57.6%. ES99: A **9.9%** vs B **7.2%** → label held. Breach test: VaR fitted in calm → A **23**, B **36** breaches vs ≈2.5 expected. **Switch the event live to COVID-19** (ES99 A 12.3% vs B 8.0%). Scoreboard: label held in **13/13** events; B beat the Nifty in **6/10** crises. |
+| 3:00–4:30 | Ritul Bokde | Optimum weights | A = max return (expected return 35.8%, volatility 29.2%); B = min variance (volatility 11.2%); C = max Sharpe over both sets (return 38.2%, Sharpe 1.47). Walk the matrix steps wᵀΣw → VaR on the Backing. Show the frontier and whole-share allocation. VaR before/after: B's 99% VaR 1.91% → 1.83%. |
+| 4:30–8:30 | Liash Roy | Test #1 | Crisis replay: ₹15,00,000 in A falls to **₹4,67,565**, B to **₹11,03,649**, Nifty −57.6%. ES99: A **9.5%** vs B **6.8%** → label held. Breach test: VaR fitted in calm → A **25**, B **37** breaches vs ≈2.5 expected. **Switch the event live to COVID-19** (ES99 A 11.5% vs B 6.7%). Scoreboard: label held in **13/13** events; B beat the Nifty in **6/10** crises. |
 | 8:30–12:00 | Baidurja Biswas | Test #2 | Target = 35.8% for A, −0.1% for B. In the crisis A's target is **unreachable**; turnover **46%** (₹6.9 lakh) vs noise p95 56%. B: **reachable**, turnover 43% vs 43%. Show bootstrap bands. |
-| 12:00–13:30 | Kasutabh Data | Verdict | Label: **Yes**; 'safe stayed safe': **Partly**. Enter a loss limit (e.g. ₹4 lakh) and show which portfolio fits. Review trigger. |
+| 12:00–13:30 | Kasutabh Datta | Verdict | Label: **Yes**; 'safe stayed safe': **Partly**. Enter a loss limit (e.g. ₹4 lakh) and show which portfolio fits. Review trigger. |
 | 13:30–15:00 | all | — | Buffer / questions. |
 
 ## Ten questions faculty are likely to ask

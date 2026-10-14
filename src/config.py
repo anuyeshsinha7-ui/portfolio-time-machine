@@ -19,7 +19,7 @@ APP_NAME = "Portfolio Time Machine"
 TAGLINE = "Does 'safe' stay safe when the market crashes?"
 GROUP = "Group 14"
 TEAM_ROLLS = [("Anu Yesh Sinha", "P2513012"), ("Rishabh Agrawal", "P2513054"), ("Ritul Bokde", "P2513057"),
-              ("Liash Roy", "P2513032"), ("Baidurja Biswas", "P2511020"), ("Kasutabh Data", "P2511037")]
+              ("Liash Roy", "P2513032"), ("Baidurja Biswas", "P2511020"), ("Kasutabh Datta", "P2511037")]
 TEAM = [n for n, _ in TEAM_ROLLS]
 CREDIT_LINE = f"{GROUP} · PGDM, Great Lakes Institute of Management, Gurgaon"
 GITHUB_USER = "anuyeshsinha7-ui"
