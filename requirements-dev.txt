@@ -5,3 +5,4 @@ requests
 cvxpy==1.9.3
 pytest
 playwright
+pyflakes
