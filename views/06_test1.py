@@ -66,6 +66,8 @@ with left:
         st.html(f"<div class='app-sec'><span class='t'>{icon} {ui.esc(ui.short(ev))}</span><span class='x'>"
                 f"{ui.chip('A stayed riskier ✓', 'ok') if held else ui.chip('labels flipped', 'bad')}</span></div>")
         ui.list_rows(rows)
+        if ui.missing_note(reg):
+            ui.note(ui.missing_note(reg), "ℹ️", "warn")
         if ev["type"] == "crisis":
             ui.note(f"Buy-and-hold low: A {ui.inr_short(reg['A']['replay']['low'] * ctx.amount_a)} · B "
                     f"{ui.inr_short(reg['B']['replay']['low'] * ctx.amount_b)} · C {ui.inr_short(reg['C']['replay']['low'] * ctx.amount('C'))} "

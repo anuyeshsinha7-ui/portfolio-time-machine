@@ -159,6 +159,15 @@ DEFAULT_STATE = {
     "amount_mode": config.AMOUNT_MODE, "amount_confirmed": False, "conf": 0.99, "horizon": 1,
     "window_mode": config.EVENT_WINDOW_MODE, "show_backing": True, "tolerance": None,
 }
+# the segmented controls can hand back None (a tap on the selected option); the pages need a real value
+VALID = {"conf": (0.95, 0.99), "horizon": (1, 10), "window_mode": ("standard", "event_only")}
+
+
+def setting(k: str):
+    v = st.session_state.get(k)
+    return v if v in VALID[k] else DEFAULT_STATE[k]
+
+
 MOBILE_UA = ("iphone", "android", "mobile", "ipod", "blackberry", "opera mini", "iemobile")
 
 
@@ -190,6 +199,8 @@ def universe_table() -> pd.DataFrame:
 def init_state() -> None:
     for k, v in DEFAULT_STATE.items():
         st.session_state.setdefault(k, v)
+    for k in VALID:  # before the widgets are drawn, so this is allowed
+        st.session_state[k] = setting(k)
     st.session_state.setdefault("is_phone", detect_phone())  # plain state: widget state is dropped on page switches
     res = default_results()
     st.session_state.setdefault("pick_A", list(res["picks"]["A"]))
@@ -393,12 +404,22 @@ def coverage_problem(eid: str, symbols: list[str], mode: str) -> str | None:
     if not ev["available"]:
         return "not supported by the Nifty 50 data"
     w = ev["windows"].get(mode) or ev["windows"]["standard"]
-    t = universe_table()
-    for s in symbols:
-        fd = t.loc[s, "first_date"] if s in t.index else None
-        if fd and pd.Timestamp(fd) > pd.Timestamp(w[0]):
-            return f"{s} listed in {pd.Timestamp(fd).year} — not available for this event"
+    late = set(E.late_listed(symbols, w[0]))
+    for k in ("A", "B"):  # a few too-new stocks are left out of the test; more than half of a portfolio blocks it
+        picks = [x for x in st.session_state.get(f"pick_{k}", []) if x in symbols]
+        n = len(late & set(picks))
+        if picks and n > len(picks) / 2:
+            return f"only {len(picks) - n} of Portfolio {k}'s {len(picks)} stocks were listed by then"
     return None
+
+
+def missing_note(reg: dict) -> str | None:
+    """'Tested without …' when some stocks were not listed yet in that period."""
+    gone = sorted({x for k in ("A", "B", "C") for x in (reg.get(k) or {}).get("missing", [])})
+    if not gone:
+        return None
+    return (f"Tested without {', '.join(gone)} (not listed yet then); the other stocks' weights were scaled up to "
+            "100%, so this is the same portfolio minus the stocks that did not exist.")
 
 
 def fallback_event(kind: str, symbols: list[str], mode: str) -> str:
@@ -436,7 +457,7 @@ def context() -> Ctx:
     res = default_results()
     a, b = tuple(s["pick_A"]), tuple(s["pick_B"])
     default = (a, b) == _default_key() or (sorted(a), sorted(b)) == tuple(sorted(x) for x in _default_key())
-    mode = s["window_mode"]
+    mode = setting("window_mode")
     if default:
         P, evd = res["portfolios"], res["evidence"]
     else:
@@ -459,8 +480,8 @@ def context() -> Ctx:
         cur = _regime(a, b, str(cal[-config.REGIME_DAYS].date()), str(cal[-1].date()))
     aa, ab = amounts()
     return Ctx(res=res, P=P, evidence=evd, events=res["events"], current=cur, crisis=out["crisis"][0], calm=out["calm"][0],
-               crisis_ev=out["crisis"][1], calm_ev=out["calm"][1], amount_a=aa, amount_b=ab, conf=s["conf"],
-               horizon=s["horizon"], mode=mode, default=default)
+               crisis_ev=out["crisis"][1], calm_ev=out["calm"][1], amount_a=aa, amount_b=ab, conf=setting("conf"),
+               horizon=setting("horizon"), mode=mode, default=default)
 
 
 def compute_scoreboard(ctx: Ctx) -> list[dict]:
@@ -1100,7 +1121,11 @@ def compact_label(eid: str, symbols: list[str], mode: str) -> str:
     prob = coverage_problem(eid, symbols, mode)
     tail = ev["label"].split(" · ")[2] if ev["label"].count(" · ") >= 2 else ""
     base = f"{'⭐ ' if eid.startswith('auto_') else ''}{short(ev)}{' · ' + tail if tail else ''}"
-    return f"⛔ {base} (needs older data)" if prob and "not supported" not in prob else base
+    if prob and "not supported" not in prob:
+        return f"⛔ {base} (too many stocks too new)"
+    w = ev["windows"].get(mode) or ev["windows"]["standard"]
+    n = len(E.late_listed(symbols, w[0]))
+    return f"{base} · without {n} newer stock{'s' if n > 1 else ''}" if n else base
 
 
 # ---------------------------------------------------------------- guided flow: preferences, ticked events

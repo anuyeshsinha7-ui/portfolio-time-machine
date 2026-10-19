@@ -430,3 +430,25 @@ def test_excel_export_covers_all_three_portfolios():
     assert w.groupby("Portfolio")["Weight"].sum().to_numpy() == pytest.approx([1, 1, 1], abs=1e-5)
     v = pd.read_excel(io.BytesIO(xl), sheet_name="VaR & ES")
     assert set(v["Portfolio"]) == {"A", "B", "C"} and (v["VaR"] > 0).all() and (v["ES"] >= v["VaR"] - 1e-12).all()
+
+
+def test_presentation_script_generates_with_every_speaker_and_no_gaps():
+    import json
+    import sys
+
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import write_docs
+
+    res = json.loads((ROOT / "results" / "default.json").read_text())
+    text = write_docs.script(res)
+    assert all(name in text for name in config.TEAM)
+    assert not any(bad in text for bad in ("nan%", "None", "{", "}"))
+
+
+def test_regime_leaves_out_stocks_not_yet_listed(picks):
+    from src import engine as E
+
+    p = E.build_portfolio("A", picks["A"][:12] + ["STARHEALTH"], config.OBJECTIVE_A, cloud_k=100)
+    r = E.regime_result(p, "2020-01-01", "2020-12-31", None, frontier_points=10)
+    assert r["available"] and r["missing"] == ["STARHEALTH"]
+    assert sum(r["test2"]["weights"].values()) == pytest.approx(1, abs=1e-6) and r["test2"]["weights"]["STARHEALTH"] == 0

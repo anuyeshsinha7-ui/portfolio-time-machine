@@ -143,8 +143,24 @@ def evidence(pa: dict, pb: dict, resamples: int = config.BOOTSTRAP_RESAMPLES, ta
 
 
 # ---------------------------------------------------------------- one portfolio in one regime (§6.8, §6.9)
+def late_listed(symbols, start) -> list[str]:
+    """Stocks with no return in the first trading week from `start` (not listed yet)."""
+    R = D.returns().loc[pd.Timestamp(start):].iloc[:5][list(symbols)]
+    return [s for s in symbols if R[s].isna().all()]
+
+
 def regime_result(p: dict, start, end, universe_labels: pd.DataFrame | None = None,
                   frontier_points: int = config.FRONTIER_POINTS) -> dict:
+    late = late_listed(p["symbols"], start)
+    if late:  # test the stocks that existed then, their weights scaled back up to 100%, and say which were left out
+        keep = [s for s in p["symbols"] if s not in late]
+        w = pd.Series(p["weights"])[keep]
+        if not keep or w.sum() <= 0:
+            return {"available": False, "reason": f"none of these stocks were listed by {pd.Timestamp(start).date()}"}
+        out = regime_result({**p, "symbols": keep, "weights": (w / w.sum()).to_dict()}, start, end, universe_labels, frontier_points)
+        if out.get("available"):  # a stock that did not exist has 0 weight in that period's optimum
+            out["test2"]["weights"] = {x: out["test2"]["weights"].get(x, 0.0) for x in p["symbols"]}
+        return {**out, "missing": late, "missing_weight": float(1 - w.sum())}
     symbols = p["symbols"]
     w = pd.Series(p["weights"])
     R, m = window_returns(symbols, start, end)

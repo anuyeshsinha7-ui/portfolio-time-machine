@@ -49,6 +49,9 @@ with left:
         rows.append(("🌪️" if ev["type"] == "crisis" else "🌤️", ui.esc(ui.short(ev)),
                      f"Optimiser {PLAIN[t2['case']]} · move {ui.pct(t2['turnover'], 0)} of the money", ui.inr_short(t2["turnover"] * amt), c))
     ui.list_rows(rows)
+    for eid, reg, ev in results:
+        if ui.missing_note(reg):
+            ui.note(f"<b>{ui.esc(ui.short(ev))}</b>: {ui.missing_note(reg)}", "ℹ️", "warn")
     if boot:
         ui.note(f"Random noise in 12 months of prices alone can shuffle up to <b>{ui.pct(boot[which]['turnover_p95'], 0)}</b> "
                 f"({ui.inr_short(boot[which]['turnover_p95'] * amt)}). Only bigger moves count as a real change.", "🎲")

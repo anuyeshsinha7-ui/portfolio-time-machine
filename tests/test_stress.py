@@ -140,3 +140,26 @@ def test_phone_rerenders_do_not_shrink_shared_charts():
     for _ in range(15):  # the regime chart is cached; resizing it in place once shrank it a little more on every rerun
         at.switch_page("views/06_test1.py").run()
         ok(at, "test1 rerun")
+
+
+def test_empty_settings_never_crash():
+    """A tap on the selected option of a segmented control can hand back None; every page must still work."""
+    at = app(conf=None, horizon=None, window_mode=None)
+    for p in FLOW:
+        at.switch_page(p).run()
+        ok(at, p)
+    assert at.session_state["conf"] == 0.99 and at.session_state["horizon"] == 1
+
+
+def test_newly_listed_stocks_are_left_out_not_blocking():
+    """Picks with stocks listed after a period starts: the period is tested without them, with a note."""
+    a = RES["picks"]["A"][:13] + ["JBMA"]
+    b = RES["picks"]["B"][:13] + ["STARHEALTH"]
+    evs = [k for k, v in RES["events"].items() if v["available"] and not k.startswith("auto")]
+    at = app(pick_A=a, pick_B=b, bt_events=evs)
+    for p in ("views/06_test1.py", "views/07_test2.py", "views/08_verdict.py", "views/01_home.py", "views/05_weights.py"):
+        at.switch_page(p).run()
+        ok(at, p)
+    at.switch_page("views/06_test1.py").run()
+    body = " ".join(str(getattr(getattr(h, "proto", None), "body", "")) for h in at.get("html"))
+    assert "Tested without" in body and "can't be tested" not in body
