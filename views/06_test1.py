@@ -26,8 +26,11 @@ with left:
             key = f"bt_{eid}"
             if key not in s:
                 s[key] = eid in s["bt_events"]
-            ev = evs_all[eid]
-            if st.checkbox(ui.compact_label(eid, s["pick_A"] + s["pick_B"], s["window_mode"]), key=key):
+            blocked = ui.coverage_problem(eid, s["pick_A"] + s["pick_B"], s["window_mode"])
+            if blocked:  # greyed out: too many of the client's stocks did not exist yet in this period
+                s[key] = False
+            if st.checkbox(ui.compact_label(eid, s["pick_A"] + s["pick_B"], s["window_mode"]), key=key,
+                           disabled=bool(blocked), help=blocked):
                 ticked.append(eid)
     s["bt_events"] = ticked
     crises = [e for e in ticked if evs_all[e]["type"] == "crisis"]

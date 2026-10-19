@@ -436,11 +436,13 @@ def test_presentation_script_generates_with_every_speaker_and_no_gaps():
     import json
     import sys
 
+    if not (ROOT / "scripts" / "write_talk.py").exists():
+        pytest.skip("speaker notes are local only")
     sys.path.insert(0, str(ROOT / "scripts"))
-    import write_docs
+    import write_talk
 
     res = json.loads((ROOT / "results" / "default.json").read_text())
-    text = write_docs.script(res)
+    text = write_talk.script(res)
     assert all(name in text for name in config.TEAM)
     assert not any(bad in text for bad in ("nan%", "None", "{", "}"))
 

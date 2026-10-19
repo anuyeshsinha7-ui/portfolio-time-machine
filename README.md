@@ -16,7 +16,7 @@
 |---|---|---|
 | ![Preferences](docs/screenshots/desktop_01_prefs.png) | ![Backtest](docs/screenshots/desktop_04_test1.png) | ![Phone](docs/screenshots/phone_02_suggest.png) |
 
-## Headline results (snapshot 13 Oct 2026, ₹15 lakh in each)
+## Headline results (snapshot 16 Oct 2026, ₹15 lakh in each)
 
 See [docs/RESULTS_SUMMARY.md](docs/RESULTS_SUMMARY.md) for every number, including the all-events scoreboard.
 
@@ -51,7 +51,7 @@ Python 3.13 · pandas · NumPy · SciPy · Plotly · Streamlit 1.62 · stlite 1.
 
 * **Redeploy:** push to `main` — Actions runs the tests, precomputes, builds `_site/`, smoke-tests it in a browser and publishes.
 * **Refresh the data (one command, on your own computer):** `bash scripts/update_data.sh` downloads up to the latest trading day, cleans and checks it against NSE, recomputes every result, runs the tests and rebuilds the site; add `--publish` to commit and push (GitHub redeploys). It stops at the first failure, so bad data never goes live. Review `data/restatements_vs_previous_snapshot.csv` and `docs/DATA_QUALITY.md`. (Not on a timer in the cloud: NSE blocks cloud servers such as GitHub Actions.)
-* **Freeze the snapshot before the presentation** so the slides, [the presentation guide](docs/PRESENTATION_GUIDE.md) and the site match.
+* **Freeze the snapshot before the presentation** so the slides and the site match.
 
 ## Team
 

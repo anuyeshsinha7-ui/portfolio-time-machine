@@ -405,11 +405,11 @@ def coverage_problem(eid: str, symbols: list[str], mode: str) -> str | None:
         return "not supported by the Nifty 50 data"
     w = ev["windows"].get(mode) or ev["windows"]["standard"]
     late = set(E.late_listed(symbols, w[0]))
-    for k in ("A", "B"):  # a few too-new stocks are left out of the test; more than half of a portfolio blocks it
+    for k in ("A", "B"):  # a few too-new stocks are left out of the test; more than MAX_MISSING_STOCKS blocks it
         picks = [x for x in st.session_state.get(f"pick_{k}", []) if x in symbols]
         n = len(late & set(picks))
-        if picks and n > len(picks) / 2:
-            return f"only {len(picks) - n} of Portfolio {k}'s {len(picks)} stocks were listed by then"
+        if n > config.MAX_MISSING_STOCKS:
+            return f"{n} of Portfolio {k}'s {len(picks)} stocks were not listed yet (more than {config.MAX_MISSING_STOCKS})"
     return None
 
 
@@ -1122,7 +1122,7 @@ def compact_label(eid: str, symbols: list[str], mode: str) -> str:
     tail = ev["label"].split(" · ")[2] if ev["label"].count(" · ") >= 2 else ""
     base = f"{'⭐ ' if eid.startswith('auto_') else ''}{short(ev)}{' · ' + tail if tail else ''}"
     if prob and "not supported" not in prob:
-        return f"⛔ {base} (too many stocks too new)"
+        return f"{base} · not testable ({prob.split(' (')[0]})"
     w = ev["windows"].get(mode) or ev["windows"]["standard"]
     n = len(E.late_listed(symbols, w[0]))
     return f"{base} · without {n} newer stock{'s' if n > 1 else ''}" if n else base

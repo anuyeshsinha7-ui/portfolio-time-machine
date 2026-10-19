@@ -13,6 +13,7 @@ PY="${PY:-/opt/anaconda3/envs/fra/bin/python}"
 "$PY" scripts/precompute.py
 "$PY" scripts/run_analysis.py
 "$PY" scripts/write_docs.py
+[ -f scripts/write_talk.py ] && "$PY" scripts/write_talk.py  # speaker notes: local only
 "$PY" -m pytest tests -q
 "$PY" scripts/build_site.py
 

@@ -1,13 +1,13 @@
 # Methodology
 
-Snapshot as of **2026-10-13**; history from **2007-09-17** (the first Nifty 50 date on Yahoo, `^NSEI`).
+Snapshot as of **2026-10-16**; history from **2007-09-17** (the first Nifty 50 date on Yahoo, `^NSEI`).
 Every number on the site comes from the code in `src/` applied to the committed snapshot in `data/`.
 
 ## 1. Data
 
 * **Universe:** today's Nifty 500 (NSE constituent list) with NSE's Industry field; market-cap bucket = Large cap (Nifty 100), Mid cap (Midcap 150), Small cap (Smallcap 250),
   "Flexi" = all three. **Core** universe (231 stocks) = continuous clean history from 2007-09-17; **extended**
-  (200) = at least 3 years, usable for custom picks; 70 excluded.
+  (201) = at least 3 years, usable for custom picks; 69 excluded.
 * **Prices:** Yahoo Finance daily closes (`auto_adjust=False`) with dividend and split history, anchored to NSE bhavcopy closes and
   rebuilt into total-return prices — see [DATA_QUALITY.md](DATA_QUALITY.md).
 * **Benchmark:** Nifty 50 (`^NSEI`), gaps filled from NSE's official index closes. It is a *price* index while stock prices include
@@ -25,7 +25,7 @@ Sharpe = (μ − r_f)/σ; Sortino = (μ − r_f)/σ_down; skewness; excess kurto
 
 Labels are set on **today's data — the trailing 3 years** — so both time-travel tests are out of sample.
 
-* **High risk** = beta ≥ 1.0 **and** volatility ≥ universe median (35.1% in this snapshot).
+* **High risk** = beta ≥ 1.0 **and** volatility ≥ universe median (35.2% in this snapshot).
 * **Low risk** = beta < 1.0 **and** volatility < universe median. Everything else = Moderate.
 * Composite risk score = average of the beta percentile and the volatility percentile.
 * **Recommendation (default picker):** A = the top 15 High-risk stocks by composite score, B = the 15 Low-risk stocks
@@ -39,7 +39,7 @@ Labels are set on **today's data — the trailing 3 years** — so both time-tra
 ## 4. Regimes and events
 
 * Equal-length windows of **252 trading days** (≈ 12 months, mirroring the 12-month stress period behind Basel's stressed VaR).
-* **Current** = the latest 252 days (2025-10-06 → 2026-10-13).
+* **Current** = the latest 252 days (2025-10-09 → 2026-10-16).
 * **Crisis (auto)** = the window around the deepest Nifty 50 drawdown, starting 21 trading days before the pre-crash peak.
 * **Calm (auto)** = the lowest-volatility 252-day window overlapping neither Current nor the auto crisis.
 * **Catalogue events** (`data/events.json`) have *search ranges*; the window is anchored on the data — crisis: the deepest peak-to-trough
@@ -60,7 +60,7 @@ Labels are set on **today's data — the trailing 3 years** — so both time-tra
 | Russia–Ukraine war and rate hikes (2022) | crisis | 2021-10-01 → 2022-06-30 | 2021-09-16 → 2022-09-20 | yes | Nifty 50 fell 17.2% peak to trough inside the search range | https://en.wikipedia.org/wiki/2022_stock_market_decline |
 | Adani–Hindenburg sell-off (2023) | crisis | 2023-01-01 → 2023-03-31 | 2022-12-05 → 2023-12-11 | yes | Nifty 50 fell 7.1% peak to trough inside the search range | https://en.wikipedia.org/wiki/Hindenburg_Research |
 | Foreign-investor sell-off correction (2024–25) | crisis | 2024-09-01 → 2025-03-31 | 2024-08-28 → 2025-09-01 | yes | Nifty 50 fell 15.8% peak to trough inside the search range | NSDL FPI Monitor, foreign portfolio investment net equity flows Oct 2024 – Feb 2025 (https://www.fpi.nsdl.co.in/) |
-| US tariff shock (2025) | crisis | 2025-03-01 → 2025-04-30 | 2024-09-30 → 2025-10-03 | no — standard: moved 100 trading days earlier so it does not overlap the Current window; dropped: the Nifty 50 data does not support this as a crisis (fall under the threshold) | Nifty 50 fell 6.4% peak to trough inside the search range | https://en.wikipedia.org/wiki/Liberation_Day_tariffs |
+| US tariff shock (2025) | crisis | 2025-03-01 → 2025-04-30 | 2024-10-04 → 2025-10-08 | no — standard: moved 97 trading days earlier so it does not overlap the Current window; dropped: the Nifty 50 data does not support this as a crisis (fall under the threshold) | Nifty 50 fell 6.4% peak to trough inside the search range | https://en.wikipedia.org/wiki/Liberation_Day_tariffs |
 | Low-volatility rally (2017) | calm | 2017-01-01 → 2017-12-31 | 2017-01-30 → 2018-02-01 | yes | lowest 126-day Nifty 50 volatility in the range 7.8% vs full-sample median 15.4% | https://www.nseindia.com/reports-indices-historical-vix |
 | Post-election steady market (2014) | calm | 2014-06-01 → 2015-02-28 | 2013-12-02 → 2014-12-15 | yes | lowest 126-day Nifty 50 volatility in the range 12.3% vs full-sample median 15.4% | https://en.wikipedia.org/wiki/2014_Indian_general_election |
 | Low-VIX stretch (2023–24) | calm | 2023-04-01 → 2024-03-31 | 2022-11-25 → 2023-12-01 | yes | lowest 126-day Nifty 50 volatility in the range 8.1% vs full-sample median 15.4% | https://www.nseindia.com/reports-indices-historical-vix |

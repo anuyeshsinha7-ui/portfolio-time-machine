@@ -54,6 +54,7 @@ REGIME_DAYS = 252
 EVENT_PRE_DAYS = 21
 EVENT_WINDOW_MODE = "standard"  # "standard" | "event_only"
 MIN_WINDOW_DAYS = 126
+MAX_MISSING_STOCKS = 5  # a period is greyed out when a portfolio has more stocks than this not yet listed
 CALM_ANCHOR_DAYS = 126  # length of the lowest-volatility stretch that anchors a calm event
 EVENTS_FILE = DATA_DIR / "events.json"
 OFFICIAL_CRISIS_EVENT = "auto"  # an id from events.json, or "auto"

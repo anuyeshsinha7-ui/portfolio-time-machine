@@ -163,3 +163,18 @@ def test_newly_listed_stocks_are_left_out_not_blocking():
     at.switch_page("views/06_test1.py").run()
     body = " ".join(str(getattr(getattr(h, "proto", None), "body", "")) for h in at.get("html"))
     assert "Tested without" in body and "can't be tested" not in body
+
+
+def test_period_greyed_out_when_more_than_five_stocks_too_new():
+    import pandas as pd
+
+    uni = pd.DataFrame(json.loads((ROOT / "results" / "universe.json").read_text())).set_index("symbol")
+    new = [s for s in uni.index[pd.to_datetime(uni["first_date"]) > "2010-06-01"] if s not in RES["picks"]["B"]][:6]
+    assert len(new) == 6
+    for n_new, greyed in ((5, False), (6, True)):
+        a = RES["picks"]["A"][:15 - n_new] + new[:n_new]
+        at = app(pick_A=a, bt_events=["gfc_2008"] if "gfc_2008" in RES["events"] else [])
+        at.switch_page("views/06_test1.py").run()
+        ok(at, f"{n_new} new stocks")
+        cb = next(c for c in at.checkbox if c.key == "bt_auto_crisis")
+        assert cb.disabled == greyed and (not greyed or cb.value is False), (n_new, cb.disabled, cb.value)
