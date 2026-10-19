@@ -64,7 +64,7 @@ def main() -> None:
     tracked = run(["git", "ls-files"])[1].splitlines()
     leaks = [f for f in tracked if any(k in f for k in ("PRESENTATION_", "write_talk", "Faculty", ".env"))]
     check(not leaks, "no speaker notes, course files or env files tracked" + (f": {leaks}" if leaks else ""))
-    code, out = run(["git", "grep", "-nIE", r"(ghp_|github_pat_|sk-[A-Za-z0-9]{20}|AKIA[0-9A-Z]{16})", "--", ".", ":!*.csv"])
+    code, out = run(["git", "grep", "-nIE", r"(ghp_|github_pat_|sk-[A-Za-z0-9]{20}|AKIA[0-9A-Z]{16})", "--", ".", ":!*.csv", ":!scripts/audit.py"])  # not its own pattern
     check(code != 0, "no keys or tokens in tracked files")
 
     section("Data")
