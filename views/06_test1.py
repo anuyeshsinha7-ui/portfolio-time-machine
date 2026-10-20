@@ -63,13 +63,8 @@ with left:
             d = RC.deviation(ctx.current[kk], reg[kk], k)
             am = ctx.amount(kk)
             rows.append((ui.PLAN[kk][2], f"Portfolio {kk} · {ui.PLAN[kk][1].split(' · ')[0]}",
-                         f"<b>VaR</b> {ui.inr_short(ctx.h(d['var_then']) * am)} ({ui.pct(ctx.h(d['var_then']))}) · today "
-                         f"{ui.inr_short(ctx.h(d['var_now']) * am)}<br>"
-                         f"<b>ES</b> {ui.inr_short(ctx.h(d['es_then']) * am)} ({ui.pct(ctx.h(d['es_then']))}) · today "
-                         f"{ui.inr_short(ctx.h(d['es_now']) * am)}<br>"
-                         f"Value after: VaR day <b>{ui.inr_short(am * (1 - ctx.h(d['var_then'])))}</b> · ES day "
-                         f"<b>{ui.inr_short(am * (1 - ctx.h(d['es_then'])))}</b>",
-                         f"{d['es_mult']:.1f}×", "ES vs today"))
+                         ui.risk_text(ctx, reg[kk], am, now=ctx.current[kk], period=f"the {ui.short(ev).split(' (')[0]}",
+                                      extra=f"ES is <b>{d['es_mult']:.1f}×</b> today's."), "", ""))
         held = RC.label_holds(reg["A"], reg["B"])
         icon = "🌪️" if ev["type"] == "crisis" else "🌤️"
         st.html(f"<div class='app-sec'><span class='t'>{icon} {ui.esc(ui.short(ev))}</span><span class='x'>"
@@ -94,7 +89,9 @@ with left:
         cmp = []
         for nm, r in [("Today", ctx.current)] + [(ui.short(ev).split(" (")[0][:18], r_) for _, r_, ev in ok]:
             v, e = ctx.h(r[ck]["risk"]["Historical"][k]["var"]), ctx.h(r[ck]["risk"]["Historical"][k]["es"])
-            cmp.append({"Period": nm, "VaR": ui.inr_short(v * am), "ES": ui.inr_short(e * am),
+            n_days, beyond = ui.tail_days(r[ck], k)
+            cmp.append({"Period": nm, "VaR": ui.inr_short(v * am), "Days beyond VaR": f"{len(beyond)} of {n_days}",
+                        "ES": ui.inr_short(e * am),
                         "Value after VaR": ui.inr_short(am * (1 - v)), "Value after ES": ui.inr_short(am * (1 - e)),
                         "Lowest value": ui.inr_short(r[ck]["replay"]["low"] * am), "ES vs today": f"{e / e_now:.1f}×"})
         st.dataframe(pd.DataFrame(cmp), hide_index=True, width="stretch",
@@ -136,16 +133,16 @@ if right is not None:
                              "VaR today": ctx.h(d["var_now"]), "VaR then": ctx.h(d["var_then"]), "Change in VaR": ctx.h(d["var_change"]),
                              "ES today": ctx.h(d["es_now"]), "ES then": ctx.h(d["es_then"]), "Change in ES": ctx.h(d["es_change"]),
                              "ES ×": round(d["es_mult"], 2),
-                             "Value after a VaR day then": ui.inr(ctx.amount(kk) * (1 - ctx.h(d["var_then"]))),
-                             "Value after an ES day then": ui.inr(ctx.amount(kk) * (1 - ctx.h(d["es_then"]))),
+                             "Value if the VaR loss happened then": ui.inr(ctx.amount(kk) * (1 - ctx.h(d["var_then"]))),
+                             "Value if the ES loss happened then": ui.inr(ctx.amount(kk) * (1 - ctx.h(d["es_then"]))),
                              "Lowest value": ui.inr(reg[kk]["replay"]["low"] * ctx.amount(kk)),
                              "Value at end": ui.inr(reg[kk]["replay"]["end"] * ctx.amount(kk)), "Volatility then": reg[kk]["volatility"], "Biggest fall then": reg[kk]["max_drawdown"]})
         if rows:
             df = pd.DataFrame(rows)
-            st.dataframe(ui.pct_df(df, [c for c in df.columns if c not in ("Period", "Window", "P", "ES ×", "Value after a VaR day then", "Value after an ES day then", "Lowest value", "Value at end")]),
+            st.dataframe(ui.pct_df(df, [c for c in df.columns if c not in ("Period", "Window", "P", "ES ×", "Value if the VaR loss happened then", "Value if the ES loss happened then", "Lowest value", "Value at end")]),
                          hide_index=True, width="stretch")
-            st.caption("Value after a VaR day = your amount × (1 − VaR); after an ES day = your amount × (1 − ES), i.e. "
-                       "after an average one of the worst days in that period. Lowest value and value at end: your amount bought on the "
+            st.caption("Value if the VaR loss happened = your amount × (1 − VaR). Value if the ES loss happened = your amount × "
+                       "(1 − ES), where ES is the average of the days that lost more than VaR in that period. Lowest value and value at end: your amount bought on the "
                        "first day of the period and held (no rebalancing).")
             st.latex(r"\Delta\text{VaR} = \text{VaR}_{\text{period}} - \text{VaR}_{\text{today}}, \quad "
                      r"\text{same weights } w_{\text{today}}, \ \text{returns of that period}")

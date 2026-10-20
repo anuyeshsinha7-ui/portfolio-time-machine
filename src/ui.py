@@ -156,7 +156,7 @@ def show(fig: go.Figure) -> None:
 # ---------------------------------------------------------------- state
 DEFAULT_STATE = {
     "amount_a": float(config.AMOUNT_A), "amount_b": float(config.AMOUNT_B), "amount_total": float(config.AMOUNT_A * 2),
-    "amount_mode": config.AMOUNT_MODE, "amount_confirmed": False, "conf": 0.99, "horizon": 1,
+    "amount_mode": config.AMOUNT_MODE, "amount_confirmed": False, "conf": 0.95, "horizon": 1,
     "window_mode": config.EVENT_WINDOW_MODE, "show_backing": True, "tolerance": None,
 }
 # the segmented controls can hand back None (a tap on the selected option); the pages need a real value
@@ -1277,5 +1277,42 @@ def risk_explainer(ctx: "Ctx") -> None:
     span = "day" if ctx.horizon == 1 else f"{ctx.horizon}-day stretch"
     ui_note = (f"<b>VaR</b> (Value at Risk): a loss you would go past on only <b>1 {span} in {odds}</b>. "
                f"<b>ES</b> (Expected Shortfall): the <b>average loss on those worst 1-in-{odds} {span}s</b>, so it is always at "
-               "least as big as VaR. <b>Value after</b> = your amount minus that loss.")
+               "least as big as VaR. Each one below shows the days it comes from and what your money would drop to.")
     note(ui_note, "📘")
+
+
+def tail_days(r: dict, conf_key: str) -> tuple[int, list[float]]:
+    """(days in the period, the 1-day losses beyond the historical VaR, worst first) — exactly the days ES averages."""
+    import numpy as np
+
+    x = np.asarray(r["returns"]["port"], dtype=float)
+    var = r["risk"]["Historical"][conf_key]["var"]
+    return len(x), sorted((-x[x <= -var]).tolist(), reverse=True)
+
+
+def risk_text(ctx: "Ctx", r: dict, am: float, now: dict | None = None, period: str | None = None, extra: str = "") -> str:
+    """VaR and ES for one portfolio in one period, worded so it can be checked by hand: the % and ₹, how many days lost
+    more than VaR, the exact losses ES averages, and what the value drops to. period=None → today's last 12 months."""
+    k = ctx.ck()
+    var, es = ctx.h(r["risk"]["Historical"][k]["var"]), ctx.h(r["risk"]["Historical"][k]["es"])
+    n, losses = tail_days(r, k)
+    days = ", ".join(f"−{x:.1%}" for x in losses)
+    scale = " These are 1-day losses; the 10-day figures are them × √10." if ctx.horizon != 1 else ""
+    if period is None:
+        when, lead_v, lead_e, where = "In the last 12 months", "VaR is", "ES is", "today's scenario"
+        today_v, today_e = "", " today"
+    else:
+        when, lead_v, lead_e, where = f"During {period}", f"During {period}, VaR was", f"ES during {period} was", period
+        nv, ne = ctx.h(now["risk"]["Historical"][k]["var"]), ctx.h(now["risk"]["Historical"][k]["es"])
+        today_v, today_e = f" (today: {pct(nv)}, {inr_short(nv * am)})", f" (today: {pct(ne)}, {inr_short(ne * am)})"
+    happen = "If the {} loss happens" if period is None else "If the {} loss happened during " + period
+    parts = [f"<b>{lead_v} {pct(var)}, which is {inr_short(var * am)}</b> of your {inr_short(am)}{today_v}. "
+             f"{'In that period' if period else when} there were <b>{len(losses)} days</b> (of {n}) that lost more than VaR.",
+             f"<b>{lead_e} {pct(es)}, which is {inr_short(es * am)}</b>{today_e}. It is the average of these {len(losses)} "
+             f"losses ({days}), which gives the Expected Shortfall for {where}.{scale}",
+             f"<b>{happen.format('VaR')}:</b> value drops from {inr_short(am)} to <b>{inr_short(am * (1 - var))}</b>, "
+             f"a loss of {inr_short(var * am)}.",
+             f"<b>{happen.format('ES')}:</b> value drops from {inr_short(am)} to <b>{inr_short(am * (1 - es))}</b>, "
+             f"a loss of {inr_short(es * am)}."] + ([extra] if extra else [])
+    return ("<div style='font-size:.8rem;line-height:1.45;color:#C9CFDB'>"
+            + "".join(f"<div style='margin-top:6px'>{x}</div>" for x in parts) + "</div>")

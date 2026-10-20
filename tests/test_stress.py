@@ -148,7 +148,7 @@ def test_empty_settings_never_crash():
     for p in FLOW:
         at.switch_page(p).run()
         ok(at, p)
-    assert at.session_state["conf"] == 0.99 and at.session_state["horizon"] == 1
+    assert at.session_state["conf"] == 0.95 and at.session_state["horizon"] == 1
 
 
 def test_newly_listed_stocks_are_left_out_not_blocking():

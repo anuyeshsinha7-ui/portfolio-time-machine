@@ -222,11 +222,13 @@ def test_expected_shortfall_shows_the_portfolio_value_left():
     amt = 1_00_00_000.0
     at = app(amount_a=amt, amount_b=amt)
     at.switch_page("views/05_weights.py").run()
-    es = RES["current"]["A"]["risk"]["Historical"]["0.99"]["es"]
-    assert not at.exception and f"value after {inr_short(amt * (1 - es))}" in text(at)
+    es = RES["current"]["A"]["risk"]["Historical"]["0.95"]["es"]  # 95% is the default
+    assert not at.exception and f"to <b>{inr_short(amt * (1 - es))}</b>, a loss of {inr_short(es * amt)}" in text(at)
     at.switch_page("views/06_test1.py").run()
-    var = RES["regimes"][f"{RES['official']['crisis']}|standard"]["A"]["risk"]["Historical"]["0.99"]["var"]
-    assert not at.exception and f"VaR day <b>{inr_short(amt * (1 - var))}</b>" in text(at) and "Expected Shortfall" in text(at)
+    var = RES["regimes"][f"{RES['official']['crisis']}|standard"]["A"]["risk"]["Historical"]["0.95"]["var"]
+    body = text(at)
+    assert not at.exception and f"drops from {inr_short(amt)} to <b>{inr_short(amt * (1 - var))}</b>, a loss of {inr_short(var * amt)}" in body
+    assert "Expected Shortfall" in body
 
 
 def test_backtest_shows_portfolio_value_through_each_period():
@@ -261,8 +263,20 @@ def test_backtest_comparison_table_today_vs_each_period():
     assert not at.exception
     t = next(d.value for d in at.dataframe if "ES vs today" in getattr(d.value, "columns", []))
     assert list(t["Period"])[0] == "Today" and len(t) == 1 + len(evs) and t["ES vs today"].iloc[0] == "1.0×"
-    var_now = RES["current"]["A"]["risk"]["Historical"]["0.99"]["var"]
+    var_now = RES["current"]["A"]["risk"]["Historical"]["0.95"]["var"]
     assert t["VaR"].iloc[0] == inr_short(var_now * 1e7) and t["Value after VaR"].iloc[0] == inr_short(1e7 * (1 - var_now))
     for v in "BC":
         next(w for w in at.segmented_control if w.key == "bt_cmp").set_value(v).run()
         assert not at.exception
+
+
+
+def test_es_text_lists_exactly_the_days_it_averages():
+    import numpy as np
+    from src import ui as U
+
+    reg = RES["regimes"][f"{RES['official']['crisis']}|standard"]["A"]
+    n, losses = U.tail_days(reg, "0.99")
+    h = reg["risk"]["Historical"]["0.99"]
+    assert n == len(reg["returns"]["port"]) and all(x > h["var"] for x in losses) and losses == sorted(losses, reverse=True)
+    assert np.mean(losses) == pytest.approx(h["es"], rel=1e-5)  # ES is exactly the average of the listed days

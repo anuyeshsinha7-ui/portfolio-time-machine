@@ -31,10 +31,13 @@ with left:
         rk = ctx.current[kk]["risk"]["Historical"][k]
         am = ctx.amount(kk)
         tl += [(f"{kk} · VaR", ui.inr_short(ctx.h(rk["var"]) * am),
-                f"{ui.pct(ctx.h(rk['var']))} · value after {ui.inr_short(am * (1 - ctx.h(rk['var'])))}", kk.lower()),
+                f"{ui.pct(ctx.h(rk['var']))} · {ui.inr_short(am)} → {ui.inr_short(am * (1 - ctx.h(rk['var'])))}", kk.lower()),
                (f"{kk} · ES", ui.inr_short(ctx.h(rk["es"]) * am),
-                f"{ui.pct(ctx.h(rk['es']))} · value after {ui.inr_short(am * (1 - ctx.h(rk['es'])))}", kk.lower())]
+                f"{ui.pct(ctx.h(rk['es']))} · {ui.inr_short(am)} → {ui.inr_short(am * (1 - ctx.h(rk['es'])))}", kk.lower())]
     ui.tiles(tl)
+    ui.section("Worked out from the last 12 months", f"{ctx.conf:.0%} · {ctx.horizon}-day")
+    ui.list_rows([(ui.PLAN[kk][2], f"Portfolio {ui.NAMES[kk]}", ui.risk_text(ctx, ctx.current[kk], ctx.amount(kk)), "", "")
+                  for kk in ("A", "B", "C")])
     ui.section("Is it recommended as it is?")
     ui.list_rows([("✅" if c["ok"] else "⚠️", c["name"], c["detail"], ui.chip("pass", "ok") if c["ok"] else ui.chip("check", "mid"), "")
                   for c in checks])
