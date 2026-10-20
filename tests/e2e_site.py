@@ -70,7 +70,8 @@ NAV_PHONE = {"prefs": "Choose", "suggest": "For you", "weights": "Today", "test1
              "methodology": "About the data"}
 
 
-def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int = 2500000, url: str | None = None) -> list[str]:
+def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int = 2500000, url: str | None = None,
+        engine: str = "chromium") -> list[str]:
     from playwright.sync_api import sync_playwright
 
     problems: list[str] = []
@@ -78,10 +79,11 @@ def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int =
     base = (url or f"http://127.0.0.1:{port}").rstrip("/")
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            browser = getattr(p, engine).launch()
             for label, vp, phone in (("desktop", {"width": 1440, "height": 900}, False),
                                      ("phone", {"width": 390, "height": 844}, True)):
-                ctx = browser.new_context(viewport=vp, device_scale_factor=2 if phone else 1, is_mobile=phone, has_touch=phone)
+                mobile = phone and engine != "firefox"  # Firefox has no mobile emulation
+                ctx = browser.new_context(viewport=vp, device_scale_factor=2 if phone else 1, is_mobile=mobile, has_touch=phone)
                 page = ctx.new_page()
                 page.on("pageerror", lambda e: problems.append(f"JS error: {e}"))
                 # landing page and amount hand-off
@@ -92,7 +94,7 @@ def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int =
                     problems.append(f"{label}: landing page title missing")
                 if screens:
                     page.screenshot(path=str(screens / f"{label}_landing.png"), full_page=True)
-                page.goto(base + f"/app/?amount={amount}")
+                page.goto(base + f"/app/?amount={amount}", wait_until="domcontentloaded")  # Python boots after "load"
                 page.wait_for_selector("text=How much would you like to invest?", timeout=240_000)
                 boot = time.time() - t0
                 print(f"[{label}] dashboard booted in {boot:.1f}s")
@@ -141,9 +143,10 @@ if __name__ == "__main__":
     ap.add_argument("--screens", type=Path)
     ap.add_argument("--port", type=int, default=8791)
     ap.add_argument("--url", help="test a deployed site instead of _site/")
+    ap.add_argument("--browser", default="chromium", choices=["chromium", "webkit", "firefox"], help="webkit = Safari's engine")
     a = ap.parse_args()
     if a.screens:
         a.screens.mkdir(parents=True, exist_ok=True)
-    probs = run(ROOT / "_site", a.port, a.screens, url=a.url)
+    probs = run(ROOT / "_site", a.port, a.screens, url=a.url, engine=a.browser)
     print("\n".join(probs) if probs else "ALL PAGES OK")
     sys.exit(1 if probs else 0)

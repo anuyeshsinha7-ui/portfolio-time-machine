@@ -24,13 +24,16 @@ odds = round(1 / (1 - ctx.conf))
 with left:
     ui.hero("Today", "Your portfolios right now", f"Weights and risk from the latest 12 months ({ctx.current['start']} → {ctx.current['end']})", "")
     ui.portfolio_badge()
-    ui.section("Risk today", f"{ctx.horizon}-day · 1 in {odds} days")
+    ui.section("Risk today", f"{ctx.conf:.0%} · {ctx.horizon}-day")
+    ui.risk_explainer(ctx)
     tl = []
     for kk in ("A", "B", "C"):
         rk = ctx.current[kk]["risk"]["Historical"][k]
         am = ctx.amount(kk)
-        tl += [(f"{kk} · a bad day could cost", ui.inr_short(ctx.h(rk["var"]) * am), f"VaR {ui.pct(ctx.h(rk['var']))}", kk.lower()),
-               (f"{kk} · worst days average", ui.inr_short(ctx.h(rk["es"]) * am), f"ES {ui.pct(ctx.h(rk['es']))}", kk.lower())]
+        tl += [(f"{kk} · VaR", ui.inr_short(ctx.h(rk["var"]) * am),
+                f"{ui.pct(ctx.h(rk['var']))} · value after {ui.inr_short(am * (1 - ctx.h(rk['var'])))}", kk.lower()),
+               (f"{kk} · ES", ui.inr_short(ctx.h(rk["es"]) * am),
+                f"{ui.pct(ctx.h(rk['es']))} · value after {ui.inr_short(am * (1 - ctx.h(rk['es'])))}", kk.lower())]
     ui.tiles(tl)
     ui.section("Is it recommended as it is?")
     ui.list_rows([("✅" if c["ok"] else "⚠️", c["name"], c["detail"], ui.chip("pass", "ok") if c["ok"] else ui.chip("check", "mid"), "")
@@ -63,10 +66,10 @@ with left:
               ("Ups and downs a year", ui.pct(p["expected_vol"]), "volatility", which.lower())])
     vb = p["var_before_after"]
     eq_v, op_v = ctx.h(vb["equal"]["Historical"][k]["var"]), ctx.h(vb["optimised"]["Historical"][k]["var"])
-    compare(f"A bad day (1 in {round(1 / (1 - ctx.conf))}): equal split vs our weights", eq_v * amt, op_v * amt,
+    compare(f"VaR ({ctx.conf:.0%}, {ctx.horizon}-day): equal split vs our weights", eq_v * amt, op_v * amt,
             f"Equal {ui.inr_short(eq_v * amt)}", f"Ours {ui.inr_short(op_v * amt)}",
-            {"A": "A chases the highest return, so its bad day is usually bigger than an equal split's.",
-             "B": "B is built for the smallest swings, so its bad day should be smaller than an equal split's.",
+            {"A": "A chases the highest return, so its VaR is usually bigger than an equal split's.",
+             "B": "B is built for the smallest swings, so its VaR should be smaller than an equal split's.",
              "C": "C balances return against risk (best Sharpe), so it sits between the two."}[which])
     for wmsg in p["constraints"]["warnings"]:
         ui.note(wmsg, "⚠️", "warn")
@@ -77,7 +80,7 @@ with left:
 if right is not None:
     with right:
         st.markdown(f"#### Today's VaR and ES, worked out four ways ({ctx.conf:.0%}, {ctx.horizon}-day; ES also at 97.5%)")
-        st.markdown("**VaR** is the loss you should not go past on a normal bad day. **ES** is the average loss on the days "
+        st.markdown(f"**VaR** at {ctx.conf:.0%} is the loss exceeded on only {1 - ctx.conf:.0%} of days. **ES** is the average loss on the days "
                     "that are worse than that. We work both out four ways and show the rupee amounts on your money.")
         rows = []
         for kk in ("A", "B", "C"):
@@ -85,7 +88,9 @@ if right is not None:
             for m in ("Historical", "Parametric normal", "Monte Carlo (Student-t)", "Cornish–Fisher"):
                 rows.append({"Portfolio": kk, "Method": m, "VaR": ctx.h(rk[m][k]["var"]), "ES": ctx.h(rk[m][k]["es"]),
                              "ES 97.5%": ctx.h(rk[m]["0.975"]["es"]), "VaR ₹": ui.inr(ctx.h(rk[m][k]["var"]) * ctx.amount(kk)),
-                             "ES ₹": ui.inr(ctx.h(rk[m][k]["es"]) * ctx.amount(kk))})
+                             "ES ₹": ui.inr(ctx.h(rk[m][k]["es"]) * ctx.amount(kk)),
+                             "Value after VaR ₹": ui.inr(ctx.amount(kk) * (1 - ctx.h(rk[m][k]["var"]))),
+                             "Value after ES ₹": ui.inr(ctx.amount(kk) * (1 - ctx.h(rk[m][k]["es"])))})
         st.dataframe(ui.pct_df(pd.DataFrame(rows), ("VaR", "ES", "ES 97.5%")), hide_index=True, width="stretch")
         hcols = st.columns(3)
         for col, kk, colr in zip(hcols, ("A", "B", "C"), (CH.A, CH.B, CH.C)):

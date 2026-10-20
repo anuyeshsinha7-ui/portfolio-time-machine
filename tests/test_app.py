@@ -214,3 +214,55 @@ def test_refresh_returns_to_the_same_screen():
     assert "How much would you like to invest?" in text(at)
     next(b for b in at.button if b.label.startswith("Continue")).click().run()
     assert not at.exception and "Does 'safe' stay safe?" in text(at)
+
+
+def test_expected_shortfall_shows_the_portfolio_value_left():
+    from src.fmt import inr_short
+
+    amt = 1_00_00_000.0
+    at = app(amount_a=amt, amount_b=amt)
+    at.switch_page("views/05_weights.py").run()
+    es = RES["current"]["A"]["risk"]["Historical"]["0.99"]["es"]
+    assert not at.exception and f"value after {inr_short(amt * (1 - es))}" in text(at)
+    at.switch_page("views/06_test1.py").run()
+    var = RES["regimes"][f"{RES['official']['crisis']}|standard"]["A"]["risk"]["Historical"]["0.99"]["var"]
+    assert not at.exception and f"VaR day <b>{inr_short(amt * (1 - var))}</b>" in text(at) and "Expected Shortfall" in text(at)
+
+
+def test_backtest_shows_portfolio_value_through_each_period():
+    from src.fmt import inr_short
+
+    amt = 1_00_00_000.0
+    at = app(amount_a=amt, amount_b=amt)
+    at.switch_page("views/06_test1.py").run()
+    rep = RES["regimes"][f"{RES['official']['crisis']}|standard"]["A"]["replay"]
+    body = text(at)
+    assert not at.exception and "Your money through this period" in body
+    assert inr_short(rep["low"] * amt) in body and inr_short(rep["end"] * amt) in body
+
+
+def test_backtest_method_table_covers_every_ticked_period_in_rupees():
+    evs = ["covid_2020", "ukraine_2022"] if all(e in RES["events"] for e in ("covid_2020", "ukraine_2022")) else \
+        [k for k, v in RES["events"].items() if v["available"] and not k.startswith("auto")][:2]
+    at = app(bt_events=evs)
+    at.switch_page("views/06_test1.py").run()
+    assert not at.exception
+    t = next(d.value for d in at.dataframe if "Value after VaR ₹" in getattr(d.value, "columns", []) and "Method" in d.value.columns)
+    assert set(t["Period"]) == {"Today"} | {RES["events"][e]["name"] for e in evs}
+    assert len(t) == (1 + len(evs)) * 3 * 4  # periods × portfolios × methods
+
+
+def test_backtest_comparison_table_today_vs_each_period():
+    from src.fmt import inr_short
+
+    evs = [k for k, v in RES["events"].items() if v["available"] and not k.startswith("auto")][:3]
+    at = app(bt_events=evs, amount_a=1_00_00_000.0, amount_b=1_00_00_000.0)
+    at.switch_page("views/06_test1.py").run()
+    assert not at.exception
+    t = next(d.value for d in at.dataframe if "ES vs today" in getattr(d.value, "columns", []))
+    assert list(t["Period"])[0] == "Today" and len(t) == 1 + len(evs) and t["ES vs today"].iloc[0] == "1.0×"
+    var_now = RES["current"]["A"]["risk"]["Historical"]["0.99"]["var"]
+    assert t["VaR"].iloc[0] == inr_short(var_now * 1e7) and t["Value after VaR"].iloc[0] == inr_short(1e7 * (1 - var_now))
+    for v in "BC":
+        next(w for w in at.segmented_control if w.key == "bt_cmp").set_value(v).run()
+        assert not at.exception

@@ -71,7 +71,7 @@ with left:
         rb = reg[which]
         bv = ctx.h(rb["risk"]["Historical"][k]["var"]) * amt
         av = ctx.h(rb["test2"]["var_after"]["Historical"][k]["var"]) * amt
-        ui.compare(f"A bad day in {names[focus]}: today's weights vs rebalanced", bv, av, f"Today {ui.inr_short(bv)}",
+        ui.compare(f"VaR ({ctx.conf:.0%}, {ctx.horizon}-day) in {names[focus]}: today's weights vs rebalanced", bv, av, f"Today {ui.inr_short(bv)}",
                    f"Rebalanced {ui.inr_short(av)}")
         ui.section("All periods at a glance")
         tbl = pd.DataFrame({"Today": pd.Series(p["weights"])})

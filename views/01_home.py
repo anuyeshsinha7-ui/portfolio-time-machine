@@ -23,7 +23,7 @@ with left:
         fall = cr[key]["replay"]["largest_fall"]
         ui.plan_card(key, amt, [
             ("Expected return a year", ui.pct(p["expected_return"])),
-            (f"A bad day today (1 in {round(1 / (1 - ctx.conf))})", f"{ui.inr_short(var_today * amt)} loss"),
+            (f"VaR today ({ctx.conf:.0%}, {ctx.horizon}-day)", f"{ui.inr_short(var_today * amt)} loss"),
             (f"Worst fall in the {ui.short(ctx.crisis_ev)}", f"{ui.inr_short(fall * amt)} lost"),
             ("Stocks · industries held", f"{sum(w > 1e-4 for w in p['weights'].values())} · "
                                          f"{sum(w > 1e-4 for w in p['industry_weights'].values())}"),
@@ -55,7 +55,7 @@ if right is not None:
         if boot:
             st.markdown(f"3. {NR.test2_finding(ctx.crisis_ev['name'], A, cr['A'], boot['A']['turnover_p95'], ctx.amount_a)}")
         st.markdown("#### How the numbers on the phone are worked out")
-        st.markdown(f"* **Bad day today**: the 1-day historical Value at Risk at {ctx.conf:.0%}, using the latest 252 days, times your "
+        st.markdown(f"* **VaR today**: the 1-day historical Value at Risk at {ctx.conf:.0%}, using the latest 252 days, times your "
                     f"amount{' (multiplied by √10 for 10 days)' if ctx.horizon == 10 else ''}.\n"
                     "* **Worst fall**: the biggest drop in your rupee value if you bought on the first day of the crisis period and "
                     "held on.\n"

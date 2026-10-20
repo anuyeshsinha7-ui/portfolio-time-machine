@@ -1,7 +1,9 @@
 """Full audit + optimisation check — run before every commit and push.
 
-    python scripts/audit.py            everything, including the real-browser test of the built site (~6 min)
+    python scripts/audit.py            everything, including the real-browser test of the built site (~5 min)
     python scripts/audit.py --quick    skip the browser test
+    python scripts/audit.py --deep     also Safari's engine + Firefox, 360 px phone layout, every link, the Excel download
+                                       and a random-click stress run (~15 min) — run before a release
 
 Exits non-zero if any check fails. Speed figures are reported; a page slower than SLOW_PAGE_S fails the check.
 """
@@ -44,6 +46,96 @@ def run(cmd: list[str], timeout: int = 1800) -> tuple[int, str]:
 
 def section(t: str) -> None:
     print(f"\n== {t}", flush=True)
+
+
+def deep() -> None:
+    """Checks that take longer: other browser engines, phone layout, links, download, random clicks."""
+    section("Other browser engines (WebKit = Safari, Firefox)")
+    for engine in ("webkit", "firefox"):
+        code, out = run([PY, "tests/e2e_site.py", "--browser", engine, "--port", "8794" if engine == "webkit" else "8795"], timeout=2400)
+        boots = [line.strip() for line in out.splitlines() if "booted" in line]
+        check(code == 0 and "ALL PAGES OK" in out, f"{engine}: every page renders · " + " · ".join(boots)
+              + ("" if code == 0 else " · " + " | ".join(out.strip().splitlines()[-3:])))
+
+    section("Phone layout, links, Excel download (Chrome)")
+    sys.path.insert(0, str(ROOT / "tests"))
+    from e2e_site import NAV_PHONE, PAGES, click_nav, serve
+    from playwright.sync_api import sync_playwright
+
+    srv = serve(ROOT / "_site", 8796)
+    base = "http://127.0.0.1:8796"
+    try:  # one failure here is reported, not allowed to stop the rest of the audit
+        with sync_playwright() as pw:
+            b = pw.chromium.launch()
+            page = b.new_context(viewport={"width": 360, "height": 780}, is_mobile=True, has_touch=True).new_page()
+            page.goto(base + "/")
+            check(not page.evaluate("document.documentElement.scrollWidth > innerWidth + 1"), "landing page: no sideways scroll at 360 px")
+            hrefs = page.eval_on_selector_all("a[href]", "els => els.map(e => e.href)")
+            import urllib.request
+            bad = []
+            for h in sorted(set(hrefs)):
+                if h.startswith(("http://", "https://")):
+                    for attempt in range(2):  # one retry: a network blip is not a broken link
+                        try:
+                            urllib.request.urlopen(urllib.request.Request(h, headers={"User-Agent": "Mozilla/5.0"}), timeout=20)
+                            break
+                        except Exception as e:  # noqa: BLE001
+                            if attempt:
+                                bad.append(f"{h} ({e})")
+                            time.sleep(3)
+            check(not bad, f"{len(set(hrefs))} landing-page links open" + (f": {bad}" if bad else ""))
+            page.goto(base + "/app/", wait_until="domcontentloaded")
+            page.wait_for_selector("text=How much would you like to invest?", timeout=240_000)
+            page.get_by_role("button", name="Continue →").click()
+            page.get_by_text(PAGES[0][1]).first.wait_for(timeout=120_000)
+            wide = []
+            for key, head in PAGES:
+                if key != "prefs":
+                    click_nav(page, NAV_PHONE[key], True)
+                    page.get_by_text(head).first.wait_for(timeout=120_000)
+                    page.wait_for_timeout(600)
+                if page.evaluate("document.documentElement.scrollWidth > innerWidth + 1"):
+                    wide.append(key)
+            check(not wide, "every screen fits 360 px without sideways scroll" + (f": {wide}" if wide else ""))
+            dpage = b.new_page(viewport={"width": 1440, "height": 950}, accept_downloads=True)
+            dpage.goto(base + "/app/", wait_until="domcontentloaded")
+            dpage.wait_for_selector("text=How much would you like to invest?", timeout=240_000)
+            dpage.get_by_role("button", name="Continue →").click()
+            dpage.get_by_text(PAGES[0][1]).first.wait_for(timeout=120_000)
+            click_nav(dpage, NAV_PHONE["methodology"], False)
+            dpage.get_by_text(dict(PAGES)["methodology"]).first.wait_for(timeout=120_000)
+            with dpage.expect_download(timeout=120_000) as d:
+                dpage.locator("[data-testid='stDownloadButton'] button").first.click()
+            xl = pd.ExcelFile(d.value.path())
+            w = pd.read_excel(xl, "Weights today")
+            check(set(w["Portfolio"]) == {"A", "B", "C"}, f"Excel download opens: {len(xl.sheet_names)} sheets, A/B/C weights inside")
+            b.close()
+    except Exception as e:  # noqa: BLE001
+        check(False, f"phone/links/download check stopped: {str(e).splitlines()[0]}")
+    finally:
+        srv.shutdown()
+
+    section("Random clicks (seeded), incl. newly listed stocks and empty settings")
+    import random
+
+    from test_stress import RES as SRES
+    from test_stress import _act, app
+    evs = [k for k, v in SRES["events"].items() if v["available"] and not k.startswith("auto")]
+    crashes = []
+    for seed in range(4):
+        rng = random.Random(100 + seed)
+        extra = dict(pick_A=SRES["picks"]["A"][:12] + ["JBMA"], pick_B=SRES["picks"]["B"][:12] + ["STARHEALTH"],
+                     bt_events=evs[:6]) if seed % 2 else {}
+        at = app(is_phone=seed == 3, **extra)
+        log = []
+        for _ in range(100):
+            if rng.random() < 0.05:
+                at.session_state[rng.choice(["conf", "horizon", "window_mode"])] = None
+            log.append(_act(at, rng))
+            if at.exception:
+                crashes.append(f"seed {seed}: {log[-3:]} → {at.exception[0].value}")
+                break
+    check(not crashes, "400 random actions, no crash" + (f": {crashes}" if crashes else ""))
 
 
 def main() -> None:
@@ -180,6 +272,8 @@ def main() -> None:
         check(code == 0 and "ALL PAGES OK" in out, "every page renders in a real browser; refresh returns to the same screen · "
               + " · ".join(boots))
 
+    if "--deep" in sys.argv:
+        deep()
     print(f"\n{'ALL CHECKS PASSED' if not fails else f'{len(fails)} FAILED'} in {time.time() - t0:.0f}s")
     for f in fails:
         print("  ✗", f)

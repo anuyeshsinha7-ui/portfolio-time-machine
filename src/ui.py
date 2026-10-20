@@ -1263,3 +1263,19 @@ def label_working(t: pd.DataFrame, sym: str) -> None:
 def pct_df(df: pd.DataFrame, cols):
     """Percentage columns shown with two decimals everywhere (Streamlit's 'percent' format drops trailing zeros)."""
     return df.style.format("{:.2%}", subset=[c for c in cols if c in df.columns], na_rep="—")
+
+
+# ---------------------------------------------------------------- one plain explanation of VaR and ES, used on every screen
+def risk_terms(ctx: "Ctx") -> tuple[str, str]:
+    """('VaR 99%, 1-day', 'ES 99%, 1-day') for the chosen confidence and horizon."""
+    tail = f"{ctx.conf:.0%}, {ctx.horizon}-day"
+    return f"VaR {tail}", f"ES {tail}"
+
+
+def risk_explainer(ctx: "Ctx") -> None:
+    odds = round(1 / (1 - ctx.conf))
+    span = "day" if ctx.horizon == 1 else f"{ctx.horizon}-day stretch"
+    ui_note = (f"<b>VaR</b> (Value at Risk): a loss you would go past on only <b>1 {span} in {odds}</b>. "
+               f"<b>ES</b> (Expected Shortfall): the <b>average loss on those worst 1-in-{odds} {span}s</b>, so it is always at "
+               "least as big as VaR. <b>Value after</b> = your amount minus that loss.")
+    note(ui_note, "📘")

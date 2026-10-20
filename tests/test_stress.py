@@ -14,7 +14,7 @@ FLOW = ["views/01_prefs.py", "views/01_suggest.py", "views/05_weights.py", "view
         "views/08_verdict.py", "views/01_home.py", "views/02_how.py", "views/03_pick.py", "views/04_call.py",
         "views/09_methodology.py"]
 CHOICES = {  # segmented controls / pills: key → values the app offers
-    "w_which": ["A", "B", "C"], "t2_which": ["A", "B", "C"], "window_mode": ["standard", "event_only"],
+    "w_which": ["A", "B", "C"], "t2_which": ["A", "B", "C"], "bt_cmp": ["A", "B", "C"], "window_mode": ["standard", "event_only"],
     "conf": [0.95, 0.99], "horizon": [1, 10], "start_mode": ["same_each", "split_total", "separate"],
 }
 AMOUNTS = ["15 lakh", "1.5 crore", "10,000", "abc", "", "5", "99999999999", "2,50,000"]

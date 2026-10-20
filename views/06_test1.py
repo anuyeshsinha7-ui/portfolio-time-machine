@@ -51,7 +51,9 @@ regs = ctx.regimes()
 with left:
     if not ticked:
         ui.note("Tick at least one period above.", "☝️", "warn")
-    ui.section("How your risk changes", f"bad day = 1 in {odds} · {ctx.horizon}-day")
+    vlab, elab = ui.risk_terms(ctx)
+    ui.section("How your risk changes", f"{vlab} · {elab}")
+    ui.risk_explainer(ctx)
     for eid, reg, ev, prob in results:
         if reg is None:
             ui.note(f"<b>{ui.short(ev)}</b> can't be tested: {prob}.", "⛔", "warn")
@@ -61,8 +63,12 @@ with left:
             d = RC.deviation(ctx.current[kk], reg[kk], k)
             am = ctx.amount(kk)
             rows.append((ui.PLAN[kk][2], f"Portfolio {kk} · {ui.PLAN[kk][1].split(' · ')[0]}",
-                         f"Bad day {ui.inr_short(ctx.h(d['var_now']) * am)} → <b>{ui.inr_short(ctx.h(d['var_then']) * am)}</b> · "
-                         f"worst days {ui.inr_short(ctx.h(d['es_now']) * am)} → <b>{ui.inr_short(ctx.h(d['es_then']) * am)}</b>",
+                         f"<b>VaR</b> {ui.inr_short(ctx.h(d['var_then']) * am)} ({ui.pct(ctx.h(d['var_then']))}) · today "
+                         f"{ui.inr_short(ctx.h(d['var_now']) * am)}<br>"
+                         f"<b>ES</b> {ui.inr_short(ctx.h(d['es_then']) * am)} ({ui.pct(ctx.h(d['es_then']))}) · today "
+                         f"{ui.inr_short(ctx.h(d['es_now']) * am)}<br>"
+                         f"Value after: VaR day <b>{ui.inr_short(am * (1 - ctx.h(d['var_then'])))}</b> · ES day "
+                         f"<b>{ui.inr_short(am * (1 - ctx.h(d['es_then'])))}</b>",
                          f"{d['es_mult']:.1f}×", "ES vs today"))
         held = RC.label_holds(reg["A"], reg["B"])
         icon = "🌪️" if ev["type"] == "crisis" else "🌤️"
@@ -71,12 +77,29 @@ with left:
         ui.list_rows(rows)
         if ui.missing_note(reg):
             ui.note(ui.missing_note(reg), "ℹ️", "warn")
-        if ev["type"] == "crisis":
-            ui.note(f"Buy-and-hold low: A {ui.inr_short(reg['A']['replay']['low'] * ctx.amount_a)} · B "
-                    f"{ui.inr_short(reg['B']['replay']['low'] * ctx.amount_b)} · C {ui.inr_short(reg['C']['replay']['low'] * ctx.amount('C'))} "
-                    f"(Nifty fell {reg['nifty']['largest_fall']:.0%})", "📉")
+        ui.section("Your money through this period", "bought on day one")
+        ui.list_rows([(ui.PLAN[kk][2], f"Portfolio {ui.NAMES[kk]}",
+                       f"{ui.inr_short(ctx.amount(kk))} → lowest <b>{ui.inr_short(reg[kk]['replay']['low'] * ctx.amount(kk))}</b>",
+                       ui.inr_short(reg[kk]["replay"]["end"] * ctx.amount(kk)), "at the end") for kk in ("A", "B", "C")])
+        nf = reg["nifty"]["largest_fall"]
+        ui.note(f"The Nifty 50 was {nf:.0%} below its starting level at its lowest" if nf > 0
+                else "The Nifty 50 never fell below its starting level", "📉")
     ok = [(eid, reg, ev) for eid, reg, ev, prob in results if reg is not None]
     if ok:
+        ui.section("Today vs each period", f"{vlab} · {elab}")
+        ck = st.segmented_control("Compare", ["A", "B", "C"], format_func=ui.NAMES.get, default="A", key="bt_cmp",
+                                  required=True) or "A"
+        am = ctx.amount(ck)
+        e_now = ctx.h(ctx.current[ck]["risk"]["Historical"][k]["es"])
+        cmp = []
+        for nm, r in [("Today", ctx.current)] + [(ui.short(ev).split(" (")[0][:18], r_) for _, r_, ev in ok]:
+            v, e = ctx.h(r[ck]["risk"]["Historical"][k]["var"]), ctx.h(r[ck]["risk"]["Historical"][k]["es"])
+            cmp.append({"Period": nm, "VaR": ui.inr_short(v * am), "ES": ui.inr_short(e * am),
+                        "Value after VaR": ui.inr_short(am * (1 - v)), "Value after ES": ui.inr_short(am * (1 - e)),
+                        "Lowest value": ui.inr_short(r[ck]["replay"]["low"] * am), "ES vs today": f"{e / e_now:.1f}×"})
+        st.dataframe(pd.DataFrame(cmp), hide_index=True, width="stretch",
+                     column_config={"Period": st.column_config.TextColumn(pinned=True)})
+        st.caption(f"Portfolio {ck} on {ui.inr_short(am)}. Lowest value = bought on the first day of that period and held.")
         lbl = ["Today"] + [ui.short(ev)[:18] for _, _, ev in ok]
         a_vals = [ctx.h(ctx.current["A"]["risk"]["Historical"][k]["es"]) * ctx.amount_a] + \
                  [ctx.h(r["A"]["risk"]["Historical"][k]["es"]) * ctx.amount_a for _, r, _ in ok]
@@ -84,7 +107,7 @@ with left:
                  [ctx.h(r["B"]["risk"]["Historical"][k]["es"]) * ctx.amount_b for _, r, _ in ok]
         c_vals = [ctx.h(ctx.current["C"]["risk"]["Historical"][k]["es"]) * ctx.amount("C")] + \
                  [ctx.h(r["C"]["risk"]["Historical"][k]["es"]) * ctx.amount("C") for _, r, _ in ok]
-        ui.section("Worst-days loss, side by side")
+        ui.section("Expected Shortfall in rupees, side by side", elab)
         ui.show(CH.risk_compare(lbl, a_vals, b_vals, None, rupees=True, c_vals=c_vals))
         if crises:
             cr = ctx.crisis
@@ -112,10 +135,18 @@ if right is not None:
                 rows.append({"Period": ev["name"], "Window": f"{reg['start']} → {reg['end']}", "P": kk,
                              "VaR today": ctx.h(d["var_now"]), "VaR then": ctx.h(d["var_then"]), "Change in VaR": ctx.h(d["var_change"]),
                              "ES today": ctx.h(d["es_now"]), "ES then": ctx.h(d["es_then"]), "Change in ES": ctx.h(d["es_change"]),
-                             "ES ×": round(d["es_mult"], 2), "Volatility then": reg[kk]["volatility"], "Biggest fall then": reg[kk]["max_drawdown"]})
+                             "ES ×": round(d["es_mult"], 2),
+                             "Value after a VaR day then": ui.inr(ctx.amount(kk) * (1 - ctx.h(d["var_then"]))),
+                             "Value after an ES day then": ui.inr(ctx.amount(kk) * (1 - ctx.h(d["es_then"]))),
+                             "Lowest value": ui.inr(reg[kk]["replay"]["low"] * ctx.amount(kk)),
+                             "Value at end": ui.inr(reg[kk]["replay"]["end"] * ctx.amount(kk)), "Volatility then": reg[kk]["volatility"], "Biggest fall then": reg[kk]["max_drawdown"]})
         if rows:
             df = pd.DataFrame(rows)
-            st.dataframe(ui.pct_df(df, [c for c in df.columns if c not in ("Period", "Window", "P", "ES ×")]), hide_index=True, width="stretch")
+            st.dataframe(ui.pct_df(df, [c for c in df.columns if c not in ("Period", "Window", "P", "ES ×", "Value after a VaR day then", "Value after an ES day then", "Lowest value", "Value at end")]),
+                         hide_index=True, width="stretch")
+            st.caption("Value after a VaR day = your amount × (1 − VaR); after an ES day = your amount × (1 − ES), i.e. "
+                       "after an average one of the worst days in that period. Lowest value and value at end: your amount bought on the "
+                       "first day of the period and held (no rebalancing).")
             st.latex(r"\Delta\text{VaR} = \text{VaR}_{\text{period}} - \text{VaR}_{\text{today}}, \quad "
                      r"\text{same weights } w_{\text{today}}, \ \text{returns of that period}")
             ui.show(CH.risk_compare(["Today"] + [ev["name"].split(" (")[0][:18] for _, r, ev, p_ in results if r is not None],
@@ -186,17 +217,19 @@ if right is not None:
         st.markdown("Historical uses the real days. Normal assumes a bell curve. Monte Carlo draws random days from a curve with "
                     "more extreme days (Student-t). Cornish–Fisher adjusts the bell curve for lopsided and extreme days.")
         rows = []
-        for name, reg, ev in regs:
+        periods = [("Today", ctx.current)] + [(ev["name"], reg) for _, reg, ev, _p in results if reg is not None]
+        for name, reg in periods:  # today plus every period you ticked
             for key in ("A", "B", "C"):
-                r = reg[key]["risk"]
-                row = {"Period": name, "Portfolio": key}
+                r, am = reg[key]["risk"], ctx.amount(key)
                 for m in V.METHODS:
-                    row[f"VaR · {m}"] = ctx.h(r[m][k]["var"])
-                    row[f"ES · {m}"] = ctx.h(r[m][k]["es"])
-                row["ES 97.5% (Basel)"] = ctx.h(r["Historical"]["0.975"]["es"])
-                rows.append(row)
+                    v, e = ctx.h(r[m][k]["var"]), ctx.h(r[m][k]["es"])
+                    rows.append({"Period": name, "Portfolio": key, "Method": m, "VaR": v, "ES": e,
+                                 "VaR ₹": ui.inr(v * am), "ES ₹": ui.inr(e * am),
+                                 "Value after VaR ₹": ui.inr(am * (1 - v)), "Value after ES ₹": ui.inr(am * (1 - e))})
         df = pd.DataFrame(rows)
-        st.dataframe(ui.pct_df(df, df.columns[2:]), hide_index=True, width="stretch")
+        st.dataframe(ui.pct_df(df, ["VaR", "ES"]), hide_index=True, width="stretch", height=420)
+        st.caption("Every period you ticked, all three portfolios, all four methods, on your amount. Value after = your amount "
+                   "minus that loss.")
         if ctx.horizon == 10:
             st.caption("10-day figures are the 1-day figures × √10. That assumes each day is independent of the last. In a crisis, "
                        "bad days come in bunches, so the real 10-day risk is usually bigger.")
@@ -247,7 +280,7 @@ if right is not None:
                        "(sort the real days), normal (average and standard deviation), Monte Carlo with Student-t draws (more "
                        "extreme days), and Cornish–Fisher (adjusts the normal for lopsided and extreme days).",
                        "Banks and fund managers use it to set limits, and it is easy to explain in rupees.",
-                       "Every 'bad day' rupee figure in this app.")
+                       "Every VaR rupee figure in this app.")
         ui.concept_box("Expected Shortfall (ES)",
                        "When a really bad day comes, how much do you lose on average? ES answers the question VaR leaves open.",
                        "The average loss on the days worse than VaR. The Basel rules for banks (FRTB) use ES at 97.5%.",

@@ -71,7 +71,7 @@ def main(site: Path) -> None:
           <li>{sum(w > 1e-4 for w in p['weights'].values())} stocks held · {html.escape(ind)}…</li>
           <li>{f"Beta {res['evidence'][k]['weighted_beta']:.2f} · volatility {pct(res['evidence'][k]['portfolio_vol'])}" if k in res['evidence']
                else f"Expected return {pct(p['expected_return'])} · Sharpe {p['sharpe']:.2f}"}</li>
-          <li>Bad day today (99% VaR): {rs(cur[k]['risk']['Historical']['0.99']['var'])}</li>
+          <li>VaR today (99%, 1 day): {rs(cur[k]['risk']['Historical']['0.99']['var'])}</li>
           <li>Worst fall in the {html.escape(ev_c['name'])}: {rs(r['replay']['largest_fall'])}</li>
         </ul>
         <svg viewBox="0 0 300 70" class="spark" aria-label="Value path in the crisis">{sparkline(r['replay']['value'], col)}</svg>
