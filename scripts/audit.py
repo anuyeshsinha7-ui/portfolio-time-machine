@@ -226,9 +226,11 @@ def main() -> None:
     section("Numbers agree across documents")
     off = res["official"]
     cr = res["regimes"][f"{off['crisis']}|standard"]
-    want = [pct(cr[k]["risk"]["Historical"]["0.99"]["es"]) for k in "AB"] + [f"{P['C']['sharpe']:.2f}"]
+    es = [cr[k]["risk"]["Historical"][config.RULE_KEY]["es"] for k in "AB"]
+    want = [pct(x) for x in es] + [f"{P['C']['sharpe']:.2f}"]  # the landing page prints 1 decimal
     summary = (config.DOCS_DIR / "RESULTS_SUMMARY.md").read_text()
-    check(all(v in summary for v in want), f"results summary quotes crisis ES99 {want[0]} / {want[1]} and C Sharpe {want[2]}")
+    in_sum = [pct(x, 2) for x in es] + [want[2]]  # the summary prints 2 decimals
+    check(all(v in summary for v in in_sum), f"results summary quotes crisis ES95 {in_sum[0]} / {in_sum[1]} and C Sharpe {in_sum[2]}")
     landing = ROOT / "_site" / "index.html"
     if landing.exists():
         check(all(v in landing.read_text() for v in want), "landing page quotes the same figures")

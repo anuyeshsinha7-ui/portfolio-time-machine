@@ -5,15 +5,15 @@
  "fetched_at": "2026-10-19 09:34:53",
  "n_constituents": 501,
  "n_core": 231,
- "n_extended": 201,
- "n_excluded": 69,
+ "n_extended": 199,
+ "n_excluded": 71,
  "sessions": 4697,
- "prices_sha256": "ec933325ee93e876ba555cf5ca2f3ef25fde4d075d8e14abd83b10055e8cc1b3",
+ "prices_sha256": "5eaac24101a482b703a8c408687cf34666e5216c87fe8dab415265aafa1e7f26",
  "benchmark_sha256": "904da0016b98123841e89e820324aa1c4ad330ab13bece7e50a9a221ec914faf",
  "sources": {
   "prices": "Yahoo Finance via yfinance (auto_adjust=False), anchored to NSE bhavcopies",
   "universe": "NSE Nifty 500 list; Nifty 100 / Midcap 150 / Smallcap 250 lists for cap buckets (archives.nseindia.com)",
   "corporate_actions": "NSE corporate-actions API; yfinance action history"
  },
- "restated_prices_vs_previous": 15439
+ "restated_prices_vs_previous": 0
 }

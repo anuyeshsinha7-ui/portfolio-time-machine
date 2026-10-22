@@ -66,10 +66,10 @@ def window_stats(close: pd.Series, mret: pd.Series, start, end) -> dict:
     c = close.loc[start:end]
     r = mret.loc[start:end]
     from .var_es import historical
-    v99, es99 = historical(r.to_numpy(), 0.99)
+    v, es = historical(r.to_numpy(), config.RULE_CONF)
     return {"start": str(pd.Timestamp(start).date()), "end": str(pd.Timestamp(end).date()),
             "return": float(c.iloc[-1] / c.iloc[0] - 1), "volatility": float(M.ann_vol(r)),
-            "max_drawdown": M.max_drawdown(r), "worst_day": float(r.min()), "var99": v99, "es99": es99,
+            "max_drawdown": M.max_drawdown(r), "worst_day": float(r.min()), "var": v, "es": es,
             "days": int(len(r))}
 
 

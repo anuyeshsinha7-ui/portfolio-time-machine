@@ -7,7 +7,7 @@ Every number on the site comes from the code in `src/` applied to the committed 
 
 * **Universe:** today's Nifty 500 (NSE constituent list) with NSE's Industry field; market-cap bucket = Large cap (Nifty 100), Mid cap (Midcap 150), Small cap (Smallcap 250),
   "Flexi" = all three. **Core** universe (231 stocks) = continuous clean history from 2007-09-17; **extended**
-  (201) = at least 3 years, usable for custom picks; 69 excluded.
+  (199) = at least 3 years, usable for custom picks; 71 excluded.
 * **Prices:** Yahoo Finance daily closes (`auto_adjust=False`) with dividend and split history, anchored to NSE bhavcopy closes and
   rebuilt into total-return prices — see [DATA_QUALITY.md](DATA_QUALITY.md).
 * **Benchmark:** Nifty 50 (`^NSEI`), gaps filled from NSE's official index closes. It is a *price* index while stock prices include
@@ -27,6 +27,9 @@ Labels are set on **today's data — the trailing 3 years** — so both time-tra
 
 * **High risk** = beta ≥ 1.0 **and** volatility ≥ universe median (35.2% in this snapshot).
 * **Low risk** = beta < 1.0 **and** volatility < universe median. Everything else = Moderate.
+* **Not rated** = negative beta (moves against the market): no label and no score, left out of the median and the
+  percentiles so it cannot shift other stocks' scores, and never recommended (it can still be hand-picked, with a warning).
+* **Equities only:** REIT and InvIT units (NSE series RR / IV) are excluded from the universe; they are not company shares.
 * Composite risk score = average of the beta percentile and the volatility percentile.
 * **Recommendation (default picker):** A = the top 15 High-risk stocks by composite score, B = the 15 Low-risk stocks
   with the lowest score, inside the client's sectors and sizes (default: all), full-history stocks first, at most
@@ -81,14 +84,13 @@ R_max = highest achievable return (linear program, `scipy.optimize.linprog`), 60
 ## 6. VaR and ES
 
 Losses are positive fractions; ₹ figures = fraction × the client's amount. 1-day horizon; 10-day via √10 (assumes i.i.d. days).
-Confidence 95% and 99%, plus ES at 97.5% (Basel FRTB).
+Confidence 95% (the default, and the level every verdict rule uses) or 99%; ES is always at the same level as VaR.
 
 1. **Historical simulation** (primary, the class convention): VaR = −(the (1−c) percentile of daily returns, linear interpolation as in
    Excel `PERCENTILE` / pandas `quantile`); ES = −(mean of the returns at or below that percentile).
 2. **Parametric normal:** VaR = −(μ + σz), ES = −μ + σφ(z)/(1−c).
 3. **Monte Carlo, multivariate Student-t:** 10,000 draws, degrees of freedom fitted by maximum likelihood to the window's portfolio
    returns and floored at 3, covariance matched to the sample, seed 42.
-4. **Cornish–Fisher:** z_CF = z + (z²−1)S/6 + (z³−3z)K/24 − (2z³−5z)S²/36; ES averages the monotone CF quantile over the tail.
 
 VaR and the frontier use constant (daily-rebalanced) weights; the ₹ crisis replay is buy-and-hold from the window start.
 Tests enforce ES ≥ VaR and 99% ≥ 95% for every method.
@@ -112,8 +114,8 @@ moving-block bootstrap of the current window (500 resamples, 5-day blocks) re-so
 
 ## 9. Recommendation rules
 
-* **Label holds.** The high-risk label holds in a period if Portfolio A's Expected Shortfall (99%, historical) and its volatility are both higher than Portfolio B's.
-* **B held up.** Portfolio B 'held up' in a crisis if its Expected Shortfall (99%, historical) and its biggest fall were both smaller than the Nifty 50's in the same period.
+* **Label holds.** The high-risk label holds in a period if Portfolio A's Expected Shortfall (95%, historical) and its volatility are both higher than Portfolio B's.
+* **B held up.** Portfolio B 'held up' in a crisis if its Expected Shortfall (95%, historical) and its biggest fall were both smaller than the Nifty 50's in the same period.
 * **Yes partly no.** Label verdict. Yes: the label held in the chosen crisis, the chosen calm period and at least 80% of all periods in the list. Partly: it held in at least one chosen period or at least half of all periods. Otherwise No.
 * **Robust.** The weights are robust in a period if the share of money you would need to move to reach that period's best weights is no more than the 95th percentile of what random noise in the data alone would make you move (measured by reshuffling today's data).
 * **Fit.** A portfolio fits you if its worst fall in rupees in a crisis replay (on your amount) is no bigger than the fall you said you could live with. Of the portfolios that fit (A, B and C), we suggest the one expected to earn the most. If none fits, we show the largest amount that keeps the portfolio that fell least within your limit.
@@ -124,7 +126,7 @@ moving-block bootstrap of the current window (500 resamples, 5-day blocks) re-so
 
 * **Survivorship bias.** We look at today's Nifty 500 companies back to 2007, so companies that left the index or failed are missing. This matters more the further back the period goes, so the 2008 results make both portfolios look best.
 * **Estimation error.** Expected returns and how stocks move together are worked out from only 252 days, so they are rough. The noise bands on the Rebalance screen show how much the weights move from noise alone.
-* **Assumptions about returns.** Historical VaR assumes the past period is a fair guide. The normal method ignores extreme days. Student-t and Cornish–Fisher are approximations. Multiplying by √10 for 10 days assumes each day is independent of the last.
+* **Assumptions about returns.** Historical VaR assumes the past period is a fair guide. The normal method ignores extreme days. The Student-t Monte Carlo is an approximation. Multiplying by √10 for 10 days assumes each day is independent of the last.
 * **Costs and taxes.** We leave out brokerage, market impact, securities transaction tax and capital-gains tax.
 * **Benchmark mismatch.** Our stock prices include reinvested dividends, but the Nifty 50 index does not, so comparisons with the Nifty slightly favour the stocks.
 * **Data.** Any data problems we could not fix are listed in the data-quality report (on the About the data screen).

@@ -82,19 +82,20 @@ with left:
 
 if right is not None:
     with right:
-        st.markdown(f"#### Today's VaR and ES, worked out four ways ({ctx.conf:.0%}, {ctx.horizon}-day; ES also at 97.5%)")
+        st.markdown(f"#### Today's VaR and ES, worked out three ways (both at {ctx.conf:.0%}, {ctx.horizon}-day)")
         st.markdown(f"**VaR** at {ctx.conf:.0%} is the loss exceeded on only {1 - ctx.conf:.0%} of days. **ES** is the average loss on the days "
-                    "that are worse than that. We work both out four ways and show the rupee amounts on your money.")
+                    "that are worse than that. We work both out three ways (the methods taught in class) and show the rupee amounts on your money.")
         rows = []
+        lv, le = f"VaR {ctx.conf:.0%}", f"ES {ctx.conf:.0%}"  # both columns always at the same, chosen confidence
         for kk in ("A", "B", "C"):
             rk = ctx.current[kk]["risk"]
-            for m in ("Historical", "Parametric normal", "Monte Carlo (Student-t)", "Cornish–Fisher"):
-                rows.append({"Portfolio": kk, "Method": m, "VaR": ctx.h(rk[m][k]["var"]), "ES": ctx.h(rk[m][k]["es"]),
-                             "ES 97.5%": ctx.h(rk[m]["0.975"]["es"]), "VaR ₹": ui.inr(ctx.h(rk[m][k]["var"]) * ctx.amount(kk)),
-                             "ES ₹": ui.inr(ctx.h(rk[m][k]["es"]) * ctx.amount(kk)),
-                             "Value after VaR ₹": ui.inr(ctx.amount(kk) * (1 - ctx.h(rk[m][k]["var"]))),
-                             "Value after ES ₹": ui.inr(ctx.amount(kk) * (1 - ctx.h(rk[m][k]["es"])))})
-        st.dataframe(ui.pct_df(pd.DataFrame(rows), ("VaR", "ES", "ES 97.5%")), hide_index=True, width="stretch")
+            for m in ("Historical", "Parametric normal", "Monte Carlo (Student-t)"):
+                v, e = ctx.h(rk[m][k]["var"]), ctx.h(rk[m][k]["es"])
+                rows.append({"Portfolio": kk, "Method": m, lv: v, le: e, f"{lv} ₹": ui.inr(v * ctx.amount(kk)),
+                             f"{le} ₹": ui.inr(e * ctx.amount(kk)),
+                             "Value after VaR loss ₹": ui.inr(ctx.amount(kk) * (1 - v)),
+                             "Value after ES loss ₹": ui.inr(ctx.amount(kk) * (1 - e))})
+        st.dataframe(ui.pct_df(pd.DataFrame(rows), (lv, le)), hide_index=True, width="stretch")
         hcols = st.columns(3)
         for col, kk, colr in zip(hcols, ("A", "B", "C"), (CH.A, CH.B, CH.C)):
             r = ctx.current[kk]
@@ -120,7 +121,7 @@ if right is not None:
                    f"Smallest amount that works: {ui.inr(alloc['min_sensible'])}.")
         rows = []
         for nm, blk in (("Equal weights (before)", vb["equal"]), ("Best weights (after)", vb["optimised"])):
-            for m in ("Historical", "Parametric normal", "Monte Carlo (Student-t)", "Cornish–Fisher"):
+            for m in ("Historical", "Parametric normal", "Monte Carlo (Student-t)"):
                 rows.append((nm, m, ui.pct(ctx.h(blk[m][k]["var"]), 2), ui.pct(ctx.h(blk[m][k]["es"]), 2)))
         st.markdown(f"#### VaR with equal weights vs the best weights ({ctx.conf:.0%}, {ctx.horizon}-day)")
         st.dataframe(pd.DataFrame(rows, columns=["Weights", "Method", "VaR", "ES"]), hide_index=True, width="stretch")

@@ -12,7 +12,7 @@ t = ui.universe_table()
 med = float(t["vol_median"].iloc[0])
 left, right = ui.split()
 evs = ui.default_results()["events"]
-TAG = {"High risk": ("🔴", "a"), "Low risk": ("🔵", "b"), "Moderate": ("🟡", "mid")}
+TAG = {"High risk": ("🔴", "a"), "Low risk": ("🔵", "b"), "Moderate": ("🟡", "mid"), "Not rated": ("⚪", "grey")}
 
 
 def coverage_text(sym: str) -> str:

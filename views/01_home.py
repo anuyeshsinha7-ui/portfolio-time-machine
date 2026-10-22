@@ -60,7 +60,7 @@ if right is not None:
                     "* **Worst fall**: the biggest drop in your rupee value if you bought on the first day of the crisis period and "
                     "held on.\n"
                     "* **Expected return**: the average daily return × 252, with today's weights.\n"
-                    "* **'Stayed riskier'**: A's Expected Shortfall (99%) and volatility were both higher than B's.")
+                    "* **'Stayed riskier'**: A's Expected Shortfall (95%) and volatility were both higher than B's.")
         st.markdown("#### Every step, from data to answer")
         ui.flowchart("home")
         st.markdown(f"Team: {', '.join(config.TEAM)} · {config.CREDIT_LINE} · [GitHub]({config.REPO_URL})")

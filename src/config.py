@@ -62,7 +62,8 @@ OFFICIAL_CALM_EVENT = "auto"
 
 # ---------------------------------------------------------------- risk measures
 CONFIDENCE = [0.95, 0.99]
-ES_BASEL = 0.975
+RULE_CONF = 0.95  # the one level used by every verdict rule, scoreboard and headline figure (= the app's default)
+RULE_KEY = f"{RULE_CONF}"
 HORIZONS = [1, 10]
 MC_DRAWS = 10_000
 T_DOF_FLOOR = 3.0
@@ -102,6 +103,7 @@ PORTFOLIO_A: list[str] = []
 PORTFOLIO_B: list[str] = []
 
 # ---------------------------------------------------------------- cleaning
+EQUITY_SERIES = ("EQ", "BE", "BZ")  # NSE equity series; REIT ("RR") and InvIT ("IV") units are not company shares
 MAX_FFILL = 2
 MAX_MISSING_PCT = 0.02
 JUMP_FLAG = 0.20

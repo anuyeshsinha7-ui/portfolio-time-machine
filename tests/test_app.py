@@ -249,9 +249,9 @@ def test_backtest_method_table_covers_every_ticked_period_in_rupees():
     at = app(bt_events=evs)
     at.switch_page("views/06_test1.py").run()
     assert not at.exception
-    t = next(d.value for d in at.dataframe if "Value after VaR ₹" in getattr(d.value, "columns", []) and "Method" in d.value.columns)
+    t = next(d.value for d in at.dataframe if "Value after VaR loss ₹" in getattr(d.value, "columns", []) and "Period" in d.value.columns)
     assert set(t["Period"]) == {"Today"} | {RES["events"][e]["name"] for e in evs}
-    assert len(t) == (1 + len(evs)) * 3 * 4  # periods × portfolios × methods
+    assert len(t) == (1 + len(evs)) * 3 * 3  # periods × portfolios × the three methods taught in class
 
 
 def test_backtest_comparison_table_today_vs_each_period():
@@ -264,7 +264,7 @@ def test_backtest_comparison_table_today_vs_each_period():
     t = next(d.value for d in at.dataframe if "ES vs today" in getattr(d.value, "columns", []))
     assert list(t["Period"])[0] == "Today" and len(t) == 1 + len(evs) and t["ES vs today"].iloc[0] == "1.0×"
     var_now = RES["current"]["A"]["risk"]["Historical"]["0.95"]["var"]
-    assert t["VaR"].iloc[0] == inr_short(var_now * 1e7) and t["Value after VaR"].iloc[0] == inr_short(1e7 * (1 - var_now))
+    assert t["VaR 95%, 1-day"].iloc[0] == inr_short(var_now * 1e7) and t["Value after VaR"].iloc[0] == inr_short(1e7 * (1 - var_now))
     for v in "BC":
         next(w for w in at.segmented_control if w.key == "bt_cmp").set_value(v).run()
         assert not at.exception

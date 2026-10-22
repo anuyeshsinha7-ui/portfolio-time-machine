@@ -44,11 +44,11 @@ def main(site: Path) -> None:
     lv = RC.label_verdict(crisis, calm, board)
     bv = RC.b_verdict(crisis, board)
     a, b = crisis["A"], crisis["B"]
-    ea, eb = a["risk"]["Historical"]["0.99"]["es"], b["risk"]["Historical"]["0.99"]["es"]
+    ea, eb = a["risk"]["Historical"][config.RULE_KEY]["es"], b["risk"]["Historical"][config.RULE_KEY]["es"]
     t2 = crisis["A"]["test2"]
     p95 = res["bootstrap"]["A"]["turnover_p95"]
     findings = [
-        f"In the {ev_c['name']}, Portfolio A's 1-day 99% Expected Shortfall was {pct(ea)} ({rs(ea)} on your "
+        f"In the {ev_c['name']}, Portfolio A's 1-day 95% Expected Shortfall was {pct(ea)} ({rs(ea)} on your "
         f"<span class='amt'>{inr_short(AMT)}</span>) vs {pct(eb)} for B ({rs(eb)}) — the high-risk label "
         f"{'held' if RC.label_holds(a, b) else 'did not hold'}.",
         f"Bought at the start of that window, A would have fallen as far as {rs(a['replay']['largest_fall'])} and B {rs(b['replay']['largest_fall'])}; "
@@ -71,7 +71,7 @@ def main(site: Path) -> None:
           <li>{sum(w > 1e-4 for w in p['weights'].values())} stocks held · {html.escape(ind)}…</li>
           <li>{f"Beta {res['evidence'][k]['weighted_beta']:.2f} · volatility {pct(res['evidence'][k]['portfolio_vol'])}" if k in res['evidence']
                else f"Expected return {pct(p['expected_return'])} · Sharpe {p['sharpe']:.2f}"}</li>
-          <li>VaR today (99%, 1 day): {rs(cur[k]['risk']['Historical']['0.99']['var'])}</li>
+          <li>VaR today (95%, 1 day): {rs(cur[k]['risk']['Historical'][config.RULE_KEY]['var'])}</li>
           <li>Worst fall in the {html.escape(ev_c['name'])}: {rs(r['replay']['largest_fall'])}</li>
         </ul>
         <svg viewBox="0 0 300 70" class="spark" aria-label="Value path in the crisis">{sparkline(r['replay']['value'], col)}</svg>
@@ -144,7 +144,7 @@ a {{ color: #8FB8F2; }}
   <h2>How it works</h2>
   <div class="flow">{flow}</div>
   <p class="cap" style="margin-top:10px">Prices from Yahoo Finance, checked day-by-day against NSE's official closes; every split, bonus,
-  rights issue and demerger rebuilt from NSE records. VaR and Expected Shortfall by four methods; Markowitz optimisation with SciPy.
+  rights issue and demerger rebuilt from NSE records. VaR and Expected Shortfall by the three methods taught in class; Markowitz optimisation with SciPy.
   The dashboard runs Python in your browser (first load ≈ 15–30 s).</p>
   <footer>{config.FOOTER.format(date=res['as_of'])} · Team: {', '.join(config.TEAM)} · {config.CREDIT_LINE} ·
   <a href="{config.REPO_URL}">GitHub repository</a></footer>

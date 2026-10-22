@@ -1,13 +1,14 @@
 """Plain-language sentences generated from computed numbers (no hard-coded findings)."""
 from __future__ import annotations
 
+from . import config
 from .fmt import inr_short, pct
 
 
 def es_finding(event_name: str, a: dict, b: dict, amount_a: float, amount_b: float, held: bool) -> str:
-    ea = a["risk"]["Historical"]["0.99"]["es"]
-    eb = b["risk"]["Historical"]["0.99"]["es"]
-    return (f"In the {event_name}, Portfolio A's average loss on its worst days (1-day Expected Shortfall, 99%) was {pct(ea)}, "
+    ea = a["risk"]["Historical"][config.RULE_KEY]["es"]
+    eb = b["risk"]["Historical"][config.RULE_KEY]["es"]
+    return (f"In the {event_name}, Portfolio A's average loss on its worst days (1-day Expected Shortfall, 95%) was {pct(ea)}, "
             f"or {inr_short(ea * amount_a)} on your {inr_short(amount_a)}. For B it was {pct(eb)} ({inr_short(eb * amount_b)}). "
             f"So the high-risk label {'held' if held else 'did not hold'}.")
 

@@ -1,4 +1,4 @@
-"""Value at Risk and Expected Shortfall — four methods (brief §6.7).
+"""Value at Risk and Expected Shortfall — three methods, as taught in class (brief §6.7).
 
 Losses are positive fractions of the portfolio value over a 1-day horizon; 10-day figures use
 √10 scaling. ES ≥ VaR and VaR(99%) ≥ VaR(95%) hold by construction (and are tested).
@@ -9,8 +9,6 @@ Methods
 2. Parametric normal: VaR = −(μ + σ z), ES = −μ + σ φ(z)/(1−c).
 3. Monte Carlo, multivariate Student-t: 10,000 draws, degrees of freedom fitted to the window's
    portfolio returns (floored at 3), covariance matched to the sample, fixed seed.
-4. Cornish–Fisher: the normal quantile corrected for skewness and excess kurtosis; ES by averaging
-   the (monotone) Cornish–Fisher quantile over the tail.
 """
 from __future__ import annotations
 
@@ -23,7 +21,7 @@ import pandas as pd
 from . import config
 
 N = NormalDist()
-METHODS = ["Historical", "Parametric normal", "Monte Carlo (Student-t)", "Cornish–Fisher"]
+METHODS = ["Historical", "Parametric normal", "Monte Carlo (Student-t)"]
 
 
 def historical(r: np.ndarray, c: float) -> tuple[float, float]:
@@ -42,31 +40,6 @@ def parametric_normal(r: np.ndarray, c: float) -> tuple[float, float]:
     var = -(mu + sd * z)
     es = -mu + sd * N.pdf(z) / (1 - c)
     return float(var), float(es)
-
-
-_GRID = 1600
-_PS = (np.arange(_GRID) + 0.5) / _GRID
-_Z = np.array([N.inv_cdf(float(x)) for x in _PS])
-
-
-def _cf_quantile(z: np.ndarray, s: float, k: float) -> np.ndarray:
-    return z + (z**2 - 1) * s / 6 + (z**3 - 3 * z) * k / 24 - (2 * z**3 - 5 * z) * s**2 / 36
-
-
-def cornish_fisher(r: np.ndarray, c: float, grid: int = 400) -> tuple[float, float]:
-    r = np.asarray(r, dtype=float)
-    r = r[~np.isnan(r)]
-    mu, sd = r.mean(), r.std(ddof=1)
-    s = float(pd.Series(r).skew())
-    k = float(pd.Series(r).kurt())
-    # monotone rearrangement of the CF quantile function over (0, 1) so ES ≥ VaR always holds
-    q_all = np.sort(_cf_quantile(_Z, s, k))
-    q_at = float(np.interp(1 - c, _PS, q_all))
-    var = -(mu + sd * q_at)
-    tail_ps = (np.arange(grid) + 0.5) / grid * (1 - c)
-    tail_q = np.interp(tail_ps, _PS, q_all)
-    es = -(mu + sd * float(tail_q.mean()))
-    return float(var), float(max(es, var))
 
 
 def fit_t_dof(r: np.ndarray, floor: float = config.T_DOF_FLOOR) -> float:
@@ -110,7 +83,7 @@ def mc_student_t(R: pd.DataFrame, w: pd.Series, cs, draws: int = config.MC_DRAWS
     return out, nu
 
 
-def all_methods(R: pd.DataFrame, w: pd.Series, cs=(0.95, 0.99, config.ES_BASEL)) -> dict:
+def all_methods(R: pd.DataFrame, w: pd.Series, cs=(0.95, 0.99)) -> dict:
     """{method: {c: {'var': x, 'es': y}}} for the constant-weight portfolio on window R."""
     port = (R.fillna(0.0) @ w.reindex(R.columns).fillna(0.0)).to_numpy()
     out = {m: {} for m in METHODS}
@@ -119,8 +92,6 @@ def all_methods(R: pd.DataFrame, w: pd.Series, cs=(0.95, 0.99, config.ES_BASEL))
         out["Historical"][c] = {"var": v, "es": e}
         v, e = parametric_normal(port, c)
         out["Parametric normal"][c] = {"var": v, "es": e}
-        v, e = cornish_fisher(port, c)
-        out["Cornish–Fisher"][c] = {"var": v, "es": e}
     mc, nu = mc_student_t(R, w, cs)
     for c in cs:
         out["Monte Carlo (Student-t)"][c] = {"var": mc[c][0], "es": mc[c][1]}

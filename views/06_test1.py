@@ -90,8 +90,8 @@ with left:
         for nm, r in [("Today", ctx.current)] + [(ui.short(ev).split(" (")[0][:18], r_) for _, r_, ev in ok]:
             v, e = ctx.h(r[ck]["risk"]["Historical"][k]["var"]), ctx.h(r[ck]["risk"]["Historical"][k]["es"])
             n_days, beyond = ui.tail_days(r[ck], k)
-            cmp.append({"Period": nm, "VaR": ui.inr_short(v * am), "Days beyond VaR": f"{len(beyond)} of {n_days}",
-                        "ES": ui.inr_short(e * am),
+            cmp.append({"Period": nm, vlab: ui.inr_short(v * am), "Days beyond VaR": f"{len(beyond)} of {n_days}",
+                        elab: ui.inr_short(e * am),
                         "Value after VaR": ui.inr_short(am * (1 - v)), "Value after ES": ui.inr_short(am * (1 - e)),
                         "Lowest value": ui.inr_short(r[ck]["replay"]["low"] * am), "ES vs today": f"{e / e_now:.1f}×"})
         st.dataframe(pd.DataFrame(cmp), hide_index=True, width="stretch",
@@ -159,7 +159,7 @@ if right is not None:
         rows = []
         for name, reg, e_ in regs:
             rows.append({"Period": name, "ES A": ctx.h(reg["A"]["risk"]["Historical"][k]["es"]), "ES B": ctx.h(reg["B"]["risk"]["Historical"][k]["es"]),
-                         "Volatility A": reg["A"]["volatility"], "Volatility B": reg["B"]["volatility"], "Nifty ES 99%": reg["B"]["nifty"]["es99"],
+                         "Volatility A": reg["A"]["volatility"], "Volatility B": reg["B"]["volatility"], "Nifty ES 95%": reg["B"]["nifty"]["es"],
                          "Biggest fall B": reg["B"]["max_drawdown"], "Biggest fall Nifty": reg["B"]["nifty"]["max_drawdown"],
                          "A stocks still High": f"{reg['A']['stability']['same']}/{reg['A']['stability']['of']}" if reg["A"]["stability"] else "",
                          "B stocks still Low": f"{reg['B']['stability']['same']}/{reg['B']['stability']['of']}" if reg["B"]["stability"] else ""})
@@ -169,8 +169,8 @@ if right is not None:
         board_w = ctx.scoreboard()
         if board_w:
             st.markdown("#### Every period in the list, side by side")
-            tbl = pd.DataFrame([{"Event": r["event"], "Type": r["type"], "Window": f"{r['start']} → {r['end']}", "ES99 A": r["es99_A"],
-                                 "ES99 B": r["es99_B"], "Volatility A": r["vol_A"], "Volatility B": r["vol_B"], "Biggest fall A": r["mdd_A"],
+            tbl = pd.DataFrame([{"Event": r["event"], "Type": r["type"], "Window": f"{r['start']} → {r['end']}", "ES95 A": r["es_A"],
+                                 "ES95 B": r["es_B"], "Volatility A": r["vol_A"], "Volatility B": r["vol_B"], "Biggest fall A": r["mdd_A"],
                                  "Biggest fall B": r["mdd_B"],
                                  "Label held": "✓" if r["label_held"] else "✗",
                                  "B beat Nifty": ("✓" if r["b_held_up"] else "✗") if r["type"] == "crisis" else "—"} for r in board_w])
@@ -204,15 +204,15 @@ if right is not None:
         for kind in ("crisis", "calm"):
             df = pd.DataFrame(rf[f"{kind}_candidates"])
             if len(df):
-                df = df[["start", "end", "return", "volatility", "max_drawdown", "worst_day", "var99"]]
-                df.columns = ["Start", "End", "Return", "Volatility", "Biggest fall", "Worst day", "VaR 99%"]
+                df = df[["start", "end", "return", "volatility", "max_drawdown", "worst_day", "var"]]
+                df.columns = ["Start", "End", "Return", "Volatility", "Biggest fall", "Worst day", "VaR 95%"]
                 st.markdown(f"The top 3 **{kind}** periods the app found by itself "
                             f"({'biggest fall' if kind == 'crisis' else 'lowest volatility'}, 252 days each, no overlaps):")
                 st.dataframe(ui.pct_df(df, df.columns[2:]), hide_index=True, width="stretch")
 
         st.markdown(f"#### VaR and ES by method ({ctx.conf:.0%}, {ctx.horizon}-day)")
         st.markdown("Historical uses the real days. Normal assumes a bell curve. Monte Carlo draws random days from a curve with "
-                    "more extreme days (Student-t). Cornish–Fisher adjusts the bell curve for lopsided and extreme days.")
+                    "more extreme days (Student-t).")
         rows = []
         periods = [("Today", ctx.current)] + [(ev["name"], reg) for _, reg, ev, _p in results if reg is not None]
         for name, reg in periods:  # today plus every period you ticked
@@ -220,12 +220,12 @@ if right is not None:
                 r, am = reg[key]["risk"], ctx.amount(key)
                 for m in V.METHODS:
                     v, e = ctx.h(r[m][k]["var"]), ctx.h(r[m][k]["es"])
-                    rows.append({"Period": name, "Portfolio": key, "Method": m, "VaR": v, "ES": e,
-                                 "VaR ₹": ui.inr(v * am), "ES ₹": ui.inr(e * am),
-                                 "Value after VaR ₹": ui.inr(am * (1 - v)), "Value after ES ₹": ui.inr(am * (1 - e))})
+                    rows.append({"Period": name, "Portfolio": key, "Method": m, vlab: v, elab: e,
+                                 f"{vlab} ₹": ui.inr(v * am), f"{elab} ₹": ui.inr(e * am),
+                                 "Value after VaR loss ₹": ui.inr(am * (1 - v)), "Value after ES loss ₹": ui.inr(am * (1 - e))})
         df = pd.DataFrame(rows)
-        st.dataframe(ui.pct_df(df, ["VaR", "ES"]), hide_index=True, width="stretch", height=420)
-        st.caption("Every period you ticked, all three portfolios, all four methods, on your amount. Value after = your amount "
+        st.dataframe(ui.pct_df(df, [vlab, elab]), hide_index=True, width="stretch", height=420)
+        st.caption("Every period you ticked, all three portfolios, all three methods, on your amount. Value after = your amount "
                    "minus that loss.")
         if ctx.horizon == 10:
             st.caption("10-day figures are the 1-day figures × √10. That assumes each day is independent of the last. In a crisis, "
@@ -273,16 +273,16 @@ if right is not None:
         ui.concept_box("Value at Risk (VaR)",
                        f"On {ctx.conf:.0%} of days you should lose less than this. On the other {1 - ctx.conf:.0%} of days you lose more, "
                        "and VaR doesn't say how much more.",
-                       "VaR_c is the loss at the (1−c) point of the spread of returns. We estimate it four ways: historical "
-                       "(sort the real days), normal (average and standard deviation), Monte Carlo with Student-t draws (more "
-                       "extreme days), and Cornish–Fisher (adjusts the normal for lopsided and extreme days).",
+                       "VaR_c is the loss at the (1−c) point of the spread of returns. We estimate it three ways, as taught in "
+                       "class: historical (sort the real days), parametric normal (average and standard deviation), and Monte "
+                       "Carlo with Student-t draws (more extreme days).",
                        "Banks and fund managers use it to set limits, and it is easy to explain in rupees.",
                        "Every VaR rupee figure in this app.")
         ui.concept_box("Expected Shortfall (ES)",
                        "When a really bad day comes, how much do you lose on average? ES answers the question VaR leaves open.",
-                       "The average loss on the days worse than VaR. The Basel rules for banks (FRTB) use ES at 97.5%.",
+                       "The average loss on the days worse than VaR, at the same confidence level as VaR (95% by default).",
                        "Two portfolios can have the same VaR but very different worst days. ES shows the difference.",
-                       "The verdict cards above and the scoreboard (ES 99%).")
+                       "The verdict cards above and the scoreboard (ES 95%).")
         ui.concept_box("Fat tails",
                        "Markets have more extreme days than a bell curve says they should. By the bell curve, a −8% day should "
                        "happen once in centuries, but it happened several times in 2008 and 2020.",

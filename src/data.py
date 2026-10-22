@@ -63,15 +63,6 @@ def window(df, start, end):
     return df.loc[pd.Timestamp(start):pd.Timestamp(end)]
 
 
-def last_n(df, n: int = config.REGIME_DAYS):
-    return df.iloc[-n:]
-
-
-def coverage_start(symbol: str) -> pd.Timestamp:
-    """First date with a return for this stock."""
-    return returns()[symbol].first_valid_index()
-
-
 def latest_prices() -> pd.Series:
     """Latest closing price per stock = the actual traded price (adjustments run backwards)."""
     return prices().ffill().iloc[-1]

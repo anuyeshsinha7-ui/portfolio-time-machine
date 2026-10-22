@@ -9,8 +9,8 @@ import numpy as np
 from . import config
 
 RULES = {
-    "label_holds": "The high-risk label holds in a period if Portfolio A's Expected Shortfall (99%, historical) and its volatility are both higher than Portfolio B's.",
-    "b_held_up": "Portfolio B 'held up' in a crisis if its Expected Shortfall (99%, historical) and its biggest fall were both smaller than the Nifty 50's in the same period.",
+    "label_holds": "The high-risk label holds in a period if Portfolio A's Expected Shortfall (95%, historical) and its volatility are both higher than Portfolio B's.",
+    "b_held_up": "Portfolio B 'held up' in a crisis if its Expected Shortfall (95%, historical) and its biggest fall were both smaller than the Nifty 50's in the same period.",
     "yes_partly_no": "Label verdict. Yes: the label held in the chosen crisis, the chosen calm period and at least 80% of all periods in the list. Partly: it held in at least one chosen period or at least half of all periods. Otherwise No.",
     "robust": "The weights are robust in a period if the share of money you would need to move to reach that period's best weights is no more than the 95th percentile of what random noise in the data alone would make you move (measured by reshuffling today's data).",
     "fit": "A portfolio fits you if its worst fall in rupees in a crisis replay (on your amount) is no bigger than the fall you said you could live with. Of the portfolios that fit (A, B and C), we suggest the one expected to earn the most. If none fits, we show the largest amount that keeps the portfolio that fell least within your limit.",
@@ -19,12 +19,12 @@ RULES = {
 
 
 def label_holds(a: dict, b: dict) -> bool:
-    return (a["risk"]["Historical"]["0.99"]["es"] > b["risk"]["Historical"]["0.99"]["es"]
+    return (a["risk"]["Historical"][config.RULE_KEY]["es"] > b["risk"]["Historical"][config.RULE_KEY]["es"]
             and a["volatility"] > b["volatility"])
 
 
 def b_held_up(b: dict) -> bool:
-    return (b["risk"]["Historical"]["0.99"]["es"] < b["nifty"]["es99"]
+    return (b["risk"]["Historical"][config.RULE_KEY]["es"] < b["nifty"]["es"]
             and b["max_drawdown"] < b["nifty"]["max_drawdown"])
 
 
@@ -87,8 +87,8 @@ LIMITATIONS = [
      "This matters more the further back the period goes, so the 2008 results make both portfolios look best."),
     ("Estimation error", "Expected returns and how stocks move together are worked out from only 252 days, so they are rough. The noise bands "
      "on the Rebalance screen show how much the weights move from noise alone."),
-    ("Assumptions about returns", "Historical VaR assumes the past period is a fair guide. The normal method ignores extreme days. Student-t and "
-     "Cornish–Fisher are approximations. Multiplying by √10 for 10 days assumes each day is independent of the last."),
+    ("Assumptions about returns", "Historical VaR assumes the past period is a fair guide. The normal method ignores extreme days. The Student-t "
+     "Monte Carlo is an approximation. Multiplying by √10 for 10 days assumes each day is independent of the last."),
     ("Costs and taxes", "We leave out brokerage, market impact, securities transaction tax and capital-gains tax."),
     ("Benchmark mismatch", "Our stock prices include reinvested dividends, but the Nifty 50 index does not, so comparisons with the Nifty slightly favour the stocks."),
     ("Data", "Any data problems we could not fix are listed in the data-quality report (on the About the data screen)."),

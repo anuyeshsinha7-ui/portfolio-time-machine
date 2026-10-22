@@ -51,6 +51,9 @@ Labels are set on **today's data — the trailing {C.CLASSIFICATION_YEARS} years
 
 * **High risk** = beta ≥ 1.0 **and** volatility ≥ universe median ({pct(res['evidence']['vol_median'])} in this snapshot).
 * **Low risk** = beta < 1.0 **and** volatility < universe median. Everything else = Moderate.
+* **Not rated** = negative beta (moves against the market): no label and no score, left out of the median and the
+  percentiles so it cannot shift other stocks' scores, and never recommended (it can still be hand-picked, with a warning).
+* **Equities only:** REIT and InvIT units (NSE series RR / IV) are excluded from the universe; they are not company shares.
 * Composite risk score = average of the beta percentile and the volatility percentile.
 * **Recommendation (default picker):** A = the top {C.PICK_N} High-risk stocks by composite score, B = the {C.PICK_N} Low-risk stocks
   with the lowest score, inside the client's sectors and sizes (default: all), full-history stocks first, at most
@@ -92,14 +95,13 @@ R_max = highest achievable return (linear program, `scipy.optimize.linprog`), {C
 ## 6. VaR and ES
 
 Losses are positive fractions; ₹ figures = fraction × the client's amount. 1-day horizon; 10-day via √10 (assumes i.i.d. days).
-Confidence 95% and 99%, plus ES at 97.5% (Basel FRTB).
+Confidence 95% (the default, and the level every verdict rule uses) or 99%; ES is always at the same level as VaR.
 
 1. **Historical simulation** (primary, the class convention): VaR = −(the (1−c) percentile of daily returns, linear interpolation as in
    Excel `PERCENTILE` / pandas `quantile`); ES = −(mean of the returns at or below that percentile).
 2. **Parametric normal:** VaR = −(μ + σz), ES = −μ + σφ(z)/(1−c).
 3. **Monte Carlo, multivariate Student-t:** {C.MC_DRAWS:,} draws, degrees of freedom fitted by maximum likelihood to the window's portfolio
    returns and floored at {C.T_DOF_FLOOR:g}, covariance matched to the sample, seed {C.SEED}.
-4. **Cornish–Fisher:** z_CF = z + (z²−1)S/6 + (z³−3z)K/24 − (2z³−5z)S²/36; ES averages the monotone CF quantile over the tail.
 
 VaR and the frontier use constant (daily-rebalanced) weights; the ₹ crisis replay is buy-and-hold from the window start.
 Tests enforce ES ≥ VaR and 99% ≥ 95% for every method.

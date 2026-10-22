@@ -151,7 +151,7 @@ def test_var_es_orderings_all_methods(current_A, picks):
     w = pd.Series(1 / len(picks["A"]), index=picks["A"])
     res = V.all_methods(current_A, w)
     for m in V.METHODS:
-        for c in (0.95, 0.99, 0.975):
+        for c in (0.95, 0.99):
             assert res[m][c]["es"] >= res[m][c]["var"] - 1e-12, m
         assert res[m][0.99]["var"] >= res[m][0.95]["var"], m
         assert res[m][0.99]["es"] >= res[m][0.95]["es"], m
@@ -173,14 +173,6 @@ def test_parametric_normal_formula():
     v, e = V.parametric_normal(r, 0.99)
     assert v == pytest.approx(2.326 * 0.01, rel=0.02)
     assert e == pytest.approx(2.665 * 0.01, rel=0.02)
-
-
-def test_cornish_fisher_equals_normal_without_skew_kurtosis():
-    rng = np.random.default_rng(2)
-    r = rng.normal(0, 0.01, 200_000)
-    v_cf, _ = V.cornish_fisher(r, 0.99)
-    v_n, _ = V.parametric_normal(r, 0.99)
-    assert v_cf == pytest.approx(v_n, rel=0.03)
 
 
 def test_mc_student_t_reproducible_and_fat_tailed(current_A, picks):
@@ -377,7 +369,7 @@ def test_var_is_a_positive_loss_for_random_portfolios_and_windows():
         out = V.all_methods(R, w)
         port = (R.fillna(0) @ w).to_numpy()
         for m in V.METHODS:
-            for c in (0.95, 0.975, 0.99):
+            for c in (0.95, 0.99):
                 assert out[m][c]["var"] > 0 and out[m][c]["es"] >= out[m][c]["var"] - 1e-12, (m, c)
             assert out[m][0.99]["var"] >= out[m][0.95]["var"] - 1e-12, m
         mu, sd = port.mean(), port.std(ddof=1)
@@ -454,3 +446,14 @@ def test_regime_leaves_out_stocks_not_yet_listed(picks):
     r = E.regime_result(p, "2020-01-01", "2020-12-31", None, frontier_points=10)
     assert r["available"] and r["missing"] == ["STARHEALTH"]
     assert sum(r["test2"]["weights"].values()) == pytest.approx(1, abs=1e-6) and r["test2"]["weights"]["STARHEALTH"] == 0
+
+
+def test_negative_beta_is_not_rated_and_does_not_move_other_scores():
+    from src import classify as CL
+
+    base = pd.DataFrame({"beta": [1.4, 1.2, 0.8, 0.5, 0.3], "volatility": [0.5, 0.4, 0.3, 0.2, 0.25]}, index=list("abcde"))
+    with_neg = pd.concat([base, pd.DataFrame({"beta": [-0.3], "volatility": [0.9]}, index=["neg"])])
+    t0, t1 = CL.classify(base), CL.classify(with_neg)
+    assert t1.loc["neg", "label"] == CL.NOT_RATED and np.isnan(t1.loc["neg", "risk_score"])
+    assert t1.loc[list("abcde"), "risk_score"].tolist() == t0["risk_score"].tolist()  # others' scores unchanged
+    assert t1["vol_median"].iloc[0] == t0["vol_median"].iloc[0]

@@ -69,7 +69,6 @@ if right is not None:
         st.latex(r"r_t = \frac{P_t}{P_{t-1}} - 1 \quad r_{p,t} = \sum_i w_i r_{i,t} \quad \mu = 252\,\bar r \quad \sigma = \sqrt{252}\,s")
         st.latex(r"\beta = \frac{\operatorname{Cov}(r, r_m)}{\operatorname{Var}(r_m)} \quad \text{MDD} = \max_t\Big(1 - \frac{W_t}{\max_{s\le t} W_s}\Big)")
         st.latex(r"\text{Sharpe} = \frac{\mu - r_f}{\sigma} \quad \text{Sortino} = \frac{\mu - r_f}{\sigma_{\text{down}}}")
-        st.latex(r"z_{CF} = z + \tfrac{(z^2-1)S}{6} + \tfrac{(z^3-3z)K}{24} - \tfrac{(2z^3-5z)S^2}{36}")
         st.latex(r"\textbf{A: } \max_w \mu^\top w \quad \textbf{B: } \min_w w^\top \Sigma w \quad "
                  r"\textbf{C: } \max_w \tfrac{\mu^\top w - r_f}{\sqrt{w^\top \Sigma w}} \quad "
                  r"\sigma_p^2 = w^\top \Sigma w,\ \Sigma = \tfrac{D^\top D}{N-1},\ D = M - \bar M")
@@ -92,7 +91,7 @@ if right is not None:
             ("SPOS", "Special pre-open session (how the NSE sets prices on the day of a demerger)"), ("NBFC", "Non-banking financial company"),
             ("FPI", "Foreign portfolio investor"), ("VIX", "Volatility index (India VIX = how much the market expects the Nifty to swing)"),
             ("RBI", "Reserve Bank of India"), ("T-bill", "Treasury bill (short-term government debt)"),
-            ("CF", "Cornish–Fisher: adjusts the bell curve for lopsided and extreme days"), ("POF", "Proportion of failures (Kupiec's test)"),
+            ("POF", "Proportion of failures (Kupiec's test)"),
         ], columns=["Term", "Meaning"]), hide_index=True, width="stretch")
         st.markdown("#### What's in each data file")
         st.dataframe(pd.DataFrame([

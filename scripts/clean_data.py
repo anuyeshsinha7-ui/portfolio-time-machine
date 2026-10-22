@@ -854,6 +854,12 @@ def main() -> None:
     cleaned, rows, ca_rows, anchor_rows, excl_rows, raw_for_spot = {}, [], [], [], [], {}
     for i, r in n200.iterrows():
         s = r["Symbol"]
+        if str(r.get("Series", "EQ")).strip() not in config.EQUITY_SERIES:  # equities only (team decision, 22 Oct 2026)
+            rows.append({"symbol": s, "company": r["Company Name"], "industry": r["Industry"], "cap_bucket": cap_of(s),
+                         "isin": r["ISIN Code"], "status": "excluded", "first_date": "", "n_days": 0,
+                         "reason": f"not an equity: NSE series {r['Series']} (REIT/InvIT units are not company shares)",
+                         "adj_close_max_gap": None, "nse_anchor_matched": None, "yahoo_level_fixes": 0, "dividend_source": ""})
+            continue
         series, info, true_raw = clean_stock(s, r, calendar, nifty_ret, fetched_at, changes_tbl, checkpoints, demerger_ratios)
         ca_rows += info["ca_rows"]
         anchor_rows += info["anchor_rows"]

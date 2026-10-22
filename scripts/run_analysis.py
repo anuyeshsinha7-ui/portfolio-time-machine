@@ -84,15 +84,15 @@ def main() -> None:
         for k in "ABC":
             r = reg[k]
             h = r["risk"]["Historical"]
-            rows.append((name, k, pct(h["0.95"]["var"], 2), pct(h["0.99"]["var"], 2), pct(h["0.99"]["es"], 2), pct(h["0.975"]["es"], 2),
+            rows.append((name, k, pct(h["0.95"]["var"], 2), pct(h["0.95"]["es"], 2), pct(h["0.99"]["var"], 2), pct(h["0.99"]["es"], 2),
                          pct(r["volatility"]), f"{r['beta']:.2f}", pct(r["max_drawdown"]), pct(r["worst_day"], 1),
-                         f"{r['avg_pairwise_corr']:.2f}", inr_short(h["0.99"]["es"] * AMT)))
-    say(tbl(rows, ["Regime", "P", "VaR95", "VaR99", "ES99", "ES97.5", "Vol", "Beta", "Max DD", "Worst day", "Avg corr", "ES99 on ₹15L"]) + "\n")
-    say("VaR/ES (99%, 1-day) by method in the official crisis:\n")
+                         f"{r['avg_pairwise_corr']:.2f}", inr_short(h["0.95"]["es"] * AMT)))
+    say(tbl(rows, ["Regime", "P", "VaR95", "ES95", "VaR99", "ES99", "Vol", "Beta", "Max DD", "Worst day", "Avg corr", "ES95 on ₹15L"]) + "\n")
+    say("VaR/ES (95%, 1-day) by method in the official crisis:\n")
     rows = []
-    for m in ("Historical", "Parametric normal", "Monte Carlo (Student-t)", "Cornish–Fisher"):
-        rows.append((m, *(pct(crisis[k]["risk"][m]["0.99"][x], 2) for k in "ABC" for x in ("var", "es"))))
-    say(tbl(rows, ["Method", "A VaR99", "A ES99", "B VaR99", "B ES99", "C VaR99", "C ES99"]) + "\n")
+    for m in ("Historical", "Parametric normal", "Monte Carlo (Student-t)"):
+        rows.append((m, *(pct(crisis[k]["risk"][m]["0.95"][x], 2) for k in "ABC" for x in ("var", "es"))))
+    say(tbl(rows, ["Method", "A VaR95", "A ES95", "B VaR95", "B ES95", "C VaR95", "C ES95"]) + "\n")
     lv = RC.label_verdict(crisis, calm, board)
     bv = RC.b_verdict(crisis, board)
     say(f"* High-risk label held: crisis **{lv['crisis']}**, calm **{lv['calm']}**, all events **{lv['events_held']}/{lv['events_total']}** → verdict **{lv['verdict']}**.")
@@ -121,33 +121,33 @@ def main() -> None:
                          pct(t["efficiency_gap"], 2)))
     say(tbl(rows, ["P", "Regime", "Target", "Case", "Regime-opt return", "Regime-opt vol", "Turnover", "₹ traded", "Noise p95", "Significant", "Efficiency gap"]) + "\n")
     for k in "ABC":
-        before = crisis[k]["risk"]["Historical"]["0.99"]
-        after = crisis[k]["test2"]["var_after"]["Historical"]["0.99"]
-        say(f"* {k} in the crisis — VaR99 before (today's weights) {pct(before['var'], 2)} → after (crisis-optimal) {pct(after['var'], 2)}; "
-            f"ES99 {pct(before['es'], 2)} → {pct(after['es'], 2)}.")
+        before = crisis[k]["risk"]["Historical"]["0.95"]
+        after = crisis[k]["test2"]["var_after"]["Historical"]["0.95"]
+        say(f"* {k} in the crisis — VaR95 before (today's weights) {pct(before['var'], 2)} → after (crisis-optimal) {pct(after['var'], 2)}; "
+            f"ES95 {pct(before['es'], 2)} → {pct(after['es'], 2)}.")
     say("")
 
     say("## 6. All-events scoreboard (standard windows)\n")
-    rows = [(r["event"], r["type"], f"{r['start']} → {r['end']}", pct(r["es99_A"], 2), pct(r["es99_B"], 2), pct(r["vol_A"]), pct(r["vol_B"]),
+    rows = [(r["event"], r["type"], f"{r['start']} → {r['end']}", pct(r["es_A"], 2), pct(r["es_B"], 2), pct(r["vol_A"]), pct(r["vol_B"]),
              pct(r["mdd_A"]), pct(r["mdd_B"]), inr_short(r["fall_A"] * AMT), inr_short(r["fall_B"] * AMT),
              "✓" if r["label_held"] else "✗", ("✓" if r["b_held_up"] else "✗") if r["type"] == "crisis" else "—") for r in board]
-    say(tbl(rows, ["Event", "Type", "Window", "ES99 A", "ES99 B", "Vol A", "Vol B", "MDD A", "MDD B", "Worst ₹ fall A", "Worst ₹ fall B", "Label held", "B beat Nifty"]) + "\n")
+    say(tbl(rows, ["Event", "Type", "Window", "ES95 A", "ES95 B", "Vol A", "Vol B", "MDD A", "MDD B", "Worst ₹ fall A", "Worst ₹ fall B", "Label held", "B beat Nifty"]) + "\n")
 
     say("## 7. Verdict\n")
     rob = {k: RC.robustness(crisis[k]["test2"]["turnover"], calm[k]["test2"]["turnover"], res["bootstrap"][k]["turnover_p95"]) for k in "ABC"}
     say(f"* Label: **{lv['verdict']}** for A; B held up: **{bv['verdict']}**.")
     say(f"* Weight robustness: A **{rob['A']['verdict']}**, B **{rob['B']['verdict']}**, C **{rob['C']['verdict']}**.")
-    say(f"* Worst case on {inr(AMT)} (official crisis): A replay fall {inr(crisis['A']['replay']['largest_fall'] * AMT)}, ES99 {inr(crisis['A']['risk']['Historical']['0.99']['es'] * AMT)}/day; "
-        f"B replay fall {inr(crisis['B']['replay']['largest_fall'] * AMT)}, ES99 {inr(crisis['B']['risk']['Historical']['0.99']['es'] * AMT)}/day.")
+    say(f"* Worst case on {inr(AMT)} (official crisis): A replay fall {inr(crisis['A']['replay']['largest_fall'] * AMT)}, ES95 {inr(crisis['A']['risk']['Historical']['0.95']['es'] * AMT)}/day; "
+        f"B replay fall {inr(crisis['B']['replay']['largest_fall'] * AMT)}, ES95 {inr(crisis['B']['risk']['Historical']['0.95']['es'] * AMT)}/day.")
     trig = RC.review_trigger(np.diff(np.log(crisis["nifty"]["value"])).tolist())
     say(f"* Review trigger: revisit when the Nifty 50's 3-month volatility exceeds {pct(trig)}.\n")
 
     say("## 8. Regime finder — top candidates\n")
     rf = res["regime_finder"]
     for kind in ("crisis", "calm"):
-        rows = [(c["start"], c["end"], pct(c["return"]), pct(c["volatility"]), pct(c["max_drawdown"]), pct(c["worst_day"]), pct(c["var99"], 2))
+        rows = [(c["start"], c["end"], pct(c["return"]), pct(c["volatility"]), pct(c["max_drawdown"]), pct(c["worst_day"]), pct(c["var"], 2))
                 for c in rf[f"{kind}_candidates"]]
-        say(f"**{kind.title()} candidates**\n\n" + tbl(rows, ["Start", "End", "Return", "Vol", "Max DD", "Worst day", "VaR99"]) + "\n")
+        say(f"**{kind.title()} candidates**\n\n" + tbl(rows, ["Start", "End", "Return", "Vol", "Max DD", "Worst day", "VaR95"]) + "\n")
 
     text = "\n".join(L)
     (config.DOCS_DIR / "RESULTS_SUMMARY.md").write_text(text)

@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from src import charts as CH
+from src import config
 from src import recommend as RC
 from src import ui
 
@@ -17,7 +18,7 @@ for eid in s["bt_events"]:
     if reg is not None:
         ticked.append((eid, reg, ev))
 board = [{"event": ev["name"], "type": ev["type"], "label_held": RC.label_holds(r["A"], r["B"]), "b_held_up": RC.b_held_up(r["B"]),
-          "es99_A": r["A"]["risk"]["Historical"]["0.99"]["es"], "es99_B": r["B"]["risk"]["Historical"]["0.99"]["es"],
+          "es_A": r["A"]["risk"]["Historical"][config.RULE_KEY]["es"], "es_B": r["B"]["risk"]["Historical"][config.RULE_KEY]["es"],
           "vol_A": r["A"]["volatility"], "vol_B": r["B"]["volatility"], "mdd_A": r["A"]["max_drawdown"], "mdd_B": r["B"]["max_drawdown"],
           "fall_A": r["A"]["replay"]["largest_fall"], "fall_B": r["B"]["replay"]["largest_fall"],
           "nifty_fall": r["nifty"]["largest_fall"], "start": r["start"], "end": r["end"]} for eid, r, ev in ticked] or None
@@ -81,12 +82,13 @@ if right is not None:
         for name, rule in RC.RULES.items():
             st.markdown(f"* **{name.replace('_', ' ').capitalize()}.** {rule}")
         st.markdown("#### The numbers the rules used")
-        st.markdown("ES 99% is the average loss on the worst 1% of days. Biggest fall is the largest drop from a high point.")
+        st.markdown("ES 95% is the average loss on the days that lost more than the 95% VaR (the worst 5% of days). Biggest fall "
+                    "is the largest drop from a high point.")
         rows = []
         for nm, reg, ev in ctx.regimes():
-            rows.append({"Period": nm, "ES 99% A": reg["A"]["risk"]["Historical"]["0.99"]["es"],
-                         "ES 99% B": reg["B"]["risk"]["Historical"]["0.99"]["es"], "Volatility A": reg["A"]["volatility"],
-                         "Volatility B": reg["B"]["volatility"], "ES 99% Nifty": reg["B"]["nifty"]["es99"],
+            rows.append({"Period": nm, "ES 95% A": reg["A"]["risk"]["Historical"][config.RULE_KEY]["es"],
+                         "ES 95% B": reg["B"]["risk"]["Historical"][config.RULE_KEY]["es"], "Volatility A": reg["A"]["volatility"],
+                         "Volatility B": reg["B"]["volatility"], "ES 95% Nifty": reg["B"]["nifty"]["es"],
                          "Biggest fall B": reg["B"]["max_drawdown"], "Biggest fall Nifty": reg["B"]["nifty"]["max_drawdown"],
                          "Label held": RC.label_holds(reg["A"], reg["B"]), "B beat Nifty": RC.b_held_up(reg["B"])})
         df = pd.DataFrame(rows)

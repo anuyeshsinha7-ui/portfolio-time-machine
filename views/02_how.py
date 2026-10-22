@@ -57,7 +57,7 @@ digraph C { rankdir=TB; bgcolor="transparent"; node [shape=box, style="rounded,f
             ("Where a crisis period starts", f"{config.EVENT_PRE_DAYS} trading days before the market's peak"),
             ("Weight per stock", f"{config.W_MIN:.0%} to {config.W_MAX:.0%} (C: {config.C_W_MIN:.0%} to {config.W_MAX:.0%})"),
             ("Portfolio goals", "A: highest return · B: lowest variance · C: highest Sharpe ratio"), ("Most in one sector", f"{config.INDUSTRY_MAX:.0%}"),
-            ("Risk-free rate", f"{config.RISK_FREE_RATE:.2%} (91-day Treasury bill)"), ("VaR confidence", "95% and 99% (ES also at 97.5%)"),
+            ("Risk-free rate", f"{config.RISK_FREE_RATE:.2%} (91-day Treasury bill)"), ("VaR and ES confidence", "95% (default) or 99% — VaR and ES always at the same level"),
             ("Monte Carlo", f"{config.MC_DRAWS:,} random Student-t draws, seed {config.SEED}"),
             ("Bootstrap", f"{config.BOOTSTRAP_RESAMPLES} reshuffles of the data, in {config.BLOCK_DAYS}-day blocks"),
         ], columns=["Assumption", "Value"]).astype(str), hide_index=True, width="stretch")

@@ -17,7 +17,6 @@ from . import config
 from . import data as D
 from . import engine as E
 from . import events as EV
-from . import universe as U
 from .fmt import AmountError, inr, inr_short, parse_amount, pct, validate_amount  # noqa: F401 (re-exported)
 
 A_COL, B_COL, C_COL, N_COL = config.COLOR_A, config.COLOR_B, config.COLOR_C, config.COLOR_NIFTY
@@ -71,17 +70,6 @@ def inject_css() -> None:
 
 
 # ---------------------------------------------------------------- layout
-def panel_label(text: str, colour: str) -> None:
-    st.html(f'<div class="ptm-panel-label"><span class="dot" style="background:{colour}"></span>{text}</div>')
-
-
-def page_header(step_key: str, title: str, subtitle: str = "") -> None:
-    client, _ = split()
-    with client:
-        st.caption(dict(STEPS).get(step_key, ""))
-        st.markdown(f"## {title}")
-        if subtitle:
-            st.markdown(f"<div class='ptm-tag'>{subtitle}</div>", unsafe_allow_html=True)
 
 
 def card(title: str, value: str, sub: str = "", kind: str = "") -> None:
@@ -132,15 +120,6 @@ def flowchart(current: str) -> None:
 def footer() -> None:
     st.html(f"<div class='ptm-footer'>{config.FOOTER.format(date=D.as_of())} · "
             f"<a href='{config.REPO_URL}' target='_blank'>Source code on GitHub</a></div>")
-
-
-def fig_style(fig: go.Figure, height: int = 380, title: str | None = None) -> go.Figure:
-    fig.update_layout(height=height, margin=dict(l=10, r=10, t=40 if title else 10, b=10), title=title,
-                      legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0), font=dict(size=12),
-                      plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", hovermode="x unified")
-    fig.update_xaxes(gridcolor="#263043", zeroline=False)
-    fig.update_yaxes(gridcolor="#263043", zeroline=False)
-    return fig
 
 
 def show(fig: go.Figure) -> None:
@@ -358,7 +337,7 @@ class Ctx:
         return self.amount_a if k == "A" else self.amount_b if k == "B" else (self.amount_a + self.amount_b) / 2
 
     def ck(self) -> str:
-        """JSON key for the selected confidence level ('0.95', '0.99' or '0.975')."""
+        """JSON key for the selected confidence level ('0.95' or '0.99')."""
         return str(self.conf)
 
     def h(self, x: float) -> float:
@@ -484,26 +463,6 @@ def context() -> Ctx:
                horizon=setting("horizon"), mode=mode, default=default)
 
 
-def compute_scoreboard(ctx: Ctx) -> list[dict]:
-    """All-events scoreboard for custom picks, with a progress bar."""
-    res = default_results()
-    a, b = tuple(ctx.P["A"]["symbols"]), tuple(ctx.P["B"]["symbols"])
-    ids = [k for k, v in res["events"].items() if v["available"] and not k.startswith("auto_")]
-    bar = st.progress(0.0, text="Testing every event…")
-    regs = {}
-    for n, eid in enumerate(ids, 1):
-        ev = res["events"][eid]
-        if coverage_problem(eid, list(a) + list(b), ctx.mode):
-            continue
-        w = ev["windows"].get(ctx.mode) or ev["windows"]["standard"]
-        regs[f"{eid}|{ctx.mode}"] = _regime(a, b, w[0], w[1])
-        bar.progress(n / len(ids), text=f"Tested {ev['name']}")
-    bar.empty()
-    board = E.scoreboard({"regimes": regs, "events": res["events"]}, ctx.mode)
-    st.session_state.setdefault("board_custom", {})[(a, b, ctx.mode)] = board
-    return board
-
-
 def compute_bootstrap(ctx: Ctx) -> dict:
     a, b = tuple(ctx.P["A"]["symbols"]), tuple(ctx.P["B"]["symbols"])
     out = {}
@@ -521,47 +480,8 @@ def health_badge() -> str:
     return f"Data health: {meta['n_core']} core + {meta['n_extended']} extended stocks checked · see page 9"
 
 
-def universe_symbols() -> list[str]:
-    return U.usable()["symbol"].tolist()
-
-
 def _sync(src: str, dst: str) -> None:
     st.session_state[dst] = st.session_state[src]
-
-
-def event_selectors(page: str) -> None:
-    """The crisis and calm dropdowns repeated at the top of a page, kept in sync with the sidebar."""
-    s = st.session_state
-    client, _ = split()
-    with client:
-        c1, c2 = st.columns(2)
-    for col, kind in ((c1, "crisis"), (c2, "calm")):
-        key = f"top_{kind}_{page}"
-        opts = event_options(kind)
-        s[key] = s[f"{kind}_id"] if s[f"{kind}_id"] in opts else opts[0]
-        labels = {e: compact_label(e, s["pick_A"] + s["pick_B"], s["window_mode"]) for e in opts}
-        col.selectbox(f"{'🔴 Crisis' if kind == 'crisis' else '🟢 Calm'} to test against", opts, format_func=labels.get,
-                      key=key, on_change=_sync, args=(key, f"{kind}_id"))
-
-
-def event_label_for(eid: str, symbols: list[str], mode: str) -> str:
-    lab = event_label(eid)
-    if eid != "custom":
-        prob = coverage_problem(eid, symbols, mode)
-        if prob and "not supported" not in prob:
-            return f"⛔ {lab} — unavailable: {prob}"
-    return lab
-
-
-def story_cards(ctx: "Ctx") -> None:
-    client, _ = split()
-    with client:
-        c1, c2 = st.columns(2)
-    for col, ev, kind in ((c1, ctx.crisis_ev, "crisis"), (c2, ctx.calm_ev, "calm")):
-        w = ev["windows"].get(ctx.mode) or ev["windows"]["standard"]
-        col.html(f"<div class='ptm-card ptm-{kind}'><h4>{'🔴' if kind == 'crisis' else '🟢'} {ev['name']}</h4>"
-                 f"<div class='sub'>Window used: {w[0]} → {w[1]} ({'standard 252 days' if ctx.mode == 'standard' else 'event only'})</div>"
-                 f"<p style='margin:.4rem 0 0'>{ev['story']}</p></div>")
 
 
 # ---------------------------------------------------------------- frames: virtual phone (desktop) or full-screen app (phones)
@@ -1040,10 +960,6 @@ PLAN = {"A": ("Portfolio A", "Bold · aims for the highest return", "🚀", "a",
 NAMES = {"A": "A · Bold", "B": "B · Steady", "C": "C · Optimum"}
 
 
-def app_css() -> None:
-    st.html(APP_CSS)
-
-
 def esc(x) -> str:
     import html as _h
     return _h.escape(str(x))
@@ -1098,12 +1014,6 @@ def verdict(emoji: str, head: str, body: str) -> None:
 
 def chip(text: str, tone: str = "grey") -> str:
     return f"<span class='chip {tone}'>{text}</span>"
-
-
-def working_header(title: str, sub: str = "") -> None:
-    st.markdown(f"#### {title}")
-    if sub:
-        st.caption(sub)
 
 
 def short(ev: dict) -> str:
@@ -1250,6 +1160,11 @@ def label_working(t: pd.DataFrame, sym: str) -> None:
     st.dataframe(pd.DataFrame({"σ ≥ median": ["High risk", "Moderate"], "σ < median": ["Moderate", "Low risk"]},
                               index=["β ≥ 1", "β < 1"]), width="stretch")
     st.markdown(f"→ yes/yes = High, no/no = Low, otherwise Moderate: **{r['label']}**.")
+    if r["label"] == CL.NOT_RATED:
+        st.markdown(f"**{sym} is Not rated:** its beta is negative ({r['beta']:.2f}), so it tends to move *against* the "
+                    "market. It gets no label and no score, it is left out of the median and the percentiles so it cannot "
+                    "shift other stocks' scores, and the app never recommends it.")
+        return
     same = t[t["label"] == r["label"]].sort_values("risk_score", ascending=False)
     rank = int(list(same.index).index(sym)) + 1
     st.markdown("**Step 2 · the score — ranks the stocks inside a label.** Beta and volatility are in different units, so each is "

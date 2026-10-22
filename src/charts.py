@@ -221,7 +221,7 @@ def nifty_history(close: pd.Series, events: list[dict], vix: pd.Series | None = 
 
 def scoreboard_heatmap(board: list[dict], amount_a: float, amount_b: float) -> go.Figure:
     names = [r["event"] for r in board]
-    metrics = [("ES 99% (1 day)", "es99"), ("Volatility", "vol"), ("Max drawdown", "mdd"), ("Worst ₹ fall", "fall")]
+    metrics = [("ES 95% (1 day)", "es"), ("Volatility", "vol"), ("Max drawdown", "mdd"), ("Worst ₹ fall", "fall")]
     z, text, x = [], [], []
     for lab, key in metrics:
         for p, amt in (("A", amount_a), ("B", amount_b)):

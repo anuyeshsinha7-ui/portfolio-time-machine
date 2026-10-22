@@ -59,7 +59,7 @@ AZAD,Azad Engineering Ltd.,Capital Goods,Small cap,INE02IJ01035,excluded,2023-12
 BEML,BEML Ltd.,Capital Goods,Small cap,INE258A01024,core,2007-09-17,4697,,0.22865,229.0,1,NSE corporate actions
 BLS,BLS International Services Ltd.,Consumer Services,Small cap,INE153T01027,extended,2016-11-22,2448,history starts 2016-11-22 — usable for custom picks; events before it are greyed out,0.0331,117.0,0,NSE corporate actions
 BSE,BSE Ltd.,Financial Services,Large cap,INE118H01025,extended,2017-02-03,2396,history starts 2017-02-03 — usable for custom picks; events before it are greyed out,0.04653,117.0,0,NSE corporate actions
-BAGMANE,Bagmane Prime Office REIT,Realty,Small cap,INE2OVN25015,excluded,,0,no Yahoo Finance data,,,0,
+BAGMANE,Bagmane Prime Office REIT,Realty,Small cap,INE2OVN25015,excluded,,0,not an equity: NSE series RR (REIT/InvIT units are not company shares),,,0,
 BAJAJ-AUTO,Bajaj Auto Ltd.,Automobile and Auto Components,Large cap,INE917I01010,extended,2008-05-26,4528,history starts 2008-05-26 — usable for custom picks; events before it are greyed out,0.01701,222.0,0,NSE corporate actions
 BAJFINANCE,Bajaj Finance Ltd.,Financial Services,Large cap,INE296A01032,core,2007-09-17,4697,,0.01191,231.0,3,NSE corporate actions
 BAJAJFINSV,Bajaj Finserv Ltd.,Financial Services,Large cap,INE918I01026,extended,2008-05-26,4528,history starts 2008-05-26 — usable for custom picks; events before it are greyed out,0.0144,222.0,2,NSE corporate actions
@@ -91,7 +91,7 @@ BOSCHLTD,Bosch Ltd.,Automobile and Auto Components,Large cap,INE323A01026,core,2
 FIRSTCRY,Brainbees Solutions Ltd.,Consumer Services,Small cap,INE02RE01045,excluded,2024-08-13,540,"history starts 2024-08-13 — under 3 years, too short for the risk label",0.01378,27.0,0,yfinance action history
 BRIGADE,Brigade Enterprises Ltd.,Realty,Small cap,INE791I01019,extended,2007-12-31,4626,history starts 2007-12-31 — usable for custom picks; events before it are greyed out,0.02152,227.0,0,NSE corporate actions
 BRITANNIA,Britannia Industries Ltd.,Fast Moving Consumer Goods,Large cap,INE216A01030,core,2007-09-17,4697,,0.01998,231.0,0,NSE corporate actions
-BIRET,Brookfield India Real Estate Trust,Realty,Small cap,INE0FDU25010,extended,2021-02-16,1400,history starts 2021-02-16 — usable for custom picks; events before it are greyed out,0.35144,0.0,0,NSE corporate actions
+BIRET,Brookfield India Real Estate Trust,Realty,Small cap,INE0FDU25010,excluded,,0,not an equity: NSE series RR (REIT/InvIT units are not company shares),,,0,
 CCL,CCL Products (I) Ltd.,Fast Moving Consumer Goods,Small cap,INE421D01022,core,2007-09-17,4697,,0.02661,229.0,1,NSE corporate actions
 CESC,CESC Ltd.,Power,Small cap,INE486A01021,core,2007-09-17,4697,,0.07993,231.0,1,NSE corporate actions
 CGPOWER,CG Power and Industrial Solutions Ltd.,Capital Goods,Large cap,INE067A01029,core,2007-09-17,4697,,0.18222,222.0,1,NSE corporate actions
@@ -150,7 +150,7 @@ DRREDDY,Dr. Reddy's Laboratories Ltd.,Healthcare,Large cap,INE089A01031,core,200
 DUMMYHEG,Dummy HEG Ltd.,Capital Goods,Small cap,DUM545A01024,excluded,,0,no Yahoo Finance data,,,0,
 EIDPARRY,E.I.D. Parry (India) Ltd.,Fast Moving Consumer Goods,Small cap,INE126A01031,core,2007-09-17,4697,,0.05231,231.0,0,NSE corporate actions
 EIHOTEL,EIH Ltd.,Consumer Services,Small cap,INE230A01023,core,2007-09-17,4697,,0.00729,231.0,2,NSE corporate actions
-EMBASSY,EMBASSY OFFICE PARKS REIT,Realty,Mid cap,INE041025011,extended,2019-04-01,1865,history starts 2019-04-01 — usable for custom picks; events before it are greyed out,0.3019,0.0,0,NSE corporate actions
+EMBASSY,EMBASSY OFFICE PARKS REIT,Realty,Mid cap,INE041025011,excluded,,0,not an equity: NSE series RR (REIT/InvIT units are not company shares),,,0,
 EICHERMOT,Eicher Motors Ltd.,Automobile and Auto Components,Large cap,INE066A01021,core,2007-09-17,4697,,0.03284,231.0,0,NSE corporate actions
 ELECON,Elecon Engineering Co. Ltd.,Capital Goods,Small cap,INE205B01031,core,2007-09-17,4697,,0.06256,231.0,0,NSE corporate actions
 ELGIEQUIP,Elgi Equipments Ltd.,Capital Goods,Small cap,INE285A01027,core,2007-09-17,4697,,0.00436,231.0,0,NSE corporate actions

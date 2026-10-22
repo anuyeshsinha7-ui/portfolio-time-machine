@@ -21,12 +21,10 @@ from . import stats_tests as ST
 from . import universe as U
 from . import var_es as V
 
-CS = (0.95, 0.99, config.ES_BASEL)
+CS = (0.95, 0.99)
 
 
 # ---------------------------------------------------------------- helpers
-def _f(x):
-    return None if x is None or (isinstance(x, float) and np.isnan(x)) else float(x)
 
 
 def _w(series: pd.Series) -> dict:
@@ -171,7 +169,7 @@ def regime_result(p: dict, start, end, universe_labels: pd.DataFrame | None = No
     risk = var_block(R, w)
     # benchmark in the same window
     nifty_r = m
-    nh_var, nh_es = V.historical(nifty_r.to_numpy(), 0.99)
+    nh_var, nh_es = V.historical(nifty_r.to_numpy(), config.RULE_CONF)
     # label stability
     stab = None
     lab = universe_labels
@@ -197,7 +195,7 @@ def regime_result(p: dict, start, end, universe_labels: pd.DataFrame | None = No
         "volatility": float(M.ann_vol(r)), "beta": M.beta(r, m), "max_drawdown": M.max_drawdown(r),
         "worst_day": float(r.min()), "worst_day_date": str(r.idxmin().date()), "avg_pairwise_corr": M.avg_pairwise_corr(R),
         "ann_return": float(M.ann_return(r)), "total_return": float((1 + r).prod() - 1),
-        "nifty": {"es99": nh_es, "var99": nh_var, "max_drawdown": M.max_drawdown(nifty_r), "volatility": float(M.ann_vol(nifty_r)),
+        "nifty": {"es": nh_es, "var": nh_var, "max_drawdown": M.max_drawdown(nifty_r), "volatility": float(M.ann_vol(nifty_r)),
                   "total_return": float((1 + nifty_r).prod() - 1)},
         "stability": stab,
         "returns": {"dates": [str(d.date()) for d in r.index], "port": np.round(r.to_numpy(), 6).tolist()},
@@ -328,15 +326,15 @@ def scoreboard(results: dict, mode: str = "standard") -> list[dict]:
         a, b = reg["A"], reg["B"]
         if not (a.get("available") and b.get("available")):
             continue
-        es_a = a["risk"]["Historical"]["0.99"]["es"]
-        es_b = b["risk"]["Historical"]["0.99"]["es"]
+        es_a = a["risk"]["Historical"][config.RULE_KEY]["es"]
+        es_b = b["risk"]["Historical"][config.RULE_KEY]["es"]
         rows.append({
             "id": eid, "event": ev["name"], "type": ev["type"], "start": reg["start"], "end": reg["end"],
-            "es99_A": es_a, "es99_B": es_b, "vol_A": a["volatility"], "vol_B": b["volatility"],
+            "es_A": es_a, "es_B": es_b, "vol_A": a["volatility"], "vol_B": b["volatility"],
             "mdd_A": a["max_drawdown"], "mdd_B": b["max_drawdown"],
             "fall_A": a["replay"]["largest_fall"], "fall_B": b["replay"]["largest_fall"],
             "nifty_fall": reg["nifty"]["largest_fall"],
             "label_held": bool(es_a > es_b and a["volatility"] > b["volatility"]),
-            "b_held_up": bool(es_b < b["nifty"]["es99"] and b["max_drawdown"] < b["nifty"]["max_drawdown"]),
+            "b_held_up": bool(es_b < b["nifty"]["es"] and b["max_drawdown"] < b["nifty"]["max_drawdown"]),
         })
     return rows

@@ -7,7 +7,7 @@
 *Does 'safe' stay safe when the market crashes?*
 
 * Two portfolios from today's Nifty 500, built from the sectors and company sizes you choose: **A — high risk** (beta ≥ 1, volatility above the median), weighted for the highest return, and **B — low risk**, weighted for the lowest variance; the app recommends the top 15 of each automatically (choosing your own is optional), no overlap. A third, **C — optimum**, mixes A's and B's stocks for the best Sharpe ratio.
-* **Time-travel test #1:** Value at Risk and Expected Shortfall (four methods) for both, in a historical crisis, a calm spell and today — did the labels hold?
+* **Time-travel test #1:** Value at Risk and Expected Shortfall (historical, parametric and Monte Carlo) for both, in a historical crisis, a calm spell and today — did the labels hold?
 * **Time-travel test #2:** re-run Markowitz with each period's data for today's target return — would the optimiser still pick our weights, or is the difference just estimation noise?
 
 **How it looks.** On a computer, the left half is a **virtual phone running the customer app** — onboarding, portfolio cards, a shopping list of shares, a crash replay, a "which portfolio fits me?" slider — in plain words and rupees. The right half is **"The working"**: the formulas, tables, charts and evidence behind whichever screen the phone is on. On a real phone the same app fills the screen, with the working one tap away. Dark theme throughout.
@@ -36,7 +36,7 @@ Tests: `pip install -r requirements-dev.txt && pytest` (browser smoke test: `pyt
 * **Labels** from the trailing 3 years (beta to the Nifty 50, annualised volatility); evidence = weighted beta, √(wᵀΣw), drawdown, correlation, and a block-bootstrap CI for σA/σB.
 * **Weights:** A maximises expected return (linear program), B minimises variance, C maximises the Sharpe ratio over A + B; 2%–25% per stock (C 0%–25%), ≤ 40% per industry; SciPy SLSQP, cross-checked against cvxpy. Parametric VaR is also worked step by step with the matrix method (Σ = DᵀD/(N−1), wᵀΣw).
 * **Regimes:** 252-day windows anchored on the Nifty 50 data — the deepest drawdown (2008) and the calmest year (2017–18) by default, plus 13 catalogue events in a dropdown.
-* **Risk:** historical, normal, Student-t Monte Carlo and Cornish–Fisher VaR/ES; Kupiec breach test; buy-and-hold ₹ crisis replay.
+* **Risk:** historical, parametric normal and Student-t Monte Carlo VaR/ES (the three methods taught in class); Kupiec breach test; buy-and-hold ₹ crisis replay.
 * Full details: [docs/METHODOLOGY.md](docs/METHODOLOGY.md) · decisions: [DECISIONS.md](DECISIONS.md).
 
 ## Data cleaning in brief
