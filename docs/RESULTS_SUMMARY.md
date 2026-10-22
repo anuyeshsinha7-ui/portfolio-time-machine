@@ -99,30 +99,27 @@ Industry weights: Healthcare 36.9%, Capital Goods 20.2%, Telecommunication 13.8%
 
 Volatility ratio σA/σB = **2.96**, block-bootstrap 95% CI **2.74 – 3.21** (500 resamples, 5-day blocks) → the call is statistically backed (whole interval above 1).
 
-## 3. Optimum weights today — VaR before and after optimising (1-day, historical)
+## 3. Optimum weights today — VaR and ES (95%, 1-day, historical) before and after optimising
 
-| Portfolio | Confidence | VaR equal-weight | VaR optimised | ES equal-weight | ES optimised |
-|---|---|---|---|---|---|
-| A | 0.95 | 3.15% | 2.97% | 3.70% | 4.07% |
-| A | 0.99 | 3.90% | 4.66% | 4.48% | 5.27% |
-| B | 0.95 | 1.24% | 1.10% | 1.71% | 1.63% |
-| B | 0.99 | 1.91% | 1.83% | 2.34% | 2.12% |
-| C | 0.95 | 2.04% | 2.23% | 2.58% | 3.17% |
-| C | 0.99 | 2.87% | 3.40% | 3.33% | 4.17% |
+| Portfolio | VaR equal-weight | VaR optimised | ES equal-weight | ES optimised |
+|---|---|---|---|---|
+| A | 3.15% | 2.97% | 3.70% | 4.07% |
+| B | 1.24% | 1.10% | 1.71% | 1.63% |
+| C | 2.04% | 2.23% | 2.58% | 3.17% |
 
 ## 4. Test #1 — does the label hold? (official periods, standard 252-day windows)
 
-| Regime | P | VaR95 | ES95 | VaR99 | ES99 | Vol | Beta | Max DD | Worst day | Avg corr | ES95 on ₹15L |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| Current | A | 2.97% | 4.07% | 4.66% | 5.27% | 30.2% | 1.22 | 14.8% | −6.2% | 0.33 | ₹61,034 |
-| Current | B | 1.10% | 1.63% | 1.83% | 2.12% | 11.2% | 0.59 | 9.8% | −2.3% | 0.24 | ₹24,479 |
-| Current | C | 2.23% | 3.17% | 3.40% | 4.17% | 22.3% | 0.92 | 11.6% | −5.0% | 0.24 | ₹47,537 |
-| Crisis | A | 5.07% | 7.21% | 8.89% | 9.96% | 45.4% | 0.79 | 75.7% | −10.6% | 0.42 | ₹1.08 lakh |
-| Crisis | B | 2.41% | 3.98% | 5.55% | 6.77% | 25.9% | 0.51 | 30.5% | −7.6% | 0.27 | ₹59,670 |
-| Crisis | C | 4.37% | 6.66% | 7.33% | 10.12% | 42.0% | 0.77 | 62.5% | −12.4% | 0.33 | ₹99,846 |
-| Calm | A | 2.49% | 3.34% | 3.84% | 4.28% | 23.6% | 1.37 | 12.9% | −4.7% | 0.22 | ₹50,136 |
-| Calm | B | 1.10% | 1.41% | 1.58% | 1.67% | 11.5% | 0.83 | 7.3% | −1.7% | 0.12 | ₹21,198 |
-| Calm | C | 2.09% | 2.69% | 2.95% | 3.46% | 20.0% | 1.11 | 12.3% | −3.7% | 0.15 | ₹40,314 |
+| Regime | P | VaR95 | ES95 | Vol | Beta | Max DD | Worst day | Avg corr | ES95 on ₹15L |
+|---|---|---|---|---|---|---|---|---|---|
+| Current | A | 2.97% | 4.07% | 30.2% | 1.22 | 14.8% | −6.2% | 0.33 | ₹61,034 |
+| Current | B | 1.10% | 1.63% | 11.2% | 0.59 | 9.8% | −2.3% | 0.24 | ₹24,479 |
+| Current | C | 2.23% | 3.17% | 22.3% | 0.92 | 11.6% | −5.0% | 0.24 | ₹47,537 |
+| Crisis | A | 5.07% | 7.21% | 45.4% | 0.79 | 75.7% | −10.6% | 0.42 | ₹1.08 lakh |
+| Crisis | B | 2.41% | 3.98% | 25.9% | 0.51 | 30.5% | −7.6% | 0.27 | ₹59,670 |
+| Crisis | C | 4.37% | 6.66% | 42.0% | 0.77 | 62.5% | −12.4% | 0.33 | ₹99,846 |
+| Calm | A | 2.49% | 3.34% | 23.6% | 1.37 | 12.9% | −4.7% | 0.22 | ₹50,136 |
+| Calm | B | 1.10% | 1.41% | 11.5% | 0.83 | 7.3% | −1.7% | 0.12 | ₹21,198 |
+| Calm | C | 2.09% | 2.69% | 20.0% | 1.11 | 12.3% | −3.7% | 0.15 | ₹40,314 |
 
 VaR/ES (95%, 1-day) by method in the official crisis:
 
@@ -136,12 +133,12 @@ VaR/ES (95%, 1-day) by method in the official crisis:
 * B held up (ES and drawdown below the Nifty 50's) in the official crisis: **True**; across crises 6/10 → **Partly**.
 * Label stability in the crisis: 3 of 15 of A's stocks keep their label (High risk) when the rule is re-run on crisis data.
 * Label stability in the crisis: 15 of 15 of B's stocks keep their label (Low risk) when the rule is re-run on crisis data.
-* Breach test A, VaR calibrated on calm: 99% → expected about 2.5, got **20** (Kupiec p = 2.37e-12); 95% → expected 12.6, got **45** (p = 1.67e-13).
-* Breach test A, VaR calibrated on current: 99% → expected about 2.5, got **16** (Kupiec p = 9.56e-09); 95% → expected 12.6, got **36** (p = 2.38e-08).
-* Breach test B, VaR calibrated on calm: 99% → expected about 2.5, got **37** (Kupiec p = 3.55e-31); 95% → expected 12.6, got **53** (p = 7.17e-19).
-* Breach test B, VaR calibrated on current: 99% → expected about 2.5, got **27** (Kupiec p = 1.67e-19); 95% → expected 12.6, got **53** (p = 7.17e-19).
-* Breach test C, VaR calibrated on calm: 99% → expected about 2.5, got **34** (Kupiec p = 1.62e-27); 95% → expected 12.6, got **46** (p = 3.88e-14).
-* Breach test C, VaR calibrated on current: 99% → expected about 2.5, got **27** (Kupiec p = 1.67e-19); 95% → expected 12.6, got **44** (p = 6.96e-13).
+* Breach test A, 95% VaR calibrated on calm: expected about 12.6 crisis days beyond it, got **45** (Kupiec p = 1.67e-13).
+* Breach test A, 95% VaR calibrated on current: expected about 12.6 crisis days beyond it, got **36** (Kupiec p = 2.38e-08).
+* Breach test B, 95% VaR calibrated on calm: expected about 12.6 crisis days beyond it, got **53** (Kupiec p = 7.17e-19).
+* Breach test B, 95% VaR calibrated on current: expected about 12.6 crisis days beyond it, got **53** (Kupiec p = 7.17e-19).
+* Breach test C, 95% VaR calibrated on calm: expected about 12.6 crisis days beyond it, got **46** (Kupiec p = 3.88e-14).
+* Breach test C, 95% VaR calibrated on current: expected about 12.6 crisis days beyond it, got **44** (Kupiec p = 6.96e-13).
 * Crisis replay on ₹15,00,000: A lowest ₹4,28,554 (fall ₹10,71,446), B lowest ₹11,04,011 (fall ₹3,95,989), C lowest ₹6,57,475 (fall ₹8,42,525), Nifty 50 fall 57.6%.
 
 ## 5. Test #2 — would the optimiser still pick our weights?

@@ -69,14 +69,12 @@ def main() -> None:
     say(f"Volatility ratio σA/σB = **{vr['ratio']:.2f}**, block-bootstrap 95% CI **{vr['lo']:.2f} – {vr['hi']:.2f}** "
         f"({vr['resamples']} resamples, 5-day blocks) → the call is {'statistically backed (whole interval above 1)' if vr['significant'] else 'NOT statistically backed'}.\n")
 
-    say("## 3. Optimum weights today — VaR before and after optimising (1-day, historical)\n")
-    rows = []
-    for k in "ABC":
-        vb = P[k]["var_before_after"]
-        for c in ("0.95", "0.99"):
-            rows.append((k, c, pct(vb["equal"]["Historical"][c]["var"], 2), pct(vb["optimised"]["Historical"][c]["var"], 2),
-                         pct(vb["equal"]["Historical"][c]["es"], 2), pct(vb["optimised"]["Historical"][c]["es"], 2)))
-    say(tbl(rows, ["Portfolio", "Confidence", "VaR equal-weight", "VaR optimised", "ES equal-weight", "ES optimised"]) + "\n")
+    say("## 3. Optimum weights today — VaR and ES (95%, 1-day, historical) before and after optimising\n")
+    c = config.RULE_KEY
+    rows = [(k, pct(P[k]["var_before_after"]["equal"]["Historical"][c]["var"], 2), pct(P[k]["var_before_after"]["optimised"]["Historical"][c]["var"], 2),
+             pct(P[k]["var_before_after"]["equal"]["Historical"][c]["es"], 2), pct(P[k]["var_before_after"]["optimised"]["Historical"][c]["es"], 2))
+            for k in "ABC"]
+    say(tbl(rows, ["Portfolio", "VaR equal-weight", "VaR optimised", "ES equal-weight", "ES optimised"]) + "\n")
 
     say("## 4. Test #1 — does the label hold? (official periods, standard 252-day windows)\n")
     rows = []
@@ -84,10 +82,10 @@ def main() -> None:
         for k in "ABC":
             r = reg[k]
             h = r["risk"]["Historical"]
-            rows.append((name, k, pct(h["0.95"]["var"], 2), pct(h["0.95"]["es"], 2), pct(h["0.99"]["var"], 2), pct(h["0.99"]["es"], 2),
+            rows.append((name, k, pct(h["0.95"]["var"], 2), pct(h["0.95"]["es"], 2),
                          pct(r["volatility"]), f"{r['beta']:.2f}", pct(r["max_drawdown"]), pct(r["worst_day"], 1),
                          f"{r['avg_pairwise_corr']:.2f}", inr_short(h["0.95"]["es"] * AMT)))
-    say(tbl(rows, ["Regime", "P", "VaR95", "ES95", "VaR99", "ES99", "Vol", "Beta", "Max DD", "Worst day", "Avg corr", "ES95 on ₹15L"]) + "\n")
+    say(tbl(rows, ["Regime", "P", "VaR95", "ES95", "Vol", "Beta", "Max DD", "Worst day", "Avg corr", "ES95 on ₹15L"]) + "\n")
     say("VaR/ES (95%, 1-day) by method in the official crisis:\n")
     rows = []
     for m in ("Historical", "Parametric normal", "Monte Carlo (Student-t)"):
@@ -103,10 +101,9 @@ def main() -> None:
             f"({'High' if k == 'A' else 'Low'} risk) when the rule is re-run on crisis data.")
     for k in "ABC":
         for nm, regw in (("calm", calm), ("current", cur)):
-            bt = ST.breach_test(np.array(regw[k]["returns"]["port"]), np.array(crisis[k]["returns"]["port"]), 0.99)
-            bt95 = ST.breach_test(np.array(regw[k]["returns"]["port"]), np.array(crisis[k]["returns"]["port"]), 0.95)
-            say(f"* Breach test {k}, VaR calibrated on {nm}: 99% → expected about {bt['expected']:.1f}, got **{bt['breaches']}** "
-                f"(Kupiec p = {bt['p_value']:.3g}); 95% → expected {bt95['expected']:.1f}, got **{bt95['breaches']}** (p = {bt95['p_value']:.3g}).")
+            bt = ST.breach_test(np.array(regw[k]["returns"]["port"]), np.array(crisis[k]["returns"]["port"]), config.RULE_CONF)
+            say(f"* Breach test {k}, 95% VaR calibrated on {nm}: expected about {bt['expected']:.1f} crisis days beyond it, got "
+                f"**{bt['breaches']}** (Kupiec p = {bt['p_value']:.3g}).")
     say(f"* Crisis replay on {inr(AMT)}: A lowest {inr(crisis['A']['replay']['low'] * AMT)} (fall {inr(crisis['A']['replay']['largest_fall'] * AMT)}), "
         f"B lowest {inr(crisis['B']['replay']['low'] * AMT)} (fall {inr(crisis['B']['replay']['largest_fall'] * AMT)}), "
         f"C lowest {inr(crisis['C']['replay']['low'] * AMT)} (fall {inr(crisis['C']['replay']['largest_fall'] * AMT)}), Nifty 50 fall {pct(crisis['nifty']['largest_fall'])}.\n")
