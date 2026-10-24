@@ -2,6 +2,8 @@
 A = warm coral, B = cool blue, Nifty 50 = grey; crisis shading red, calm shading green, always labelled."""
 from __future__ import annotations
 
+import textwrap
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -15,12 +17,21 @@ COLS = {"A": A, "B": B, "C": C}
 CHOSEN = {"max_sharpe": "maximum Sharpe", "min_variance": "minimum variance", "max_return": "maximum return"}
 CRISIS, CALM = config.COLOR_CRISIS, config.COLOR_CALM
 COL = {"A": A, "B": B, "Nifty 50": N}
+# one clearly different colour (and dash) per tested period, used by every period chart
+PERIOD_PAL = [CRISIS, CALM, "#B45AC9", "#E0A33A", "#4BB5C1", "#6C7AE0", "#C2577A", "#9C6B3E", "#5FA35F", "#D9D96B"]
+DASHES = ["dash", "dot", "dashdot", "longdash", "longdashdot"]
 
 
 def _base(fig: go.Figure, height=380, title=None, yfmt=None, xfmt=None) -> go.Figure:
-    fig.update_layout(height=height, margin=dict(l=8, r=8, t=46 if title else 10, b=8),
-                      title=dict(text=title or "", font=dict(size=14)),
-                      legend=dict(orientation="h", yanchor="bottom", y=1.0, x=0, font=dict(size=11)),
+    # A title above a multi-row legend used to be drawn on top of it. When there is a legend, the title becomes the
+    # legend's own heading, so the space Plotly reserves for the legend always includes it. Side "top", not "top left":
+    # "top left" starts the items after the title's width, which pushed long legends off the right edge.
+    in_legend = bool(title) and fig.layout.showlegend is not False and sum(t.showlegend is not False for t in fig.data) > 1
+    fig.update_layout(height=height, margin=dict(l=8, r=8, t=10 if in_legend or not title else 46, b=8),
+                      title=dict(text="" if in_legend else (title or ""), font=dict(size=14)),
+                      legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0, font=dict(size=11),
+                                  title=dict(text=f"<b>{title}</b><br>" if in_legend else "", side="top",
+                                             font=dict(size=13, color="#E6E9EF"))),
                       font=dict(size=12, family="Inter, -apple-system, Helvetica, Arial", color="#C9CFDB"), plot_bgcolor="rgba(0,0,0,0)",
                       paper_bgcolor="rgba(0,0,0,0)", hoverlabel=dict(bgcolor="#1E2638", font=dict(color="#E6E9EF")))
     fig.update_xaxes(gridcolor="#263043", zeroline=False, tickformat=xfmt)
@@ -58,25 +69,37 @@ def frontier(p: dict, regimes: list[tuple] | None = None, title=None, show_cloud
                                    marker=dict(size=3, color="#3A4560", opacity=.55), hoverinfo="skip"))
     fr = p["frontier"]
     fig.add_trace(go.Scatter(x=fr["vols"], y=fr["rets"], mode="lines", name="Best mixes today (frontier)",
-                             line=dict(color=col, width=3)))
+                             line=dict(color=col, width=3),
+                             hovertemplate="Today's frontier<br>return %{y:.1%} · volatility %{x:.1%}<extra></extra>"))
     if show_stocks:
-        syms = p["symbols"]
+        syms = sorted(p["symbols"], key=lambda s: (p["vol_i"][s], p["mu"][s]))
+        pos = ["top center", "bottom center", "middle right", "middle left"]  # alternate so neighbouring labels don't collide
         fig.add_trace(go.Scatter(x=[p["vol_i"][s] for s in syms], y=[p["mu"][s] for s in syms], mode="markers+text", text=syms,
-                                 textposition="top center", textfont=dict(size=9, color="#9AA3B5"), name="Individual stocks",
-                                 marker=dict(size=7, color="#161D2C", line=dict(color="#9AA3B5", width=1.2))))
+                                 textposition=[pos[i % 4] for i in range(len(syms))], textfont=dict(size=9, color="#9AA3B5"),
+                                 name="Individual stocks", marker=dict(size=7, color="#161D2C", line=dict(color="#9AA3B5", width=1.2)),
+                                 hovertemplate="%{text}<br>return %{y:.1%} · volatility %{x:.1%}<extra></extra>"))
     mv = fr["minvar"]
+    top = ", ".join(f"{s} {w:.0%}" for s, w in sorted(p["weights"].items(), key=lambda x: -x[1])[:3])
     fig.add_trace(go.Scatter(x=[mv["vol"]], y=[mv["ret"]], mode="markers", name="Least risky mix",
-                             marker=dict(symbol="diamond", size=12, color="#E6E9EF")))
+                             marker=dict(symbol="diamond", size=12, color="#E6E9EF"),
+                             hovertemplate="Least risky mix<br>return %{y:.1%} · volatility %{x:.1%}<extra></extra>"))
     fig.add_trace(go.Scatter(x=[p["expected_vol"]], y=[p["expected_return"]], mode="markers",
                              name=f"Chosen: {CHOSEN[p['objective']]}",
-                             marker=dict(symbol="star", size=17, color=col, line=dict(color="#E6E9EF", width=1))))
-    for name, rc, rfr, today, opt in regimes or []:
-        fig.add_trace(go.Scatter(x=rfr["vols"], y=rfr["rets"], mode="lines", name=f"Frontier — {name}",
-                                 line=dict(color=rc, width=2, dash="dash")))
-        fig.add_trace(go.Scatter(x=[today[0]], y=[today[1]], mode="markers", name=f"Today's weights in {name}",
-                                 marker=dict(symbol="x", size=12, color=rc)))
-        fig.add_trace(go.Scatter(x=[opt[0]], y=[opt[1]], mode="markers", name=f"Optimal in {name}",
-                                 marker=dict(symbol="star-open", size=14, color=rc, line=dict(width=2))))
+                             marker=dict(symbol="star", size=17, color=col, line=dict(color="#E6E9EF", width=1)),
+                             hovertemplate=f"Today's weights ({CHOSEN[p['objective']]})<br>return %{{y:.1%}} · volatility %{{x:.1%}}"
+                                           f"<br>largest: {top}<extra></extra>"))
+    for i, (name, rc, rfr, today, opt, *rest) in enumerate(regimes or []):
+        opt_top = rest[0] if rest else ""
+        fig.add_trace(go.Scatter(x=rfr["vols"], y=rfr["rets"], mode="lines", name=f"Frontier — {name}", legendgroup=name,
+                                 line=dict(color=rc, width=2, dash=DASHES[i % len(DASHES)]),
+                                 hovertemplate=f"{name} frontier<br>return %{{y:.1%}} · volatility %{{x:.1%}}<extra></extra>"))
+        fig.add_trace(go.Scatter(x=[today[0]], y=[today[1]], mode="markers", name=f"Today's weights in {name}", legendgroup=name,
+                                 marker=dict(symbol="x", size=12, color=rc), showlegend=False,
+                                 hovertemplate=f"Today's weights during {name}<br>return %{{y:.1%}} · volatility %{{x:.1%}}<extra></extra>"))
+        fig.add_trace(go.Scatter(x=[opt[0]], y=[opt[1]], mode="markers", name=f"Optimal in {name}", legendgroup=name,
+                                 marker=dict(symbol="star-open", size=14, color=rc, line=dict(width=2)), showlegend=False,
+                                 hovertemplate=f"Best mix for {name}<br>return %{{y:.1%}} · volatility %{{x:.1%}}"
+                                               + (f"<br>largest: {opt_top}" if opt_top else "") + "<extra></extra>"))
     fig.update_xaxes(title="Volatility (annual)")
     fig.update_yaxes(title="Expected return (annual)")
     return _base(fig, 460, title, yfmt=".0%", xfmt=".0%")
@@ -108,9 +131,10 @@ def breach_timeline(dates, r, var, colour, name) -> go.Figure:
 def weights_bars(table: pd.DataFrame, title=None) -> go.Figure:
     """table: index = stocks, columns = regimes → grouped horizontal bars."""
     fig = go.Figure()
-    palette = {"Today": "#E6E9EF", "Current": "#E6E9EF", "Crisis": CRISIS, "Calm": CALM, "Equal": "#6B7690"}
+    others = iter(PERIOD_PAL * 3)
     for c in table.columns:
-        fig.add_trace(go.Bar(y=table.index, x=table[c], name=c, orientation="h", marker=dict(color=palette.get(c, "#8792A8")),
+        colour = "#E6E9EF" if c in ("Today", "Current") else next(others)
+        fig.add_trace(go.Bar(y=table.index, x=table[c], name=c, orientation="h", marker=dict(color=colour),
                              hovertemplate="%{y}: %{x:.1%}<extra>" + c + "</extra>"))
     fig.update_layout(barmode="group", yaxis=dict(autorange="reversed"))
     return _base(fig, max(300, 28 * len(table) * max(1, len(table.columns)) // 2 + 120), title, xfmt=".0%")
@@ -239,16 +263,22 @@ def scoreboard_heatmap(board: list[dict], amount_a: float, amount_b: float) -> g
 
 
 def bootstrap_bands(symbols, base, lo, hi, regime_w: dict, title=None) -> go.Figure:
+    rows = np.arange(len(symbols), dtype=float)
+    regs = list(regime_w.values() if isinstance(regime_w, dict) else regime_w)
     fig = go.Figure()
-    fig.add_trace(go.Bar(y=symbols, x=[hi[s] - lo[s] for s in symbols], base=[lo[s] for s in symbols], orientation="h",
-                         marker=dict(color="rgba(122,131,148,.35)"), name="90% noise band",
-                         hovertemplate="%{y}: %{base:.1%} – %{x:.1%}<extra></extra>"))
-    fig.add_trace(go.Scatter(y=symbols, x=[base[s] for s in symbols], mode="markers", name="Today",
-                             marker=dict(symbol="line-ns", size=16, line=dict(width=3, color="#E6E9EF"))))
-    for name, w, col in regime_w.values() if isinstance(regime_w, dict) else regime_w:
-        fig.add_trace(go.Scatter(y=symbols, x=[w[s] for s in symbols], mode="markers", name=name,
-                                 marker=dict(size=10, color=col, symbol="diamond")))
-    fig.update_layout(yaxis=dict(autorange="reversed"))
+    fig.add_trace(go.Bar(y=rows, x=[hi[s] - lo[s] for s in symbols], base=[lo[s] for s in symbols], orientation="h", width=0.8,
+                         marker=dict(color="rgba(122,131,148,.30)"), name="90% noise band (chance alone)", customdata=symbols,
+                         hovertemplate="%{customdata}: noise band %{base:.1%} – %{x:.1%} wide<extra></extra>"))
+    fig.add_trace(go.Scatter(y=rows, x=[base[s] for s in symbols], mode="markers", name="Today's weight", customdata=symbols,
+                             marker=dict(symbol="line-ns", size=22, line=dict(width=4, color="#FFFFFF")),
+                             hovertemplate="%{customdata}: today %{x:.1%}<extra></extra>"))
+    for k, (name, w, col) in enumerate(regs):  # each period on its own sub-row, so overlapping markers stay visible
+        off = (k - (len(regs) - 1) / 2) * min(0.18, 0.7 / max(len(regs), 1))
+        inside = ["inside" if lo[s] - 1e-9 <= w[s] <= hi[s] + 1e-9 else "OUTSIDE" for s in symbols]
+        fig.add_trace(go.Scatter(y=rows + off, x=[w[s] for s in symbols], mode="markers", name=name, customdata=list(zip(symbols, inside)),
+                                 marker=dict(size=9, color=col, symbol="diamond", line=dict(width=1, color="#0B0F17")),
+                                 hovertemplate="%{customdata[0]}: " + name + " %{x:.1%} (%{customdata[1]} the band)<extra></extra>"))
+    fig.update_layout(yaxis=dict(autorange="reversed", tickmode="array", tickvals=rows, ticktext=symbols))
     fig.update_xaxes(title="Weight")
     return _base(fig, 120 + 30 * len(symbols), title, xfmt=".0%")
 
@@ -256,11 +286,11 @@ def bootstrap_bands(symbols, base, lo, hi, regime_w: dict, title=None) -> go.Fig
 def turnover_hist(noise, p95, marks: list[tuple]) -> go.Figure:
     fig = go.Figure(go.Histogram(x=noise, nbinsx=30, marker=dict(color="#3A4560"), name="Money moved by noise alone"))
     fig.add_vline(x=p95, line=dict(color="#E6E9EF", dash="dash"), annotation_text=f"95% limit {p95:.0%}", annotation_font_size=11)
-    for name, v, col in marks:
-        fig.add_vline(x=v, line=dict(color=col, width=3), annotation_text=f"{name} {v:.0%}", annotation_position="top left",
-                      annotation_font_size=11)
+    for name, v, col in marks:  # periods named in the legend: labels on the lines piled on top of each other when close
+        fig.add_vline(x=v, line=dict(color=col, width=3))
+        fig.add_trace(go.Scatter(x=[None], y=[None], mode="lines", line=dict(color=col, width=3), name=f"{name} {v:.0%}"))
     fig.update_xaxes(title="Share of money moved (½ Σ |Δw|)")
-    return _base(fig, 260, None, xfmt=".0%")
+    return _base(fig, 300, None, xfmt=".0%")
 
 
 def risk_compare(labels: list[str], a_vals: list[float], b_vals: list[float], title: str, rupees: bool = False,
@@ -269,11 +299,12 @@ def risk_compare(labels: list[str], a_vals: list[float], b_vals: list[float], ti
     fmt = (lambda v: inr_short(v)) if rupees else (lambda v: f"{v:.1%}")
     fig = go.Figure()
     bars = [("Portfolio A", a_vals, A), ("Portfolio B", b_vals, B)] + ([("Portfolio C", c_vals, C)] if c_vals else [])
+    labels = ["<br>".join(textwrap.wrap(str(x), 12)) for x in labels]  # stacked, not tilted and cut off on a phone
     for name, vals, col in bars:
         fig.add_trace(go.Bar(x=labels, y=vals, name=name, marker=dict(color=col), text=[fmt(v) for v in vals],
                              textposition="outside", textfont=dict(size=10), cliponaxis=False,
                              hovertemplate="%{x}: %{text}<extra>" + name + "</extra>"))
-    fig.update_layout(barmode="group", bargap=0.25)
+    fig.update_layout(barmode="group", bargap=0.25, xaxis=dict(tickangle=0, tickfont=dict(size=10)))
     fig.update_yaxes(tickformat=None if rupees else ".0%", rangemode="tozero")
     return _base(fig, 340, title)
 
@@ -281,9 +312,10 @@ def risk_compare(labels: list[str], a_vals: list[float], b_vals: list[float], ti
 def weights_heat(table: pd.DataFrame, title: str | None = None) -> go.Figure:
     """Stocks × periods heatmap of weights (today vs each period's optimum)."""
     z = table.to_numpy()
-    fig = go.Figure(go.Heatmap(z=z, x=list(table.columns), y=list(table.index), zmin=0, zmax=max(0.25, float(np.nanmax(z))),
+    cols = ["<br>".join(textwrap.wrap(str(c), 11)) for c in table.columns]  # long period names stacked, not tilted over each other
+    fig = go.Figure(go.Heatmap(z=z, x=cols, y=list(table.index), zmin=0, zmax=max(0.25, float(np.nanmax(z))),
                                colorscale=[[0, "#121826"], [0.5, "#2B5A9E"], [1, A]], text=np.vectorize(lambda v: f"{v:.0%}")(z),
                                texttemplate="%{text}", textfont=dict(size=10), showscale=False,
                                hovertemplate="%{y} · %{x}: %{text}<extra></extra>"))
-    fig.update_layout(yaxis=dict(autorange="reversed"), xaxis=dict(side="top"))
+    fig.update_layout(yaxis=dict(autorange="reversed"), xaxis=dict(side="top", tickangle=0, tickfont=dict(size=10)))
     return _base(fig, 120 + 26 * len(table), title)

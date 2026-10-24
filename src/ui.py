@@ -488,7 +488,7 @@ def _sync(src: str, dst: str) -> None:
 TABS = [("prefs", "🎛️", "Choose"), ("suggest", "✨", "For you"), ("weights", "🎯", "Today"), ("test1", "🌪️", "Backtest"),
         ("test2", "🔁", "Rebalance"), ("verdict", "✅", "Verdict")]
 MORE = [("start", "💰", "Your amount"), ("pick", "✏️", "Choose my own stocks"),
-        ("home", "⏳", "Summary"), ("call", "⚖️", "The risk call"), ("how", "🧭", "How it works"), ("method", "📚", "About the data")]
+        ("home", "⏳", "Summary"), ("call", "⚖️", "The risk call"), ("how", "🧭", "How it works"), ("method", "📚", "About the data"), ("thanks", "🙏", "Thank you")]
 _CTX = {"in_client": False}
 
 DEVICE_CSS = """
@@ -1231,3 +1231,42 @@ def risk_text(ctx: "Ctx", r: dict, am: float, now: dict | None = None, period: s
              f"a loss of {inr_short(es * am)}."] + ([extra] if extra else [])
     return ("<div style='font-size:.8rem;line-height:1.45;color:#C9CFDB'>"
             + "".join(f"<div style='margin-top:6px'>{x}</div>" for x in parts) + "</div>")
+
+
+def period_name(ev: dict) -> str:
+    """Full short name of a period, never cut mid-word: '2008 crash (deepest in the data)' → '2008 crash'."""
+    return ev["name"].split(" (")[0]
+
+
+def frontier_explorer(ctx: "Ctx", key: str, periods: list[tuple[dict, dict]], default: str = "A", target: bool = False) -> str:
+    """One interactive efficient-frontier chart, used on Today, Backtest and Rebalance: switch Portfolio A / B / C,
+    pick which periods to overlay (each period's own frontier, where today's weights sat in it, and that period's best
+    mix), and hover any point for its return and volatility (and the largest weights of the marked portfolios)."""
+    k = st.segmented_control("Portfolio on the chart", ["A", "B", "C"], format_func=NAMES.get, default=default,
+                             key=f"{key}_p", required=True) or default
+    p = ctx.P[k]
+    names = [period_name(ev) for ev, _ in periods]
+    chosen = []
+    if periods:
+        sk = f"{key}_per"
+        if sk in st.session_state:  # keep only periods that are still ticked
+            st.session_state[sk] = [n for n in st.session_state[sk] if n in names]
+        chosen = st.multiselect("Periods to show", names, default=None if sk in st.session_state else names[:2], key=sk,
+                                help="Each period adds its own frontier (dashed), where today's weights sat (✕) and its best mix (☆).")
+    regimes = []
+    for i, (ev, reg) in enumerate(periods):
+        nm = names[i]
+        if nm not in chosen or not reg[k].get("available", True):
+            continue
+        t2 = reg[k]["test2"]
+        top = ", ".join(f"{s} {w:.0%}" for s, w in sorted(t2["weights"].items(), key=lambda x: -x[1])[:3])
+        regimes.append((nm, CH.PERIOD_PAL[i % len(CH.PERIOD_PAL)], t2["frontier"],
+                        (t2["today_in_regime"]["vol"], t2["today_in_regime"]["ret"]), (t2["vol"], t2["ret"]), top))
+    what = "today" if not periods else ("today vs " + ", ".join(r[0] for r in regimes) if regimes else "today (pick a period above)")
+    fig = CH.frontier(p, regimes=regimes, show_cloud=not regimes, show_stocks=not regimes,
+                      title=f"Portfolio {NAMES[k]}: efficient frontier — {what}")
+    if target:
+        fig.add_hline(y=p["target_return"], line=dict(color="#E6E9EF", dash="dot"),
+                      annotation_text=f"target {p['target_return']:.0%}", annotation_position="bottom right")
+    show(fig)
+    return k

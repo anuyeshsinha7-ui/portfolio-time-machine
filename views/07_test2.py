@@ -76,7 +76,7 @@ with left:
         ui.section("All periods at a glance")
         tbl = pd.DataFrame({"Today": pd.Series(p["weights"])})
         for eid, reg_, ev in results:
-            tbl[ui.short(ev)[:14]] = pd.Series(reg_[which]["test2"]["weights"])
+            tbl[ui.period_name(ev)] = pd.Series(reg_[which]["test2"]["weights"])
         tbl.index = [u.loc[x, "company"].split(" ")[0][:12] for x in tbl.index]
         ui.show(CH.weights_heat(tbl))
         if boot:
@@ -110,16 +110,16 @@ if right is not None and results:
         st.dataframe(ui.pct_df(df, [c for c in df.columns if c not in ("Period", "Case", "₹ to move")]), hide_index=True, width="stretch")
         st.caption(" ".join(f"**{v.split(' — ')[0]}**: {v.split(' — ')[1]}." for v in CASE.values()) +
                    " Share to move = half the sum of all weight changes, so 20% means a fifth of the money changes hands.")
-        PAL = [CH.CRISIS, CH.CALM, "#B45AC9", "#E0A33A", "#4BB5C1", "#8A8F98", "#6C7AE0"]
+        PAL = CH.PERIOD_PAL
         if boot:
             for eid, reg_, ev in results:
                 st.markdown(f"* {NR.test2_finding(ev['name'], p, reg_[which], boot[which]['turnover_p95'], amt)}")
         wt = pd.DataFrame({"Today": pd.Series(p["weights"])})
         for eid, reg_, ev in results:
-            wt[ui.short(ev)[:16]] = pd.Series(reg_[which]["test2"]["weights"])
+            wt[ui.period_name(ev)] = pd.Series(reg_[which]["test2"]["weights"])
         ui.show(CH.weights_bars(wt, f"Portfolio {which}: weights the optimiser picks in each period"))
         ind = {"Today": p["industry_weights"]}
-        ind.update({ui.short(ev)[:16]: reg_[which]["test2"]["industry_weights"] for eid, reg_, ev in results})
+        ind.update({ui.period_name(ev): reg_[which]["test2"]["industry_weights"] for eid, reg_, ev in results})
         ui.show(CH.industry_bars(ind, "How the sector weights change"))
         st.markdown("#### The sum the optimiser solves in each period")
         st.latex(r"\min_w\; w^\top \Sigma_{\text{period}}\, w \quad \text{s.t.}\quad \mu_{\text{period}}^\top w \ge "
@@ -128,30 +128,39 @@ if right is not None and results:
         st.caption("Extra risk carried = how much more volatility today's weights had in that period than the best mix that "
                    "earned the same return.")
         st.markdown("#### The best-mix line: today vs each period")
-        regimes = []
-        for i, (eid, reg_, ev) in enumerate(results):
-            t2 = reg_[which]["test2"]
-            regimes.append((ui.short(ev)[:16], PAL[i % len(PAL)], t2["frontier"],
-                            (t2["today_in_regime"]["vol"], t2["today_in_regime"]["ret"]), (t2["vol"], t2["ret"])))
-        fig = CH.frontier(p, regimes=regimes, show_cloud=False, show_stocks=False,
-                          title=f"Portfolio {which}: frontier per period, target {ui.pct(p['target_return'])}")
-        fig.add_hline(y=p["target_return"], line=dict(color="#E6E9EF", dash="dot"), annotation_text="target return")
-        ui.show(fig)
+        st.markdown("Pick the periods to compare and switch between A, B and C. Each period adds its own frontier (dashed), "
+                    "where today's weights sat in that period (✕) and the best mix that period wanted (☆). Hover any point.")
+        ui.frontier_explorer(ctx, "t2_front", [(ev, reg_) for _, reg_, ev in results], default=which, target=True)
         st.markdown("#### A real change, or just noise in the data?")
         st.markdown("Twelve months of prices is a small sample. To see how much the weights move by chance, we reshuffle "
                     "today's data many times and solve again each time. A period's change only counts as real if it is "
                     "bigger than almost all of those chance changes.")
         if boot:
             b = boot[which]
+            n = len(p["symbols"])
+            wide = sum(b["band_hi"][x] - b["band_lo"][x] > 0.15 for x in p["symbols"])
+            lines = []
+            for eid, reg_, ev in results:
+                out = [x for x in p["symbols"]
+                       if not (b["band_lo"][x] - 1e-9 <= reg_[which]["test2"]["weights"][x] <= b["band_hi"][x] + 1e-9)]
+                lines.append(f"* **{ui.period_name(ev)}:** {n - len(out)} of {n} stocks inside their band"
+                             + (f"; outside: {', '.join(out)} → that period genuinely wanted a different weight for them."
+                                if out else " → no stock needed a different weight than chance alone gives."))
+            st.markdown(f"**How to read it:** each grey band is where a stock's best weight landed in 90% of {b['resamples']} "
+                        "reshuffles of today's data, i.e. how far chance alone moves it. The white tick is today's weight; each "
+                        "diamond is what a period's optimiser picked. **Inside the band = within normal noise (no real change); "
+                        f"outside = a real change.** For Portfolio {which}, {wide} of {n} stocks have a band wider than 15 "
+                        "percentage points, so these weights are " + ("very sensitive to the data." if wide > n / 2 else "fairly stable."))
+            st.markdown("\n".join(lines))
             ui.show(CH.bootstrap_bands(p["symbols"], b["base"], b["band_lo"], b["band_hi"],
-                                       [(f"{ui.short(ev)[:16]}-optimal", reg_[which]["test2"]["weights"], PAL[i % len(PAL)])
+                                       [(ui.period_name(ev), reg_[which]["test2"]["weights"], PAL[i % len(PAL)])
                                         for i, (eid, reg_, ev) in enumerate(results)],
-                                       f"Grey bands: where 90% of the weights landed across {b['resamples']} reshuffles of today's data"))
+                                       f"Portfolio {which}: noise bands vs each period's best weight"))
             outside = sorted({x for x in p["symbols"] for eid, reg_, ev in results
                               if not (b["band_lo"][x] - 1e-9 <= reg_[which]["test2"]["weights"][x] <= b["band_hi"][x] + 1e-9)})
             st.caption(f"Stocks whose weight in a period falls outside its grey band: {', '.join(outside) or 'none'}.")
             ui.show(CH.turnover_hist(b["turnover_noise"], b["turnover_p95"],
-                                     [(ui.short(ev)[:12], reg_[which]["test2"]["turnover"], PAL[i % len(PAL)])
+                                     [(ui.period_name(ev), reg_[which]["test2"]["turnover"], PAL[i % len(PAL)])
                                       for i, (eid, reg_, ev) in enumerate(results)]))
             st.caption("A change counts as real if the share of money moved is above the 95th percentile of what noise alone "
                        f"moves. We reshuffle the latest 252 days in 5-day blocks, {b['resamples']} times.")

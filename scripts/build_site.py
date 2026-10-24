@@ -68,6 +68,7 @@ def main() -> None:
     build_landing.main(SITE)
     for extra in (ROOT / "site_src" / "static").glob("*") if (ROOT / "site_src" / "static").exists() else []:
         shutil.copy2(extra, SITE / extra.name)
+    shutil.copy2(ROOT / "assets" / "thank-you.mp4", SITE / "thank-you.mp4")  # played by the closing screen
     (SITE / ".nojekyll").write_text("")
     total = sum(p.stat().st_size for p in SITE.rglob("*") if p.is_file())
     print(f"_site built: {len(files)} app files, {total / 1e6:.1f} MB")

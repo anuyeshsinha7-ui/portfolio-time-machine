@@ -75,6 +75,7 @@ with left:
                   ("🏆", "Today's winners only", "Companies that failed since 2007 aren't in the test, which flatters history.", "", ""),
                   ("💸", "Before costs and tax", "Brokerage, STT and capital-gains tax are not included.", "", ""),
                   ("🎓", "Educational project", "Not investment advice.", "", "")])
+    ui.next_button("Thank you 🙏", "thanks")
 
 if right is not None:
     with right:

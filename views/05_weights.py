@@ -143,12 +143,13 @@ if right is not None:
         st.markdown(f"μ is the average daily return × 252. Σ is how the stocks move together (covariance) × 252. r_f is "
                     f"{config.RISK_FREE_RATE:.2%}, the 91-day Treasury bill rate. We solve it with SciPy's SLSQP method, starting "
                     f"from several points. After solving, we check every limit again, and our tests compare the answer with cvxpy.")
-        ui.show(CH.frontier(p, title=f"Portfolio {which}: the best mixes of these stocks (latest 12 months)"))
-        fr = p["frontier"]
+        fk = ui.frontier_explorer(ctx, "w_front", [], default=which)
+        pf = ctx.P[fk]
+        fr = pf["frontier"]
         st.caption(f"The line starts at {ui.pct(fr['r_min'])}, the return of the least risky mix, and ends at {ui.pct(fr['r_max'])}, "
                    f"the highest return the limits allow. In between we found the least risky mix for {len(fr['rets'])} target "
-                   f"returns. Our pick: return {ui.pct(p['expected_return'])}, volatility {ui.pct(p['expected_vol'])}, "
-                   f"Sharpe {p['sharpe']:.2f}.")
+                   f"returns. Portfolio {fk}: return {ui.pct(pf['expected_return'])}, volatility {ui.pct(pf['expected_vol'])}, "
+                   f"Sharpe {pf['sharpe']:.2f}. Hover any point for its numbers.")
         ui.concept_box("Efficient frontier",
                        "For each level of return, one mix of the stocks has the least risk. Join up those best mixes and you get "
                        "the frontier. Any mix below the line gives you less return for the same risk.",

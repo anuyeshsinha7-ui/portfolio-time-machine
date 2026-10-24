@@ -26,12 +26,13 @@ PAGES = {
     "pick": st.Page("views/03_pick.py", title="Choose my own stocks", icon="✏️", url_path="pick"),
     "call": st.Page("views/04_call.py", title="The risk call", icon="⚖️", url_path="call"),
     "method": st.Page("views/09_methodology.py", title="About the data", icon="📚", url_path="methodology"),
+    "thanks": st.Page("views/10_thanks.py", title="Thank you", icon="🙏", url_path="thanks"),
 }
 PAGES["today"] = PAGES["weights"]
 st.session_state["_pages"] = PAGES
 
 nav = st.navigation([PAGES[k] for k in ("start", "prefs", "suggest", "weights", "test1", "test2", "verdict", "home", "how", "pick",
-                                        "call", "method")], position="hidden")
+                                        "call", "method", "thanks")], position="hidden")
 
 
 # ---------------------------------------------------------------- sidebar

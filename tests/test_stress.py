@@ -12,9 +12,9 @@ ROOT = Path(__file__).resolve().parent.parent
 RES = json.loads((ROOT / "results" / "default.json").read_text())
 FLOW = ["views/01_prefs.py", "views/01_suggest.py", "views/05_weights.py", "views/06_test1.py", "views/07_test2.py",
         "views/08_verdict.py", "views/01_home.py", "views/02_how.py", "views/03_pick.py", "views/04_call.py",
-        "views/09_methodology.py"]
+        "views/09_methodology.py", "views/10_thanks.py"]
 CHOICES = {  # segmented controls / pills: key → values the app offers
-    "w_which": ["A", "B", "C"], "t2_which": ["A", "B", "C"], "bt_cmp": ["A", "B", "C"], "window_mode": ["standard", "event_only"],
+    "w_which": ["A", "B", "C"], "w_front_p": ["A", "B", "C"], "t1_front_p": ["A", "B", "C"], "t2_front_p": ["A", "B", "C"], "t2_which": ["A", "B", "C"], "bt_cmp": ["A", "B", "C"], "window_mode": ["standard", "event_only"],
     "conf": [0.95, 0.99], "horizon": [1, 10], "start_mode": ["same_each", "split_total", "separate"],
 }
 AMOUNTS = ["15 lakh", "1.5 crore", "10,000", "abc", "", "5", "99999999999", "2,50,000"]
@@ -178,3 +178,19 @@ def test_period_greyed_out_when_more_than_five_stocks_too_new():
         ok(at, f"{n_new} new stocks")
         cb = next(c for c in at.checkbox if c.key == "bt_auto_crisis")
         assert cb.disabled == greyed and (not greyed or cb.value is False), (n_new, cb.disabled, cb.value)
+
+
+def test_frontier_explorer_switches_portfolio_and_periods():
+    """The frontier chart on Today / Backtest / Rebalance: A/B/C switch and the period picker, every combination."""
+    at = app(bt_events=[k for k, v in RES["events"].items() if v["available"] and not k.startswith("auto")][:3])
+    for page, key in (("views/05_weights.py", "w_front"), ("views/06_test1.py", "t1_front"), ("views/07_test2.py", "t2_front")):
+        at.switch_page(page).run()
+        for v in "ABC":
+            next(w for w in at.segmented_control if w.key == f"{key}_p").set_value(v).run()
+            ok(at, f"{key}={v}")
+            per = [m for m in at.multiselect if m.key == f"{key}_per"]
+            if per:  # Today has no periods; the others offer every ticked period
+                at.session_state[TESTING_KEY][per[0].id] = lambda x: x
+                for chosen in ([], per[0].options[:1], per[0].options):
+                    per[0].set_value(chosen).run()
+                    ok(at, f"{key}={v} periods={chosen}")

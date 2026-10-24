@@ -11,7 +11,7 @@ from src import config
 ROOT = Path(__file__).resolve().parent.parent
 PAGES = ["views/01_prefs.py", "views/01_suggest.py", "views/05_weights.py", "views/06_test1.py", "views/07_test2.py",
          "views/08_verdict.py", "views/01_home.py", "views/02_how.py", "views/03_pick.py", "views/04_call.py",
-         "views/09_methodology.py"]
+         "views/09_methodology.py", "views/10_thanks.py"]
 RES = json.loads((ROOT / "results" / "default.json").read_text())
 CRISES = ["auto_crisis"] + [k for k, v in RES["events"].items() if v["type"] == "crisis" and not k.startswith("auto")]
 CALMS = ["auto_calm"] + [k for k, v in RES["events"].items() if v["type"] == "calm" and not k.startswith("auto")]

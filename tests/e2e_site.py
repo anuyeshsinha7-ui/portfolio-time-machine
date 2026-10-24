@@ -20,7 +20,8 @@ ROOT = Path(__file__).resolve().parent.parent
 PAGES = [("prefs", "Where would you like to invest?"), ("suggest", "Recommended for you"), ("weights", "Your portfolios right now"),
          ("test1", "What if a crisis hit?"), ("test2", "How should the weights change?"), ("verdict", "Does 'safe' stay safe?"),
          ("home", "Your money in two portfolios"), ("how", "6 simple steps"), ("pick", "Choose my own stocks"),
-         ("call", "Why A is the bold one"), ("methodology", "Checked against the exchange")]
+         ("call", "Why A is the bold one"), ("methodology", "Checked against the exchange"),
+         ("thanks", "Thank you!")]
 
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -67,7 +68,7 @@ NAV_DESKTOP = {"home": "Home — the 30-second verdict", "how": "How this app wo
                "verdict": "Verdict & recommendation", "methodology": "Methodology & data"}
 NAV_PHONE = {"prefs": "Choose", "suggest": "For you", "weights": "Today", "test1": "Backtest", "test2": "Rebalance",
              "verdict": "Verdict", "home": "Summary", "how": "How it works", "pick": "Choose my own stocks", "call": "The risk call",
-             "methodology": "About the data"}
+             "methodology": "About the data", "thanks": "Thank you"}
 
 
 def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int = 2500000, url: str | None = None,
@@ -110,6 +111,11 @@ def run(site: Path, port: int = 8791, screens: Path | None = None, amount: int =
                         page.get_by_text(heading).first.wait_for(timeout=120_000)
                     time.sleep(2.5)
                     err = errors_on(page)
+                    if key == "thanks":  # the closing video must be published next to the app and reachable from it
+                        st_ = page.evaluate("async () => { const v = document.querySelector('video');"
+                                            " return v ? (await fetch(v.src, {method: 'HEAD'})).status : 0 }")
+                        if st_ != 200:
+                            problems.append(f"{label} thanks: video not found (status {st_})")
                     if err:
                         problems.append(f"{label} {key}: {err}")
                     if screens:

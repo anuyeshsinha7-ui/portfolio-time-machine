@@ -87,7 +87,7 @@ with left:
         am = ctx.amount(ck)
         e_now = ctx.h(ctx.current[ck]["risk"]["Historical"][k]["es"])
         cmp = []
-        for nm, r in [("Today", ctx.current)] + [(ui.short(ev).split(" (")[0][:18], r_) for _, r_, ev in ok]:
+        for nm, r in [("Today", ctx.current)] + [(ui.period_name(ev), r_) for _, r_, ev in ok]:
             v, e = ctx.h(r[ck]["risk"]["Historical"][k]["var"]), ctx.h(r[ck]["risk"]["Historical"][k]["es"])
             n_days, beyond = ui.tail_days(r[ck], k)
             cmp.append({"Period": nm, vlab: ui.inr_short(v * am), "Days beyond VaR": f"{len(beyond)} of {n_days}",
@@ -97,7 +97,7 @@ with left:
         st.dataframe(pd.DataFrame(cmp), hide_index=True, width="stretch",
                      column_config={"Period": st.column_config.TextColumn(pinned=True)})
         st.caption(f"Portfolio {ck} on {ui.inr_short(am)}. Lowest value = bought on the first day of that period and held.")
-        lbl = ["Today"] + [ui.short(ev)[:18] for _, _, ev in ok]
+        lbl = ["Today"] + [ui.period_name(ev) for _, _, ev in ok]
         a_vals = [ctx.h(ctx.current["A"]["risk"]["Historical"][k]["es"]) * ctx.amount_a] + \
                  [ctx.h(r["A"]["risk"]["Historical"][k]["es"]) * ctx.amount_a for _, r, _ in ok]
         b_vals = [ctx.h(ctx.current["B"]["risk"]["Historical"][k]["es"]) * ctx.amount_b] + \
@@ -146,7 +146,7 @@ if right is not None:
                        "first day of the period and held (no rebalancing).")
             st.latex(r"\Delta\text{VaR} = \text{VaR}_{\text{period}} - \text{VaR}_{\text{today}}, \quad "
                      r"\text{same weights } w_{\text{today}}, \ \text{returns of that period}")
-            ui.show(CH.risk_compare(["Today"] + [ev["name"].split(" (")[0][:18] for _, r, ev, p_ in results if r is not None],
+            ui.show(CH.risk_compare(["Today"] + [ui.period_name(ev) for _, r, ev, p_ in results if r is not None],
                                     [ctx.h(ctx.current["A"]["risk"]["Historical"][k]["var"])] +
                                     [ctx.h(r["A"]["risk"]["Historical"][k]["var"]) for _, r, ev, p_ in results if r is not None],
                                     [ctx.h(ctx.current["B"]["risk"]["Historical"][k]["var"])] +
@@ -154,6 +154,11 @@ if right is not None:
                                     f"VaR {ctx.conf:.0%} (% of the portfolio)",
                                     c_vals=[ctx.h(ctx.current["C"]["risk"]["Historical"][k]["var"])] +
                                     [ctx.h(r["C"]["risk"]["Historical"][k]["var"]) for _, r, ev, p_ in results if r is not None]))
+        if any(r is not None for _, r, _e, _p in results):
+            st.markdown("#### Efficient frontier in each period you ticked")
+            st.markdown("Each period's own best-mix line (dashed), where today's weights sat in it (✕) and the best mix it "
+                        "wanted (☆). Switch between A, B and C, pick periods, hover any point.")
+            ui.frontier_explorer(ctx, "t1_front", [(ev, r) for _, r, ev, _p in results if r is not None])
         st.markdown("#### The rules for the verdict, and the numbers they use")
         st.markdown(f"* {RC.RULES['label_holds']}\n* {RC.RULES['b_held_up']}")
         rows = []
